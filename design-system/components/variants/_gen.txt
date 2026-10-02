@@ -1,0 +1,50 @@
+// Generator (run via run_script: eval this file's text, then await gen()). Builds FigmaVariants.jsx from _names.txt.
+async function gen() {
+  const names = [...new Set((await readFile('components/variants/_names.txt')).split('\n').map((s) => s.trim()).filter(Boolean))];
+  const norm = (s) => s.replace(/[^A-Za-z0-9]/g, '');
+  const clean = (s) => s.replace(/[^\x20-\x7E]/g, '').trim();
+  const SZ = { 40: 'md', 36: 'sm', 32: 'xs', 28: '2xs' };
+  const sizeOf = (s) => { const m = s.match(/\((\d+)\)/); return m ? +m[1] : null; };
+  const COLORS = { Purple: 'purple', Red: 'red', Orange: 'orange', Pink: 'pink', Green: 'green', Blue: 'blue', Gray: 'gray', Yellow: 'yellow', Teal: 'teal', Sky: 'sky' };
+  const out = []; const seen = new Set(); const used = new Set();
+  for (const n of names) {
+    const id = norm(n); if (seen.has(id)) continue; seen.add(id);
+    const [fam, ...rest] = n.split('/'); const parts = rest.map(clean);
+    let jsx = null;
+    if (fam === 'Buttons [1.1]') {
+      let [a, b, state, size, on] = parts; if (a === 'Lighter') { on = size; size = state; state = b; b = 'Lighter'; } let tone = a === 'Error' ? 'error' : a === 'Lighter' ? 'primary' : 'neutral';
+      let variant = a === 'Lighter' ? 'lighter' : (b || 'Filled').toLowerCase(); const sz = SZ[sizeOf(size)] || 'md';
+      const icon = on === 'On';
+      jsx = `<Button tone="${tone}" variant="${variant}" size="${sz}"${state === 'Disabled' ? ' disabled' : ''}${icon ? ' iconOnly leftIcon={<Icon name="FileCopyLine" />}' : ''} {...p}>{p.children ?? 'Button'}</Button>`; used.add('Button'); used.add('Icon');
+    } else if (fam === 'Badge [1.1]') {
+      const color = COLORS[(parts[1] || '').split(' ').pop()] || 'gray'; const size = sizeOf(parts[2]) === 20 ? 'md' : 'sm';
+      const num = parts[3] === 'On'; const dis = parts[4] === 'On';
+      jsx = `<Badge color="${color}" size="${size}"${num ? ' type="number"' : ''}${dis ? ' disabled' : ''} {...p}>{p.children ?? ${num ? "'8'" : "'Badge'"}}</Badge>`; used.add('Badge');
+    } else if (fam === 'Link Buttons [1.1]') {
+      const [tone, state, size, ul] = parts; const t = { Gray: 'gray', Black: 'black', Error: 'error', Modifiable: 'black' }[tone] || 'primary';
+      jsx = `<LinkButton tone="${t}" size="${sizeOf(size) === 16 ? 'sm' : 'md'}"${ul === 'On' ? ' underline' : ''}${state === 'Disabled' ? ' disabled' : ''} {...p}>{p.children ?? 'Link Button'}</LinkButton>`; used.add('LinkButton');
+    } else if (fam === 'Social Buttons [1.1]') {
+      const brand = parts[0]; jsx = `<SocialButton iconOnly={${parts[3] === 'On'}} {...p}>{p.children ?? 'Continue with ${brand}'}</SocialButton>`; used.add('SocialButton');
+    } else if (fam === 'Alert & Notification & Toast [1.1]') {
+      const st = (parts[0] || '').toLowerCase().split(' ').pop(); const lg = /Large/.test(parts[1] || '');
+      jsx = `<Alert status="${st}" size="${lg ? 'lg' : 'sm'}" title={p.title ?? 'Insert your alert title here!'} {...p}>{p.children}</Alert>`; used.add('Alert');
+    } else if (fam === 'Content Divider [1.1]') {
+      jsx = `<ContentDivider type="${/Text/.test(parts[0]) ? 'text-line' : 'line'}" {...p}>{p.children ?? 'OR'}</ContentDivider>`; used.add('ContentDivider');
+    } else if (fam === 'Tag [1.1]') { jsx = `<Tag dismissible={${parts[2] === 'On'}} {...p}>{p.children ?? 'Tag'}</Tag>`; used.add('Tag');
+    } else if (fam === 'Radio Card [1.1]') { jsx = `<RadioCard label="Insert your label" description="Insert a description here." {...p} />`; used.add('RadioCard');
+    } else if (fam === 'Scroll [1.1]') { jsx = `<ScrollArea height={120} {...p}>{p.children}</ScrollArea>`; used.add('ScrollArea');
+    } else if (fam === 'Sidebar [Navigation] [1.1]') { jsx = `<Sidebar collapsed={${parts[0] === 'On'}} sections={[{ title: 'Main', items: [{ label: 'Dashboard', icon: 'LayoutGridLine' }] }]} {...p} />`; used.add('Sidebar');
+    } else if (fam === 'Select [1.1]') { jsx = `<Select options={[{ label: 'Indonesia', value: 'id' }]} defaultValue="id" {...p} />`; used.add('Select');
+    } else if (fam === 'Status Badge [1.1]') { const st = (parts[0] || '').toLowerCase(); jsx = `<StatusBadge status="${st || 'completed'}" dot={${parts[1] === 'On'}} {...p}>{p.children ?? '${parts[0] || 'Completed'}'}</StatusBadge>`; used.add('StatusBadge');
+    } else if (fam === 'Bottom Sheets Header [1.1]') {
+      const k = (parts[0] || '').toLowerCase(); const st = ['success', 'warning', 'error', 'information'].includes(k) ? k : null;
+      jsx = `<BottomSheetHeader title={p.title ?? 'Insert title'} description={p.description ?? 'Insert a description here.'}${st ? ` status="${st}"` : k.includes('left') ? ' icon="Settings2Line"' : ''} {...p} />`; used.add('BottomSheetHeader');
+    }
+    if (jsx) out.push(`/** Figma: "${n.replace(/\*\//g, '')}" */\nexport const ${id} = (p = {}) => ${jsx};`);
+  }
+  const SRC = { Button: '../actions/Button.jsx', Icon: '../icons/Icon.jsx', Badge: '../display/Badge.jsx', LinkButton: '../actions/LinkButton.jsx', SocialButton: '../actions/SocialButton.jsx', Alert: '../feedback/Alert.jsx', ContentDivider: '../display/ContentDivider.jsx', Tag: '../display/Tag.jsx', RadioCard: '../forms/CheckboxCard.jsx', ScrollArea: '../navigation/HorizontalFilter.jsx', Sidebar: '../navigation/Sidebar.jsx', Select: '../forms/Select.jsx', StatusBadge: '../display/Badge.jsx', BottomSheetHeader: '../feedback/BottomSheet.jsx' };
+  const imports = [...used].map((u) => `import { ${u} } from '${SRC[u]}';`).join('\n');
+  const src = `import React from 'react';\n${imports}\n\n// Generated: one export per Figma variant-symbol (pre-set props on the hand-authored components).\n\n${out.join('\n')}\n`;
+  await saveFile('components/variants/FigmaVariants.jsx', src);
+  return out.length;
+}

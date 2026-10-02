@@ -1,0 +1,40 @@
+import * as React from 'react';
+export interface SelectProps { label?: React.ReactNode;
+  required?: boolean;
+  sublabel?: React.ReactNode;
+  hint?: React.ReactNode;
+  error?: boolean | string;
+  disabled?: boolean;
+  size?: "md" | "sm" | "xs";
+  options?: { label: React.ReactNode;
+  value?: string;
+  icon?: string | React.ReactNode }[];
+  value?: string;
+  defaultValue?: string;
+  placeholder?: string;
+  leftIcon?: string | React.ReactNode;
+  onChange?: (v: string) => void;
+  style?: React.CSSProperties; }
+export declare function Select(props: SelectProps): React.ReactElement | null;
+export interface CompactSelectProps { options?: { label: React.ReactNode;
+  value?: string;
+  icon?: string | React.ReactNode }[];
+  value?: string;
+  defaultValue?: string;
+  icon?: string | React.ReactNode;
+  size?: "md" | "sm" | "xs";
+  error?: boolean;
+  disabled?: boolean;
+  onChange?: (v: string) => void;
+  style?: React.CSSProperties; }
+export declare function CompactSelect(props: CompactSelectProps): React.ReactElement | null;
+export interface InlineSelectProps { options?: { label: React.ReactNode;
+  value?: string }[];
+  value?: string;
+  defaultValue?: string;
+  icon?: string | React.ReactNode;
+  disabled?: boolean;
+  onChange?: (v: string) => void;
+  style?: React.CSSProperties; }
+export declare function InlineSelect(props: InlineSelectProps): React.ReactElement | null;
+export default Select;

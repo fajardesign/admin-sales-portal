@@ -1,0 +1,3 @@
+/* Webfonts. Inter (incl. optical-size axis — "Inter Display" in Figma is Inter at display opsz) and Mulish via Google Fonts.
+   No font binaries were included in the Figma source; these are CDN-hosted equivalents of the exact families used. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=Mulish:wght@400;500;700;900&display=swap');

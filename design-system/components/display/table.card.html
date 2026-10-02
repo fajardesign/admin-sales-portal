@@ -1,0 +1,16 @@
+<!-- @dsCard group="Components" viewport="700x300" name="Table" subtitle="Table, TableHeaderCell, TableRowCell, SortingIcon" -->
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{margin:0;padding:20px;background:var(--bg-white-0)}.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.col{display:flex;flex-direction:column;gap:12px}.lbl{font:var(--subheading-2xs);letter-spacing:.04em;text-transform:uppercase;color:var(--text-soft-400);width:72px;flex-shrink:0}</style></head><body><div id="root"></div>
+<script type="text/babel">
+const DS = window.AmarBankInternalWebDS_806d63; const h = React.useState;
+
+const { Table, StatusBadge, KeyIcon, Icon, Checkbox } = DS;
+const rows=[{id:1,name:'Salary Deposit',desc:'Monthly salary from Apex',date:'Sep 18',amt:3500,st:'completed'},{id:2,name:'Stock Dividend',desc:'Payment from stock investment',date:'Sep 18',amt:846.14,st:'pending'},{id:3,name:'Rental Income',desc:'Rental payment from Mr. Dupont',date:'Sep 17',amt:100,st:'failed'}];
+const lab={completed:'Berhasil',pending:'Menunggu',failed:'Gagal'};const ic={completed:'SelectBoxCircleFill',pending:'AlertFill',failed:'ErrorWarningFill'};
+function App(){ return <Table columns={[{key:'name',header:'Transaksi',sortable:true,render:r=><div className="row" style={{gap:12}}><KeyIcon icon="BankLine" size="sm"/><div className="col" style={{gap:4}}><span style={{font:'var(--label-sm)'}}>{r.name}</span><span style={{font:'var(--paragraph-xs)',color:'var(--text-sub-600)'}}>{r.desc}</span></div></div>},{key:'date',header:'Tanggal',sortable:true},{key:'st',header:'Status',render:r=><StatusBadge status={r.st} icon={<Icon name={ic[r.st]} size={16}/>}>{lab[r.st]}</StatusBadge>},{key:'amt',header:'Nominal',align:'right',sortable:true,render:r=>'$'+r.amt.toLocaleString('en-US',{minimumFractionDigits:2})}]} rows={rows}/>; }
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script></body></html>

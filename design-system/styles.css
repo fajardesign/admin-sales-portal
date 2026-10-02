@@ -1,0 +1,8 @@
+@import './tokens/fonts.css';
+@import './tokens/fig-tokens.css';
+@import './tokens/fig-typography.css';
+@import './tokens/semantic.css';
+@import './tokens/base.css';
+@import './components/brand-sets/fig-assets.css';
+@import './components/widget-sets/fig-assets.css';
+@import './components/misc-sets/fig-assets.css';

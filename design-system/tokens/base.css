@@ -1,0 +1,8 @@
+/* Minimal base — body type + link colors. */
+body { font-family: var(--font-sans); color: var(--text-strong-950); background: var(--bg-white-0); -webkit-font-smoothing: antialiased; }
+a { color: var(--primary-base); text-decoration: none; }
+a:hover { color: var(--primary-darker); text-decoration: underline; }
+@keyframes ab-spin { to { transform: rotate(360deg); } }
+@keyframes ab-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ab-slide-in-right { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes ab-pop-in { from { transform: translateY(8px) scale(0.98); opacity: 0; } to { transform: none; opacity: 1; } }

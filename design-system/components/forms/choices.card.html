@@ -1,0 +1,20 @@
+<!-- @dsCard group="Components" viewport="700x420" name="Selection controls" subtitle="Checkbox, Radio, Switch (+Label / Card), IntegrationSwitch, Slider, Rating, ColorDots" -->
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{margin:0;padding:20px;background:var(--bg-white-0)}.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.col{display:flex;flex-direction:column;gap:12px}.lbl{font:var(--subheading-2xs);letter-spacing:.04em;text-transform:uppercase;color:var(--text-soft-400);width:72px;flex-shrink:0}</style></head><body><div id="root"></div>
+<script type="text/babel">
+const DS = window.AmarBankInternalWebDS_806d63; const h = React.useState;
+
+const { Checkbox, CheckboxLabel, Radio, RadioGroup, Switch, SwitchLabel, CheckboxCard, RadioCard, SwitchCard, KeyIcon, Slider, RangeSlider, Rating, RatingBar, ColorDots, Badge } = DS;
+function App(){ const [r,setR]=h('now'); const [c,setC]=h('blue'); const [rb,setRb]=h(3); return <div className="col">
+ <div className="row"><Checkbox/><Checkbox checked/><Checkbox indeterminate/><Checkbox disabled/><Radio/><Radio checked/><Radio disabled/><Switch/><Switch checked/><Switch disabled/></div>
+ <div className="row" style={{alignItems:'flex-start',gap:32}}><div className="col"><CheckboxLabel label="Ingat saya" defaultChecked/><CheckboxLabel label="Setuju" description="Saya menyetujui syarat & ketentuan."/></div><RadioGroup value={r} onChange={setR} options={[{label:'Kirim sekarang',value:'now'},{label:'Terjadwal',value:'later',sublabel:'(H+1)'}]}/><SwitchLabel label="Notifikasi email" defaultChecked/></div>
+ <div className="row" style={{alignItems:'stretch'}}><RadioCard width={300} media={<KeyIcon icon="BankLine" size="sm"/>} label="Transfer Online" description="Real-time, maks. Rp 50 juta" checked/><SwitchCard width={300} label="Approval berlapis" badge={<Badge color="blue">Baru</Badge>} description="Wajibkan 2 approver." defaultChecked/></div>
+ <div className="row" style={{gap:24}}><Slider label="Limit" defaultValue={40} style={{width:200}}/><RangeSlider label="Rentang" style={{width:200}}/><div className="col"><Rating value={3.5} showValue reviews={128}/><ColorDots value={c} onChange={setC}/></div></div>
+ <RatingBar value={rb} onChange={setRb} items={[1,2,3,4,5,6,7,8,9,10]}/>
+</div>; }
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script></body></html>

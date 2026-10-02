@@ -1,0 +1,8 @@
+/* Core entry for apps: fonts + tokens + base only (no fig-assets.css for the Figma-generated
+   brand-sets / widget-sets / misc-sets). Use styles.css instead if you render those generated sets. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=Mulish:wght@400;500;700;900&display=swap');
+@import './tokens/fonts.css';
+@import './tokens/fig-tokens.css';
+@import './tokens/fig-typography.css';
+@import './tokens/semantic.css';
+@import './tokens/base.css';
