@@ -7,4 +7,8 @@ export default defineConfig({
   resolve: {
     alias: { '@ds': '/design-system' },
   },
+  test: {
+    environment: 'jsdom',
+    css: false,
+  },
 });

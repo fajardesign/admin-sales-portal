@@ -1,15 +1,23 @@
 # Admin Sales Portal
 
-Web admin untuk tim sales Amar Bank, dibangun dengan **Amar Bank Internal Web DS** (`design-system/`).
+Portal web Admin Sales Portal Amar Bank (fase 1: Manajemen Akun Team Leader), dibangun dengan **Amar Bank Internal Web DS** (`design-system/`).
 
 ```bash
 npm install
-npm run dev      # http://localhost:5173
+npm run dev      # http://localhost:5173 — DevToolbar di bawah layar untuk pindah layar & skenario mock
+npm test         # Vitest: validasi + flow W1/W2/KC1
 npm run build
 npm run lint
 npm run gen:ds   # regenerate design-system/COMPONENTS.md + index.js dari .d.ts
 ```
 
-- Komponen: `import { Button, Table } from '@ds/index.js'` — props di `design-system/COMPONENTS.md`.
-- Panduan desain (wajib dibaca): `knowledge-bundle/design-system/`.
-- Struktur: `src/layout/AppShell.jsx` (Sidebar + PageHeader), `src/pages/*`, `src/data/*` (mock data).
+| Rute | Layar |
+|---|---|
+| `#/login` | W1 Login Admin |
+| `#/denied` | W1 Akses ditolak |
+| `#/users` | W2 Manajemen Akun (+ modal Tambah Pengguna) |
+| `#/activate` | KC1 Aktivasi akun |
+
+- Knowledge (wajib dibaca & dirawat): `knowledge-bundle/` — mulai dari `knowledge-bundle/index.md`.
+- Komponen: `import { Button } from '@ds/index.js'` — props di `design-system/COMPONENTS.md`.
+- API masih mock: `src/api/mockApi.js`. Sumber desain: `design-sources/sales-portal-web/`.

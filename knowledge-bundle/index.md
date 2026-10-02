@@ -13,10 +13,12 @@ Amar Bank Internal Web DS — wajib untuk setiap halaman web Admin Sales Portal.
 - [Content Guidelines](design-system/content-guidelines.md) — bahasa, nada, casing, format angka & field
 
 ## Products
-_(belum ada)_
+- [Sales Portal Web (Admin)](products/sales-portal-web.md) — peran, autentikasi Keycloak, daftar layar, status implementasi, pertanyaan terbuka
 
 ## PRD
-_(belum ada)_
+_(belum ada — perilaku saat ini bersumber dari prototipe desain, lihat Products/Flows)_
 
 ## Flows
-_(belum ada)_
+- [W1 · Login Admin & Akses Ditolak](flows/w1-login.md)
+- [W2 · Manajemen Akun (Team Leader)](flows/w2-account-management.md) — daftar TL, modal Tambah Pengguna, validasi, hasil simpan
+- [KC1 · Aktivasi Akun](flows/kc1-activation.md) — kebijakan password, state tautan

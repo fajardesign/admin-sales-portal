@@ -26,3 +26,15 @@ Detail props di `design-system/COMPONENTS.md`.
 - `assets/logos/` — 12 SVG: `amar-bank-{horizontal,vertical}-{color,white,black}`, `amar-bank-without-title-{color,white}`, `amar-bank-bisnis-{horizontal,vertical}-{default,color-text}`. Untuk sidebar gelap pakai varian white/default.
 - `assets/illustrations/empty-states/` — 34 PNG (16 `finance-*`, 18 `hr-*`) ilustrasi empty state abu-abu.
 - `assets/avatars/` — 7 persona (⚠ terpotong, lihat overview.md). Untuk data nyata pakai `Avatar` dengan inisial.
+
+## Catatan implementasi (gotchas)
+- **`TextInput` + `onBlur`**: komponen menyebar `...rest` ke `<input>` *setelah* `onBlur` internalnya — mengoper `onBlur` langsung
+  menimpa handler fokus (ring fokus tidak hilang). Tangkap blur di wrapper: `<div onBlur={...}><TextInput … /></div>`
+  (contoh: `src/pages/account-management/AddUserModal.jsx`). Prop lain (`autoComplete`, `inputMode`, `aria-*`) aman lewat `...rest`.
+- **`StatusModal` `actions`**: setiap child dari `actions` dibungkus `flex: 1` — oper fragment `<>…</>` berisi tombol, bukan `<div>` (style div akan hilang).
+  Untuk dialog konfirmasi, bungkus dengan `<Modal width={400} style={{ overflow:'visible', background:'transparent', boxShadow:'none' }}>`.
+- **`Modal`** menutup lewat Esc/klik overlay memanggil `onClose`; saat dua modal bertumpuk, kosongkan `onClose` modal bawah agar Esc tidak memicu keduanya.
+- **`Toast`** tidak memposisikan diri — letakkan di container `position: fixed; top/right: var(--space-24); z-index: 200`.
+- **Tabel kustom**: untuk kolom dengan isi kaya (avatar, 2 baris), pakai `<table>` + `TableHeaderCell` (`first`/`last`/`sort`) + `TableRowCell`
+  di dalam kartu `radius 16 + shadow-stroke`, alih-alih `Table`.
+- **`AmarBankLogo`** inline SVG semua varian memuat metadata C2PA yang besar — penyumbang utama ukuran bundle JS (±580 KB).
