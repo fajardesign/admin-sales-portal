@@ -1,0 +1,22 @@
+<!-- @dsCard group="Components" viewport="700x420" name="Buttons" subtitle="Button, LinkButton, CompactButton, FancyButton, SocialButton, FAB, ButtonGroup, SelectedButton" -->
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{margin:0;padding:20px;background:var(--bg-white-0)}.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.col{display:flex;flex-direction:column;gap:12px}.lbl{font:var(--subheading-2xs);letter-spacing:.04em;text-transform:uppercase;color:var(--text-soft-400);width:72px;flex-shrink:0}</style></head><body><div id="root"></div>
+<script type="text/babel">
+const DS = window.AmarBankInternalWebDS_806d63; const h = React.useState;
+
+const { Button, LinkButton, CompactButton, FancyButton, SocialButton, FAB, ButtonGroup, SelectedButton, Icon } = DS;
+function App(){ const [g,setG]=h('Harian'); const [s,setS]=h(true);
+return <div className="col">
+ <div className="row"><span className="lbl">Filled</span><Button leftIcon={<Icon name="AddLine"/>}>Transfer Baru</Button><Button tone="neutral">Neutral</Button><Button tone="error">Hapus</Button><Button disabled>Disabled</Button></div>
+ <div className="row"><span className="lbl">Stroke</span><Button variant="stroke">Primary</Button><Button variant="stroke" tone="neutral" rightIcon={<Icon name="ArrowRightSLine"/>}>Lanjut</Button><Button variant="lighter">Lighter</Button><Button variant="ghost" tone="neutral">Ghost</Button></div>
+ <div className="row"><span className="lbl">Sizes</span><Button size="md">40</Button><Button size="sm">36</Button><Button size="xs">32</Button><Button size="2xs">28</Button><Button iconOnly leftIcon={<Icon name="FileCopyLine"/>} variant="stroke" tone="neutral" /></div>
+ <div className="row"><span className="lbl">Other</span><FancyButton>Fancy</FancyButton><FancyButton type="primary">Primary</FancyButton><FancyButton type="basic">Basic</FancyButton><SocialButton logo={<Icon name="GlobalLine"/>}>Continue with SSO</SocialButton></div>
+ <div className="row"><span className="lbl">Compact</span><CompactButton icon={<Icon name="CloseLine"/>}/><CompactButton variant="ghost" icon={<Icon name="More2Line"/>}/><CompactButton variant="white" fullRadius icon={<Icon name="AddLine"/>}/><LinkButton>Lihat Semua</LinkButton><LinkButton tone="gray" underline>Gray link</LinkButton><LinkButton tone="error" size="sm">Error</LinkButton><FAB/></div>
+ <div className="row"><span className="lbl">Group</span><ButtonGroup value={g} onChange={setG} items={[{label:'Harian',value:'Harian'},{label:'Mingguan',value:'Mingguan'},{label:'Bulanan',value:'Bulanan'}]}/><SelectedButton selected={s} onClick={()=>setS(!s)}>Semua</SelectedButton><SelectedButton>Masuk</SelectedButton></div>
+</div>; }
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script></body></html>

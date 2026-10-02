@@ -1,0 +1,1 @@
+Figma-generated (fig_materialize) components for the widget-specific sets of the source file. Props follow the Figma variant axes (see each .d.ts). Internal dependencies are prefixed with `_` so they stay bundle-private and do not collide with the hand-authored primitives.

@@ -1,0 +1,24 @@
+<!-- @dsCard group="Components" viewport="700x520" name="Navigation" subtitle="Sidebar, Tabs, SegmentedControl, Breadcrumbs, Pagination, StepIndicator, PageHeader, Dropdown" -->
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{margin:0;padding:20px;background:var(--bg-white-0)}.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.col{display:flex;flex-direction:column;gap:12px}.lbl{font:var(--subheading-2xs);letter-spacing:.04em;text-transform:uppercase;color:var(--text-soft-400);width:72px;flex-shrink:0}</style></head><body><div id="root"></div>
+<script type="text/babel">
+const DS = window.AmarBankInternalWebDS_806d63; const h = React.useState;
+
+const { Sidebar, TabMenuHorizontal, TabMenuVertical, SegmentedControl, Breadcrumbs, Pagination, StepIndicatorHorizontal, StepIndicatorVertical, Dropdown, DropdownItem, DropdownSearch, DropdownGroupLabel, Badge } = DS;
+function App(){ const [t,setT]=h('a'); const [s,setS]=h('Incoming'); const [p,setP]=h(3); const [n,setN]=h('Beranda'); const [q,setQ]=h('');
+return <div style={{display:'flex',gap:16,height:480}}>
+ <Sidebar theme="dark" style={{borderRadius:12,height:480,width:232}} company="PT Sinar Jaya" logo={<img src="../../assets/logos/amar-bank-without-title-color.svg" height="28"/>} value={n} onChange={setN} sections={[{title:'Utama',items:[{label:'Beranda',icon:'HomeSmile2Line'},{label:'Transfer',icon:'ArrowLeftRightLine',chevron:true},{label:'Payroll',icon:'Wallet3Line',badge:<Badge color="yellow" uppercase>New</Badge>}]},{title:'Atur',items:[{label:'Notifikasi',icon:'Notification3Line'}]}]}/>
+ <div className="col" style={{flex:1,minWidth:0}}>
+  <Breadcrumbs items={[{label:'Beranda',icon:'HomeSmile2Line'},{label:'Transfer'},{label:'Konfirmasi'}]}/>
+  <TabMenuHorizontal value={t} onChange={setT} items={[{label:'Ringkasan',value:'a',icon:'LayoutGridLine'},{label:'Mutasi',value:'b'},{label:'e-Statement',value:'c'}]}/>
+  <SegmentedControl value={s} onChange={setS} items={[{label:'Incoming'},{label:'Outgoing'},{label:'Pending'}]}/>
+  <StepIndicatorHorizontal steps={['Penerima','Nominal','Konfirmasi']} current={1}/>
+  <div className="row" style={{alignItems:'flex-start'}}><StepIndicatorVertical steps={['Data perusahaan','Pengguna','Selesai']} current={1} style={{width:190}}/><Dropdown width={200} search={<DropdownSearch value={q} onChange={setQ}/>}><DropdownGroupLabel>Akun</DropdownGroupLabel><DropdownItem icon="User6Line" label="Profil"/><DropdownItem icon="Settings2Line" label="Pengaturan" selected/><DropdownItem icon="LogoutBoxRLine" label="Keluar"/></Dropdown></div>
+  <Pagination page={p} total={12} onChange={setP} showSummary={false}/>
+ </div></div>; }
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script></body></html>

@@ -1,0 +1,20 @@
+<!-- @dsCard group="Components" viewport="700x460" name="Data display" subtitle="Badge, StatusBadge, Tag, Avatar, AvatarGroup, KeyIcon, ChartLegend, Progress, Accordion, ContentCard, ContentDivider" -->
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="../../_ds_bundle.js"></script>
+<style>body{margin:0;padding:20px;background:var(--bg-white-0)}.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.col{display:flex;flex-direction:column;gap:12px}.lbl{font:var(--subheading-2xs);letter-spacing:.04em;text-transform:uppercase;color:var(--text-soft-400);width:72px;flex-shrink:0}</style></head><body><div id="root"></div>
+<script type="text/babel">
+const DS = window.AmarBankInternalWebDS_806d63; const h = React.useState;
+
+const { Badge, StatusBadge, Tag, Avatar, AvatarGroup, CompactAvatarGroup, KeyIcon, ChartLegend, ProgressBarLabel, CircularProgress, StepperDot, Accordion, ContentCard, ContentDivider, Icon } = DS;
+const A='../../assets/avatars/';
+function App(){ return <div className="col">
+ <div className="row"><Badge color="green">+5%</Badge><Badge color="red">-3%</Badge><Badge color="blue" type="dot">Aktif</Badge><Badge color="yellow" uppercase>New</Badge><Badge color="purple" type="number" size="md">8</Badge><Badge disabled>Disabled</Badge><StatusBadge status="completed" icon={<Icon name="SelectBoxCircleFill" size={16}/>}>Berhasil</StatusBadge><StatusBadge status="pending" icon={<Icon name="AlertFill" size={16}/>}>Menunggu</StatusBadge><StatusBadge status="failed" icon={<Icon name="ErrorWarningFill" size={16}/>}>Gagal</StatusBadge></div>
+ <div className="row"><Avatar size={48} src={A+'arthur-taylor.png'} status="online" badge="verified"/><Avatar size={40} src={A+'emma-wright.png'}/><Avatar size={40} name="Sophia Williams"/><Avatar size={32} icon/><AvatarGroup size={32} avatars={[{src:A+'laura-perez.png'},{src:A+'wei-chen.png'},{src:A+'james-brown.png'},{src:A+'matthew-johnson.png'},{name:'X'},{name:'Y'}]}/><CompactAvatarGroup size={32} avatars={[{src:A+'sophia-williams.png'},{src:A+'james-brown.png'},{src:A+'wei-chen.png'}]} count={12}/><Tag>Payroll</Tag><Tag variant="gray" dismissible={false}>Vendor</Tag></div>
+ <div className="row"><KeyIcon icon="ArrowLeftDownLine"/><KeyIcon icon="ArrowRightUpLine" variant="lighter" color="red"/><KeyIcon icon="Calendar2Line" variant="lighter" color="yellow"/><KeyIcon icon="BankLine" color="primary" variant="lighter" size="lg"/><ChartLegend color="blue">Income</ChartLegend><ChartLegend color="yellow">Expenses</ChartLegend><ChartLegend color="purple">Scheduled</ChartLegend><CircularProgress value={72} size={56}/><StepperDot active={1}/></div>
+ <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}><div className="col"><ProgressBarLabel title="Limit harian terpakai" value={64}/><ContentDivider type="text-line">atau</ContentDivider><ContentCard media={<Avatar src={A+'laura-perez.png'}/>} label="Laura Perez" sublabel="(Admin)" description="laura@perusahaan.co.id"/></div><div className="col"><Accordion title="Berapa limit transfer harian?" defaultOpen>Limit default Rp 500 juta per hari dan dapat diubah di Batas Transaksi.</Accordion><Accordion title="Bagaimana cara menambah pengguna?"/></div></div>
+</div>; }
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script></body></html>
