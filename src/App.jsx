@@ -7,6 +7,7 @@ import { AccessDenied } from './pages/AccessDenied.jsx';
 import { AccountManagement } from './pages/account-management/AccountManagement.jsx';
 import { Activation } from './pages/Activation.jsx';
 import { DevToolbar } from './dev/DevToolbar.jsx';
+import { preset } from './dev/presets.js';
 
 // Sesi contoh untuk membuka layar langsung via DevToolbar.
 const DEV_ADMIN = { loginId: 'rina.saraswati@amarbank.co.id', role: 'ADMIN', name: 'Rina Saraswati', roleLabel: 'Admin' };
@@ -42,9 +43,9 @@ export default function App() {
   else screen = <Login onLoggedIn={onLoggedIn} />;
 
   return (
-    <ToasterProvider>
+    <ToasterProvider initialToast={preset?.toast}>
       {screen}
-      {DEMO && <DevToolbar path={path} />}
+      {DEMO && !preset && <DevToolbar path={path} />}
     </ToasterProvider>
   );
 }

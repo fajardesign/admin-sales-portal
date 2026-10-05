@@ -3,11 +3,13 @@ import { Button, ContentDivider, TextInput } from '@ds/index.js';
 import { AuthCard, AuthHero, AuthLayout } from '../components/AuthLayout.jsx';
 import { login } from '../api/mockApi.js';
 import { DEMO } from '../lib/env.js';
+import { preset } from '../dev/presets.js';
 
 /** W1 · Login Admin (Keycloak themed, realm sales-portal). */
 export function Login({ onLoggedIn }) {
-  const [loginId, setLoginId] = useState('');
-  const [password, setPassword] = useState('');
+  const init = preset?.login ?? {};
+  const [loginId, setLoginId] = useState(init.loginId ?? '');
+  const [password, setPassword] = useState(init.password ?? '');
   const [busy, setBusy] = useState(false);
   const valid = loginId.trim().length > 0 && password.length > 0;
 
@@ -35,7 +37,7 @@ export function Login({ onLoggedIn }) {
               value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
           </div>
           <Button type="submit" fullWidth disabled={!valid || busy}>{busy ? 'Memproses...' : 'Masuk'}</Button>
-          {DEMO && (
+          {DEMO && !preset && (
             <div style={{ padding: 'var(--space-10) var(--space-12)', borderRadius: 'var(--rounded-10)', background: 'var(--bg-weak-50)', font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>
               Demo: email berisi "tl" menampilkan halaman Akses ditolak; lainnya masuk ke Manajemen Akun.
             </div>

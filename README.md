@@ -20,6 +20,7 @@ npm run gen:ds   # regenerate design-system/COMPONENTS.md + index.js dari .d.ts
 
 - Knowledge (wajib dibaca & dirawat): `knowledge-bundle/` — mulai dari `knowledge-bundle/index.md`.
 - Komponen: `import { Button } from '@ds/index.js'` — props di `design-system/COMPONENTS.md`.
+- Preset layar (mode demo): `/?preset=<nama>` membuka satu state langsung, mis. `/?preset=add-user-dup-email` — daftar di `src/dev/presets.js`.
 - API masih mock: `src/api/mockApi.js`. Sumber desain: `design-sources/sales-portal-web/`.
 
 ## Deploy (GitHub Pages)

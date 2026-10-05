@@ -49,6 +49,13 @@ Role selain TL belum ada di fase ini (Select "Role" dikunci ke `TL (Team Leader)
 - Skenario prototipe (state tabel, hasil simpan, status tautan, nama belakang opsional) diatur lewat **DevToolbar** (mode demo: dev server & build GitHub Pages `VITE_DEMO=true`), padanan props prototipe di claude.ai/design.
 - Demo publik: https://fajardesign.github.io/admin-sales-portal/ (deploy otomatis dari `main`).
 - Tes: `src/__tests__/` (`npm test`) mencakup validasi dan seluruh flow di atas.
+- **Preset layar** (mode demo): `/?preset=<nama>` membuka satu state langsung (rute + skenario + isi form/toast), tanpa DevToolbar — daftar di `src/dev/presets.js` (23 preset, nama = nama frame Figma). Dipakai untuk dokumentasi & capture ke Figma.
+
+## Figma
+- File **Sales - Partner Dashboard - Android** (`6ezrFIAonEuXZAgMhAbBlY`):
+  - **Page 5** → section *"Sales Portal Web · Implementasi (kode, 2026-10-05)"* (node `426:7544`): 23 frame hasil capture dari implementasi web (html-to-design), baris per flow 01–04. Frame berupa layer mentah, **bukan** instance komponen library.
+  - **Admin Portal** page: desain asli tim desain (frame `01 | …`–`04 | …`, memakai komponen library `[1.1]`). Beda yang terlihat vs implementasi: font Mulish vs Inter, telepon `0812 3456 7890` vs `+62 812-3456-7890`.
+- Capture ulang: `npm run dev`, lalu buka `http://localhost:5173/?preset=<nama>#figmacapture=<id>&figmaendpoint=…` (ID dari tool `generate_figma_design`); halaman harus aktif di foreground saat capture.
 
 ## Pertanyaan terbuka
 - Apakah **Nama Belakang** wajib atau opsional? Prototipe menyediakan keduanya (`lastNameOptional`, default wajib).

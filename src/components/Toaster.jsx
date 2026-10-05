@@ -4,8 +4,9 @@ import { Toast } from '@ds/index.js';
 const ToastContext = createContext(() => {});
 
 /** Toast pojok kanan atas, otomatis hilang setelah 5 detik. Pakai: const toast = useToast(); toast('success', 'Judul'). */
-export function ToasterProvider({ children }) {
-  const [toast, setToast] = useState(null);
+export function ToasterProvider({ initialToast, children }) {
+  // initialToast: [status, title] — hanya untuk preset demo (tanpa auto-dismiss).
+  const [toast, setToast] = useState(initialToast ? { status: initialToast[0], title: initialToast[1], key: 0 } : null);
   const timer = useRef();
   const show = useCallback((status, title) => {
     clearTimeout(timer.current);
