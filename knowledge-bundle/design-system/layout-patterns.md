@@ -17,3 +17,16 @@ updated: 2026-10-02
 - Halaman list/tabel: `HorizontalFilter` (ButtonGroup/SegmentedControl + search `TextInput size="xs"`) → `Table` → `Pagination`; detail baris di `Drawer` (400px dari kanan).
 - Alur multi-step (mis. form pengajuan): `StepIndicatorHorizontal` + konfirmasi di `Modal` + hasil `StatusModal`/`TransactionIllustration`.
 - Struktur nav sidebar contoh: section **Utama** / **Atur**, label UPPERCASE; item dengan ikon Remix 20px + chevron.
+
+## Halaman auth (Keycloak themed)
+Dipakai login, akses ditolak, aktivasi (lihat `src/components/AuthLayout.jsx`):
+- Latar `--bg-weak-50`, header (logo `AmarBankLogo` horizontal color 30px + label kanan) dan footer dengan padding `24px 44px`.
+- Kartu 440px, padding 32, radius 20, `--shadow-stroke-xs`, gap 24 (form) / 16 (pesan status).
+- Hero: halo gradient (`--bg-weak-50` → transparan, padding 16) berisi lingkaran putih 64px + ikon 32px; judul `--title-h5`, deskripsi `--paragraph-md`.
+- Pesan status: medallion 56px `--state-*-lighter` + ikon 28px `--state-*-base`, judul `--title-h6`, isi `--paragraph-sm`.
+
+## Halaman admin (shell portal)
+`src/components/AdminShell.jsx`: Sidebar dark + header (medallion ikon 48px, `--label-lg` judul, `--paragraph-sm` deskripsi, chip pengguna 36px `--primary-alpha-10`, tombol Keluar) dengan stroke bawah; konten pad `24 32 32`, gap 16.
+
+## State data
+Loading = skeleton pulse (`@keyframes sk-pulse`, 1.4s) dengan bar `--bg-soft-200`; empty/error = ilustrasi 108px + pesan + satu aksi (`src/components/EmptyState.jsx`).

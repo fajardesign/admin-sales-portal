@@ -12,3 +12,10 @@ Semua UI di repo ini **harus** memakai Amar Bank Internal Web DS di `design-syst
 - Jangan edit isi `design-system/` untuk kebutuhan satu halaman; itu salinan library. `COMPONENTS.md` dan `index.js`
   di-generate dari `.d.ts` — regenerate bila komponen berubah.
 - Skill `/amar-bank-design` memuat panduan yang sama.
+
+## Knowledge bundle (wajib dirawat)
+`knowledge-bundle/` adalah base knowledge proyek. Setiap kali mengimpor desain, membangun/mengubah halaman, atau memutuskan aturan bisnis:
+- Simpan pengetahuannya: produk → `products/`, alur layar & aturan (validasi, pesan, state) → `flows/`, kebutuhan → `prd/`, design system → `design-system/`.
+- Pakai frontmatter (`title`, `description`, `type`, `tags`, `updated`, plus `source`/`code` bila ada); copy UI ditulis persis.
+- Perbarui `knowledge-bundle/index.md` dan tambah entri di `knowledge-bundle/log.md`.
+- Sumber desain mentah disimpan di `design-sources/<nama>/`.

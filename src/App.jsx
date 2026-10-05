@@ -1,23 +1,50 @@
 import { useState } from 'react';
-import { Button, Icon } from '@ds/index.js';
-import { AppShell } from './layout/AppShell.jsx';
-import { Dashboard } from './pages/Dashboard.jsx';
-import { Leads } from './pages/Leads.jsx';
-import { ComingSoon } from './pages/ComingSoon.jsx';
-import { NAV, PAGE_META } from './data/nav.js';
+import { navigate, useHashRoute } from './lib/router.js';
+import { DEMO } from './lib/env.js';
+import { ToasterProvider } from './components/Toaster.jsx';
+import { Login } from './pages/Login.jsx';
+import { AccessDenied } from './pages/AccessDenied.jsx';
+import { AccountManagement } from './pages/account-management/AccountManagement.jsx';
+import { Activation } from './pages/Activation.jsx';
+import { DevToolbar } from './dev/DevToolbar.jsx';
 
-const labelOf = (v) => NAV.flatMap((s) => s.items).find((it) => it.value === v)?.label ?? v;
+// Sesi contoh untuk membuka layar langsung via DevToolbar.
+const DEV_ADMIN = { loginId: 'rina.saraswati@amarbank.co.id', role: 'ADMIN', name: 'Rina Saraswati', roleLabel: 'Admin' };
+const DEV_TL = { loginId: 'tl.andi@amarbank.co.id', role: 'TL' };
+
+/**
+ * Rute:
+ *  #/login     W1 Login Admin
+ *  #/denied    W1 Akses ditolak (role tanpa akses web)
+ *  #/users     W2 Manajemen Akun (hanya ADMIN)
+ *  #/activate  KC1 Aktivasi akun (tautan undangan; tanpa sesi)
+ */
+/** Demo: buka layar terproteksi langsung tanpa login (sesi contoh). Production: sesi apa adanya. */
+function devSession(path, session) {
+  if (!DEMO) return session;
+  if (path === '/users' && session?.role !== 'ADMIN') return DEV_ADMIN;
+  if (path === '/denied' && !session) return DEV_TL;
+  return session;
+}
 
 export default function App() {
-  const [page, setPage] = useState('home');
-  const meta = PAGE_META[page] ?? { title: labelOf(page) };
+  const { path } = useHashRoute();
+  const [loggedIn, setSession] = useState(null);
+  const session = devSession(path, loggedIn);
+
+  const logout = () => { setSession(null); navigate('/login'); };
+  const onLoggedIn = (s) => { setSession(s); navigate(s.role === 'ADMIN' ? '/users' : '/denied'); };
+
+  let screen;
+  if (path === '/activate') screen = <Activation />;
+  else if (path === '/users' && session?.role === 'ADMIN') screen = <AccountManagement user={session} onLogout={logout} />;
+  else if (path === '/denied' && session) screen = <AccessDenied loginId={session.loginId} onLogout={logout} />;
+  else screen = <Login onLoggedIn={onLoggedIn} />;
 
   return (
-    <AppShell page={page} onNavigate={setPage} title={meta.title} description={meta.description}
-      actions={page === 'leads' && <Button leftIcon={<Icon name="AddLine" />}>Tambah Lead</Button>}>
-      {page === 'home' && <Dashboard onNavigate={setPage} />}
-      {page === 'leads' && <Leads />}
-      {!['home', 'leads'].includes(page) && <ComingSoon title={meta.title} />}
-    </AppShell>
+    <ToasterProvider>
+      {screen}
+      {DEMO && <DevToolbar path={path} />}
+    </ToasterProvider>
   );
 }

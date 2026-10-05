@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/amar-bank-internal-web-ds-806d634a-7101-4e84-b95e-12a21aee38bd/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/amar-bank-internal-web-ds-806d634a-7101-4e84-b95e-12a21aee38bd/tokens/fig-tokens.css">
+  <link rel="stylesheet" href="_ds/amar-bank-internal-web-ds-806d634a-7101-4e84-b95e-12a21aee38bd/tokens/fig-typography.css">
+  <link rel="stylesheet" href="_ds/amar-bank-internal-web-ds-806d634a-7101-4e84-b95e-12a21aee38bd/tokens/semantic.css">
+  <link rel="stylesheet" href="_ds/amar-bank-internal-web-ds-806d634a-7101-4e84-b95e-12a21aee38bd/tokens/base.css">
+  <link rel="stylesheet" href="_ds/amar-bank-internal-web-ds-806d634a-7101-4e84-b95e-12a21aee38bd/styles.css">
+  <script src="_ds/amar-bank-internal-web-ds-806d634a-7101-4e84-b95e-12a21aee38bd/_ds_bundle.js"></script>
+  <style>
+    html, body { margin: 0; background: var(--bg-white-0); font-family: Inter, sans-serif; }
+    a { color: var(--primary-base); } a:hover { color: var(--primary-darker); }
+    @keyframes sk-pulse { 0%,100% { opacity: 1 } 50% { opacity: .5 } }
+  </style>
+</helmet>
+
+<div style="min-height: 100vh; background: var(--bg-white-0); color: var(--text-strong-950);">
+
+  <!-- W1 · Keycloak themed login -->
+  <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}">
+    <div data-screen-label="W1 Login Admin" style="min-height: 100vh; display: flex; flex-direction: column; background: var(--bg-weak-50);">
+      <header style="display: flex; align-items: center; justify-content: space-between; padding: 24px 44px;">
+        <div>{{ logoColor }}</div>
+        <span style="font: var(--paragraph-sm); color: var(--text-sub-600);">Sales Portal · Admin</span>
+      </header>
+      <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px;">
+        <div style="width: 440px; max-width: 100%; box-sizing: border-box; padding: 32px; border-radius: 20px; background: var(--bg-white-0); box-shadow: var(--shadow-stroke-xs); display: flex; flex-direction: column; gap: 24px;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center;">
+            <div style="padding: 16px; border-radius: 999px; background: linear-gradient(180deg, var(--bg-weak-50) 0%, rgba(247,247,247,0) 100%);">
+              <div style="width: 64px; height: 64px; border-radius: 999px; background: var(--bg-white-0); box-shadow: var(--shadow-stroke-xs); display: flex; align-items: center; justify-content: center; color: var(--icon-sub-600);">{{ icUser32 }}</div>
+            </div>
+            <span style="font: var(--title-h5); color: var(--text-strong-950); margin-top: 4px;">Masuk ke Sales Portal</span>
+            <span style="font: var(--paragraph-md); color: var(--text-sub-600);">Masukkan email atau nomor telepon dan password Anda.</span>
+          </div>
+          <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.ContentDivider" hint-size="100%,1px"></x-import>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.TextInput" label="Email atau Nomor Telepon" required="{{ true }}" left-icon="MailLine" placeholder="nama@amarbank.co.id atau 0812..." value="{{ loginId }}" on-change="{{ onLoginId }}" hint-size="100%,68px"></x-import>
+            <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.TextInput" label="Password" required="{{ true }}" type="password" left-icon="Lock2Line" placeholder="••••••••" value="{{ loginPw }}" on-change="{{ onLoginPw }}" error="{{ loginErr }}" hint-size="100%,68px"></x-import>
+          </div>
+          <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.Button" full-width="{{ true }}" disabled="{{ loginDisabled }}" on-click="{{ doLogin }}" hint-size="100%,40px">{{ loginLabel }}</x-import>
+          <div style="padding: 10px 12px; border-radius: 10px; background: var(--bg-weak-50); font: var(--paragraph-xs); color: var(--text-sub-600);">Demo: email berisi "tl" menampilkan halaman Akses ditolak; lainnya masuk ke Manajemen Akun.</div>
+        </div>
+      </div>
+      <footer style="display: flex; justify-content: space-between; padding: 24px 44px; font: var(--paragraph-sm); color: var(--text-sub-600);">
+        <span>© 2026 Amar Bank</span>
+        <span>Didukung Keycloak · realm sales-portal</span>
+      </footer>
+    </div>
+  </sc-if>
+
+  <!-- W1 · Access denied -->
+  <sc-if value="{{ isDenied }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="W1 Akses Ditolak" style="min-height: 100vh; display: flex; flex-direction: column; background: var(--bg-weak-50);">
+      <header style="display: flex; align-items: center; padding: 24px 44px;"><div>{{ logoColor }}</div></header>
+      <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px;">
+        <div style="width: 440px; max-width: 100%; box-sizing: border-box; padding: 32px; border-radius: 20px; background: var(--bg-white-0); box-shadow: var(--shadow-stroke-xs); display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center;">
+          <div style="width: 56px; height: 56px; border-radius: 999px; background: var(--state-error-lighter); color: var(--state-error-base); display: flex; align-items: center; justify-content: center;">{{ icShield }}</div>
+          <div style="display: flex; flex-direction: column; gap: 6px;">
+            <span style="font: var(--title-h6); color: var(--text-strong-950);">Akses ditolak</span>
+            <span style="font: var(--paragraph-sm); color: var(--text-sub-600); text-wrap: pretty;">Akses ditolak. Akun ini tidak memiliki akses ke portal web.</span>
+          </div>
+          <div style="font: var(--paragraph-xs); color: var(--text-soft-400);">Masuk sebagai {{ loginIdShown }}</div>
+          <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.Button" variant="stroke" tone="neutral" full-width="{{ true }}" left-icon="{{ icLogout }}" on-click="{{ logout }}" hint-size="100%,40px">Keluar</x-import>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- W2a · Account Management -->
+  <sc-if value="{{ isUsers }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="W2a Manajemen Akun" style="display: flex; height: 100vh; background: var(--bg-white-0);">
+      <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.Sidebar" theme="dark" company="" logo="{{ logoWhite }}" sections="{{ navSections }}" value="users" hint-size="272px,100%"></x-import>
+      <main style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+        <header style="display: flex; align-items: center; gap: 12px; padding: 20px 32px; box-shadow: inset 0 -1px 0 var(--stroke-soft-200);">
+          <div style="flex: 1; display: flex; align-items: center; gap: 14px; min-width: 0;">
+            <div style="width: 48px; height: 48px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--stroke-soft-200); display: flex; align-items: center; justify-content: center; color: var(--icon-sub-600);">{{ icTeam }}</div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <span style="font: var(--label-lg); color: var(--text-strong-950);">Manajemen Akun</span>
+              <span style="font: var(--paragraph-sm); color: var(--text-sub-600);">Buat akun Team Leader dan kirim undangan aktivasi.</span>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px; padding-right: 4px;">
+              <div style="width: 36px; height: 36px; border-radius: 999px; background: var(--primary-alpha-10); color: var(--primary-base); display: flex; align-items: center; justify-content: center; font: var(--label-sm);">RS</div>
+              <div style="display: flex; flex-direction: column;">
+                <span style="font: var(--label-sm); color: var(--text-strong-950);">Rina Saraswati</span>
+                <span style="font: var(--paragraph-xs); color: var(--text-sub-600);">Admin</span>
+              </div>
+            </div>
+            <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.Button" variant="stroke" tone="neutral" left-icon="{{ icLogout }}" on-click="{{ logout }}" hint-size="100px,40px">Keluar</x-import>
+          </div>
+        </header>
+
+        <div style="flex: 1; overflow: auto; padding: 24px 32px 32px; display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font: var(--label-md); color: var(--text-strong-950);">Team Leader</span>
+              <sc-if value="{{ showCount }}" hint-placeholder-val="{{ true }}">
+                <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.Badge" color="gray" type="number" hint-size="24px,16px">{{ rowCount }}</x-import>
+              </sc-if>
+            </div>
+            <sc-if value="{{ showAddTop }}" hint-placeholder-val="{{ true }}">
+              <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.Button" left-icon="{{ icAdd }}" on-click="{{ openAdd }}" hint-size="170px,40px">Tambah Pengguna</x-import>
+            </sc-if>
+          </div>
+
+          <div style="border-radius: 16px; box-shadow: inset 0 0 0 1px var(--stroke-soft-200); padding: 4px 16px 8px; background: var(--bg-white-0); overflow-x: auto;">
+            <table style="width: 100%; min-width: 860px; border-collapse: separate; border-spacing: 0; margin-top: 12px;">
+              <thead>
+                <tr>
+                  <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.TableHeaderCell" first="{{ true }}">Nama</x-import>
+                  <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.TableHeaderCell">Email</x-import>
+                  <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.TableHeaderCell">Telepon</x-import>
+                  <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.TableHeaderCell">Status</x-import>
+                  <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.TableHeaderCell" last="{{ true }}" sort="desc">Dibuat</x-import>
+                </tr>
+              </thead>
+              <tbody>
+                <sc-if value="{{ isData }}" hint-placeholder-val="{{ true }}">
+                  <sc-for list="{{ rows }}" as="r" hint-placeholder-count="5">
+                    <tr style="background: {{ r.bg }};">
+                      <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.TableRowCell">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                          <div style="width: 32px; height: 32px; flex: none; border-radius: 999px; background: var(--bg-weak-50); box-shadow: inset 0 0 0 1px var(--stroke-soft-200); display: flex; align-items: center; justify-content: center; font: var(--label-xs); color: var(--text-sub-600);">{{ r.initials }}</div>
+                          <span style="font: var(--label-sm); color: var(--text-strong-950); white-space: nowrap;">{{ r.name }}</span>
+                        </div>
+                      </x-import>
+                      <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.TableRowCell"><span style="color: var(--text-sub-600); white-space: nowrap;">{{ r.email }}</span></x-import>
+                      <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.TableRowCell"><span style="color: var(--text-sub-600); white-space: nowrap;">{{ r.phoneFmt }}</span></x-import>
+                      <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.TableRowCell">
+                        <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.StatusBadge" status="{{ r.badge }}" dot="{{ true }}">{{ r.statusLabel }}</x-import>
+                      </x-import>
+                      <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.TableRowCell">
+                        <div style="display: flex; flex-direction: column; gap: 2px;">
+                          <span style="font: var(--paragraph-sm); color: var(--text-strong-950); white-space: nowrap;">{{ r.date }}</span>
+                          <span style="font: var(--paragraph-xs); color: var(--text-soft-400);">{{ r.time }}</span>
+                        </div>
+                      </x-import>
+                    </tr>
+                  </sc-for>
+                </sc-if>
+                <sc-if value="{{ isLoading }}" hint-placeholder-val="{{ false }}">
+                  <sc-for list="{{ skeleton }}" as="s" hint-placeholder-count="5">
+                    <tr>
+                      <td style="height: 64px; padding: 12px; border-bottom: 1px solid var(--stroke-soft-200);"><div style="display: flex; align-items: center; gap: 12px;"><div style="width: 32px; height: 32px; border-radius: 999px; background: var(--bg-soft-200); animation: sk-pulse 1.4s ease-in-out infinite;"></div><div style="width: 120px; height: 12px; border-radius: 6px; background: var(--bg-soft-200); animation: sk-pulse 1.4s ease-in-out infinite;"></div></div></td>
+                      <td style="padding: 12px; border-bottom: 1px solid var(--stroke-soft-200);"><div style="width: 160px; height: 12px; border-radius: 6px; background: var(--bg-soft-200); animation: sk-pulse 1.4s ease-in-out infinite;"></div></td>
+                      <td style="padding: 12px; border-bottom: 1px solid var(--stroke-soft-200);"><div style="width: 110px; height: 12px; border-radius: 6px; background: var(--bg-soft-200); animation: sk-pulse 1.4s ease-in-out infinite;"></div></td>
+                      <td style="padding: 12px; border-bottom: 1px solid var(--stroke-soft-200);"><div style="width: 72px; height: 20px; border-radius: 6px; background: var(--bg-soft-200); animation: sk-pulse 1.4s ease-in-out infinite;"></div></td>
+                      <td style="padding: 12px; border-bottom: 1px solid var(--stroke-soft-200);"><div style="width: 90px; height: 12px; border-radius: 6px; background: var(--bg-soft-200); animation: sk-pulse 1.4s ease-in-out infinite;"></div></td>
+                    </tr>
+                  </sc-for>
+                </sc-if>
+              </tbody>
+            </table>
+
+            <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 56px 24px; text-align: center;">
+                <img src="assets/empty-users.png" alt="" style="width: 108px; height: 108px; object-fit: contain;">
+                <span style="font: var(--paragraph-sm); color: var(--text-sub-600);">Belum ada pengguna. Tambahkan pengguna pertama.</span>
+                <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.Button" left-icon="{{ icAdd }}" on-click="{{ openAdd }}" hint-size="170px,40px">Tambah Pengguna</x-import>
+              </div>
+            </sc-if>
+            <sc-if value="{{ isError }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 56px 24px; text-align: center;">
+                <img src="assets/empty-error.png" alt="" style="width: 108px; height: 108px; object-fit: contain;">
+                <span style="font: var(--paragraph-sm); color: var(--text-sub-600);">Gagal memuat data. Coba lagi.</span>
+                <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.Button" variant="stroke" tone="neutral" left-icon="{{ icRefresh }}" on-click="{{ retry }}" hint-size="120px,40px">Coba lagi</x-import>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </main>
+    </div>
+  </sc-if>
+
+  <!-- KC1 · Keycloak activation web view -->
+  <sc-if value="{{ isActivate }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="KC1 Aktivasi Akun" style="min-height: 100vh; display: flex; flex-direction: column; background: var(--bg-weak-50);">
+      <header style="display: flex; align-items: center; justify-content: space-between; padding: 24px 44px;">
+        <div>{{ logoColor }}</div>
+        <span style="font: var(--paragraph-sm); color: var(--text-sub-600);">Sales Portal</span>
+      </header>
+      <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px;">
+        <sc-if value="{{ actShowForm }}" hint-placeholder-val="{{ true }}">
+          <div style="width: 440px; max-width: 100%; box-sizing: border-box; padding: 32px; border-radius: 20px; background: var(--bg-white-0); box-shadow: var(--shadow-stroke-xs); display: flex; flex-direction: column; gap: 24px;">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center;">
+              <div style="padding: 16px; border-radius: 999px; background: linear-gradient(180deg, var(--bg-weak-50) 0%, rgba(247,247,247,0) 100%);">
+                <div style="width: 64px; height: 64px; border-radius: 999px; background: var(--bg-white-0); box-shadow: var(--shadow-stroke-xs); display: flex; align-items: center; justify-content: center; color: var(--icon-sub-600);">{{ icLock32 }}</div>
+              </div>
+              <span style="font: var(--title-h5); color: var(--text-strong-950); margin-top: 4px;">Aktivasi akun Anda</span>
+              <span style="font: var(--paragraph-md); color: var(--text-sub-600);">Buat password untuk {{ actEmail }}</span>
+            </div>
+            <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.ContentDivider" hint-size="100%,1px"></x-import>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.TextInput" label="Password Baru" required="{{ true }}" type="password" left-icon="Lock2Line" placeholder="••••••••" value="{{ actPw }}" on-change="{{ onActPw }}" error="{{ actPwErr }}" hint-size="100%,68px"></x-import>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; padding: 12px; border-radius: 10px; background: var(--bg-weak-50);">
+                <sc-for list="{{ policy }}" as="p" hint-placeholder-count="5">
+                  <div style="display: flex; align-items: center; gap: 6px; font: var(--paragraph-xs); color: {{ p.color }};">
+                    <span style="display: flex;">{{ p.icon }}</span>
+                    <span>{{ p.label }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.TextInput" label="Konfirmasi Password" required="{{ true }}" type="password" left-icon="Lock2Line" placeholder="••••••••" value="{{ actPw2 }}" on-change="{{ onActPw2 }}" error="{{ actPw2Err }}" hint-size="100%,68px"></x-import>
+            </div>
+            <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.Button" full-width="{{ true }}" disabled="{{ actDisabled }}" on-click="{{ submitAct }}" hint-size="100%,40px">Simpan</x-import>
+          </div>
+        </sc-if>
+        <sc-if value="{{ actShowMsg }}" hint-placeholder-val="{{ false }}">
+          <div style="width: 440px; max-width: 100%; box-sizing: border-box; padding: 32px; border-radius: 20px; background: var(--bg-white-0); box-shadow: var(--shadow-stroke-xs); display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center;">
+            <div style="width: 56px; height: 56px; border-radius: 999px; background: {{ actMsg.bg }}; color: {{ actMsg.fg }}; display: flex; align-items: center; justify-content: center;">{{ actMsg.icon }}</div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <span style="font: var(--title-h6); color: var(--text-strong-950);">{{ actMsg.title }}</span>
+              <span style="font: var(--paragraph-sm); color: var(--text-sub-600); text-wrap: pretty;">{{ actMsg.body }}</span>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+      <footer style="display: flex; justify-content: center; padding: 24px 44px; font: var(--paragraph-sm); color: var(--text-sub-600);">© 2026 Amar Bank</footer>
+    </div>
+  </sc-if>
+
+  <!-- W2b · Add User modal -->
+  <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.Modal" open="{{ modalOpen }}" on-close="{{ requestCancel }}" width="{{ 480 }}">
+    <div data-screen-label="W2b Tambah Pengguna">
+      <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.ModalHeader" title="Tambah Pengguna" description="Undangan aktivasi akan dikirim ke email pengguna." icon="UserAddLine" on-close="{{ requestCancel }}"></x-import>
+      <div style="padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+        <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.TextInput" label="Email" required="{{ true }}" left-icon="MailLine" placeholder="nama@email.com" value="{{ form.email }}" on-change="{{ onEmail }}" on-blur="{{ blurEmail }}" error="{{ errs.email }}" disabled="{{ saving }}" hint-size="100%,68px"></x-import>
+        <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.TextInput" label="Telepon" required="{{ true }}" prefix="{{ phonePrefix }}" placeholder="812 3456 7890" value="{{ form.phone }}" on-change="{{ onPhone }}" on-blur="{{ blurPhone }}" error="{{ errs.phone }}" disabled="{{ saving }}" hint-size="100%,68px"></x-import>
+        <div style="display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px;">
+          <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.TextInput" label="Nama Depan" required="{{ true }}" placeholder="Budi" value="{{ form.first }}" on-change="{{ onFirst }}" on-blur="{{ blurFirst }}" error="{{ errs.first }}" disabled="{{ saving }}" hint-size="100%,68px"></x-import>
+          <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.TextInput" label="Nama Belakang" required="{{ lastRequired }}" sublabel="{{ lastSublabel }}" placeholder="Santoso" value="{{ form.last }}" on-change="{{ onLast }}" on-blur="{{ blurLast }}" error="{{ errs.last }}" disabled="{{ saving }}" hint-size="100%,68px"></x-import>
+        </div>
+        <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.Select" label="Role" required="{{ true }}" disabled="{{ true }}" value="TL" options="{{ roleOptions }}" hint="Fase ini hanya untuk Team Leader." hint-size="100%,68px"></x-import>
+      </div>
+      <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.ModalFooter">
+        <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.Button" variant="stroke" tone="neutral" size="sm" disabled="{{ saving }}" on-click="{{ requestCancel }}">Batal</x-import>
+        <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.Button" size="sm" disabled="{{ saveDisabled }}" left-icon="{{ saveIcon }}" on-click="{{ submitAdd }}">{{ saveLabel }}</x-import>
+      </x-import>
+    </div>
+  </x-import>
+
+  <!-- Cancel confirmation -->
+  <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.Modal" open="{{ confirmOpen }}" on-close="{{ keepEditing }}" width="{{ 400 }}" style="overflow: visible; background: transparent; box-shadow: none;">
+    <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.StatusModal" status="warning" title="Batalkan penambahan pengguna?" actions="{{ confirmActions }}">Data yang sudah diisi akan hilang.</x-import>
+  </x-import>
+
+  <!-- Toast -->
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; top: 24px; right: 24px; z-index: 200;">
+      <x-import component-from-global-scope="AmarBankInternalWebDS_806d63.Toast" status="{{ toast.status }}" title="{{ toast.title }}" dismissible="{{ true }}" on-dismiss="{{ closeToast }}" hint-size="390px,60px"></x-import>
+    </div>
+  </sc-if>
+
+  <!-- Prototype screen switcher -->
+  <sc-if value="{{ showNav }}" hint-placeholder-val="{{ true }}">
+    <div style="position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 90; display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--bg-strong-950); box-shadow: var(--shadow-modal);">
+      <sc-for list="{{ protoNav }}" as="n" hint-placeholder-count="4">
+        <button onClick="{{ n.go }}" style="border: 0; cursor: pointer; padding: 6px 12px; border-radius: 8px; font: var(--label-xs); background: {{ n.bg }}; color: {{ n.fg }};">{{ n.label }}</button>
+      </sc-for>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;login&quot;,&quot;denied&quot;,&quot;users&quot;,&quot;activate&quot;],&quot;default&quot;:&quot;login&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototipe&quot;},&quot;showPrototypeNav&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Prototipe&quot;},&quot;tableState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;data&quot;,&quot;loading&quot;,&quot;empty&quot;,&quot;error&quot;],&quot;default&quot;:&quot;data&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;W2a Tabel&quot;},&quot;saveOutcome&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;success&quot;,&quot;emailFail&quot;,&quot;kcFail&quot;,&quot;dupEmail&quot;,&quot;dupPhone&quot;],&quot;default&quot;:&quot;emailFail&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;W2b Simpan&quot;},&quot;lastNameOptional&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;W2b Simpan&quot;},&quot;activationState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;valid&quot;,&quot;expired&quot;,&quot;already&quot;],&quot;default&quot;:&quot;valid&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;KC1 Aktivasi&quot;}}">
+class Component extends DCLogic {
+  state = {
+    screen: this.props.startScreen ?? 'login',
+    loginId: '', loginPw: '', loginBusy: false, deniedId: '',
+    tableState: this.props.tableState ?? 'data',
+    rows: null, newId: null,
+    modalOpen: false, confirmOpen: false, saving: false,
+    form: { email: '', phone: '', first: '', last: '' },
+    touched: {}, serverErr: {},
+    toast: null,
+    actPw: '', actPw2: '', actTouched2: false, actSubmitted: false, actDone: false,
+  };
+
+  componentDidMount() { this.setState({ rows: this.seedRows() }); }
+  componentDidUpdate(pp) {
+    if (pp.startScreen !== this.props.startScreen && this.props.startScreen) this.setState({ screen: this.props.startScreen });
+    if (pp.tableState !== this.props.tableState && this.props.tableState) this.setState({ tableState: this.props.tableState });
+    if (pp.activationState !== this.props.activationState) this.setState({ actDone: false, actPw: '', actPw2: '' });
+  }
+
+  seedRows() {
+    const d = (s) => new Date(s);
+    return [
+      { id: 1, first: 'Dimas', last: 'Pratama', email: 'dimas.pratama@amarbank.co.id', phone: '81234567890', active: false, at: d('2026-10-02T03:15:00Z') },
+      { id: 2, first: 'Siti', last: 'Rahmawati', email: 'siti.rahmawati@amarbank.co.id', phone: '85711223344', active: true, at: d('2026-10-01T08:42:00Z') },
+      { id: 3, first: 'Andreas', last: 'Wijaya', email: 'andreas.wijaya@amarbank.co.id', phone: '81398765432', active: true, at: d('2026-09-30T02:05:00Z') },
+      { id: 4, first: 'Putri', last: 'Lestari', email: 'putri.lestari@amarbank.co.id', phone: '87855667788', active: false, at: d('2026-09-29T06:30:00Z') },
+      { id: 5, first: 'Rizky', last: 'Hidayat', email: 'rizky.hidayat@amarbank.co.id', phone: '81122334455', active: true, at: d('2026-09-28T01:20:00Z') },
+    ];
+  }
+
+  fmtPhone(p) { return '+62 ' + p.slice(0, 3) + '-' + p.slice(3, 7) + '-' + p.slice(7); }
+  fmtDate(dt) {
+    const m = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    const w = new Date(dt.getTime() + 7 * 3600e3);
+    const p = (n) => String(n).padStart(2, '0');
+    return { date: p(w.getUTCDate()) + ' ' + m[w.getUTCMonth()] + ' ' + w.getUTCFullYear(), time: p(w.getUTCHours()) + '.' + p(w.getUTCMinutes()) + ' WIB' };
+  }
+  normPhone(v) {
+    let d = (v || '').replace(/\D/g, '');
+    if (d.startsWith('62')) d = d.slice(2);
+    if (d.startsWith('0')) d = d.slice(1);
+    return d;
+  }
+  lastOptional() { return this.props.lastNameOptional ?? false; }
+  validate(f) {
+    const e = {};
+    const email = f.email.trim().toLowerCase();
+    if (!email) e.email = 'Informasi wajib diisi';
+    else if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) e.email = 'Format tidak valid';
+    const ph = this.normPhone(f.phone);
+    if (!ph) e.phone = 'Informasi wajib diisi';
+    else if (!/^8\d{7,11}$/.test(ph)) e.phone = 'Format tidak valid';
+    const nameRe = /^[A-Za-zÀ-ÿ .'\-]+$/;
+    [['first', false], ['last', this.lastOptional()]].forEach(([k, opt]) => {
+      const v = f[k].trim();
+      if (!v) { if (!opt) e[k] = 'Informasi wajib diisi'; }
+      else if (v.length > 50) e[k] = 'Maksimal 50 karakter';
+      else if (!nameRe.test(v)) e[k] = 'Format tidak valid';
+    });
+    return e;
+  }
+  showToast(status, title) {
+    clearTimeout(this._tt);
+    this.setState({ toast: { status, title } });
+    this._tt = setTimeout(() => this.setState({ toast: null }), 5000);
+  }
+  ic(name, size) { const DS = window.AmarBankInternalWebDS_806d63; return DS ? React.createElement(DS.Icon, { name, size: size || 20 }) : null; }
+  logo(color) { const DS = window.AmarBankInternalWebDS_806d63; return DS ? React.createElement(DS.AmarBankLogo, { lockup: 'horizontal', color, height: 30 }) : null; }
+
+  go(screen) { this.setState({ screen, modalOpen: false, confirmOpen: false }); if (screen === 'users') this.loadTable(); }
+  loadTable() {
+    const target = this.props.tableState ?? 'data';
+    if (target !== 'data') { this.setState({ tableState: target }); return; }
+    this.setState({ tableState: 'loading' });
+    clearTimeout(this._lt);
+    this._lt = setTimeout(() => this.setState({ tableState: 'data' }), 900);
+  }
+
+  setField(k, v) {
+    this.setState((s) => ({ form: { ...s.form, [k]: v }, serverErr: { ...s.serverErr, [k]: undefined } }));
+  }
+  blur(k) { this.setState((s) => ({ touched: { ...s.touched, [k]: true } })); }
+
+  submitAdd() {
+    const errs = this.validate(this.state.form);
+    if (Object.keys(errs).length) { this.setState({ touched: { email: 1, phone: 1, first: 1, last: 1 } }); return; }
+    if (this.state.saving) return;
+    this.setState({ saving: true });
+    const outcome = this.props.saveOutcome ?? 'success';
+    setTimeout(() => {
+      if (outcome === 'dupEmail') { this.setState({ saving: false, serverErr: { email: 'Email sudah terdaftar' } }); return; }
+      if (outcome === 'dupPhone') { this.setState({ saving: false, serverErr: { phone: 'Nomor telepon sudah terdaftar' } }); return; }
+      if (outcome === 'kcFail') { this.setState({ saving: false }); this.showToast('error', 'Gagal membuat akun. Coba lagi.'); return; }
+      const f = this.state.form;
+      const id = Date.now();
+      const row = { id, first: f.first.trim(), last: f.last.trim(), email: f.email.trim().toLowerCase(), phone: this.normPhone(f.phone), active: false, at: new Date() };
+      this.setState((s) => ({ rows: [row, ...(s.rows || [])], newId: id, tableState: 'data', saving: false, modalOpen: false, form: { email: '', phone: '', first: '', last: '' }, touched: {}, serverErr: {} }));
+      if (outcome === 'emailFail') this.showToast('warning', 'Pengguna dibuat, tetapi email undangan gagal dikirim. Hubungi tim teknis.');
+      else this.showToast('success', 'Pengguna berhasil dibuat. Undangan aktivasi telah dikirim.');
+      setTimeout(() => this.setState({ newId: null }), 3000);
+    }, 1200);
+  }
+  requestCancel() {
+    if (this.state.saving) return;
+    const f = this.state.form;
+    const dirty = f.email || f.phone || f.first || f.last;
+    if (dirty) this.setState({ confirmOpen: true });
+    else this.setState({ modalOpen: false, touched: {}, serverErr: {} });
+  }
+
+  policyChecks(pw) {
+    const user = 'dimas.pratama@amarbank.co.id';
+    return [
+      { label: 'Minimal 8 karakter', ok: pw.length >= 8 },
+      { label: '1 huruf besar', ok: /[A-Z]/.test(pw) },
+      { label: '1 huruf kecil', ok: /[a-z]/.test(pw) },
+      { label: '1 angka', ok: /\d/.test(pw) },
+      { label: 'Bukan username', ok: pw.length > 0 && pw.toLowerCase() !== user && pw.toLowerCase() !== user.split('@')[0] },
+    ];
+  }
+
+  renderVals() {
+    const s = this.state;
+    const DS = window.AmarBankInternalWebDS_806d63;
+    const screen = s.screen;
+
+    // login
+    const loginValid = s.loginId.trim().length > 0 && s.loginPw.length > 0;
+    const doLogin = () => {
+      if (!loginValid || s.loginBusy) return;
+      this.setState({ loginBusy: true });
+      setTimeout(() => {
+        const isTL = /tl/i.test(s.loginId.split('@')[0]);
+        this.setState({ loginBusy: false, loginPw: '', deniedId: s.loginId.trim() });
+        this.go(isTL ? 'denied' : 'users');
+      }, 700);
+    };
+
+    // table
+    const rows = (s.rows || []).map((r) => {
+      const fd = this.fmtDate(r.at);
+      return {
+        ...r, name: r.first + (r.last ? ' ' + r.last : ''),
+        initials: (r.first[0] + (r.last ? r.last[0] : '')).toUpperCase(),
+        phoneFmt: this.fmtPhone(r.phone), date: fd.date, time: fd.time,
+        badge: r.active ? 'completed' : 'pending', statusLabel: r.active ? 'Aktif' : 'Belum aktif',
+        bg: r.id === s.newId ? 'var(--primary-alpha-10)' : 'transparent',
+      };
+    });
+    const ts = s.tableState === 'data' && rows.length === 0 ? 'empty' : s.tableState;
+
+    // form
+    const allErrs = this.validate(s.form);
+    const errs = {};
+    ['email', 'phone', 'first', 'last'].forEach((k) => { errs[k] = s.serverErr[k] || (s.touched[k] ? allErrs[k] : undefined); });
+    const hasServerErr = Object.values(s.serverErr).some(Boolean);
+    const saveDisabled = s.saving || Object.keys(allErrs).length > 0 || hasServerErr;
+
+    // activation
+    const actState = this.props.activationState ?? 'valid';
+    const checks = this.policyChecks(s.actPw);
+    const pwOk = checks.every((c) => c.ok);
+    const matchOk = s.actPw2.length > 0 && s.actPw2 === s.actPw;
+    let actMsg = null;
+    if (actState === 'expired') actMsg = { title: 'Tautan tidak berlaku', body: 'Tautan sudah kedaluwarsa. Hubungi Admin.', bg: 'var(--state-error-lighter)', fg: 'var(--state-error-base)', icon: this.ic('TimeLine', 28) };
+    else if (actState === 'already') actMsg = { title: 'Akun sudah aktif', body: 'Akun Anda sudah aktif. Silakan masuk melalui aplikasi.', bg: 'var(--state-information-lighter)', fg: 'var(--state-information-base)', icon: this.ic('InformationLine', 28) };
+    else if (s.actDone) actMsg = { title: 'Aktivasi berhasil', body: 'Akun Anda sudah aktif. Silakan buka aplikasi Sales Portal untuk masuk.', bg: 'var(--state-success-lighter)', fg: 'var(--state-success-base)', icon: this.ic('ShieldCheckLine', 28) };
+
+    const navItems = [['login', 'W1 Login'], ['denied', 'Akses ditolak'], ['users', 'W2 Manajemen Akun'], ['activate', 'KC1 Aktivasi']];
+
+    return {
+      isLogin: screen === 'login', isDenied: screen === 'denied', isUsers: screen === 'users', isActivate: screen === 'activate',
+      logoColor: this.logo('color'), logoWhite: DS ? React.createElement(DS.AmarBankLogo, { lockup: 'horizontal', color: 'white', height: 26 }) : null,
+      icUser32: this.ic('User6Line', 32), icLock32: this.ic('Lock2Line', 32), icShield: this.ic('ShieldUserLine', 28),
+      icLogout: this.ic('LogoutBoxRLine'), icAdd: this.ic('UserAddLine'), icTeam: this.ic('TeamLine', 24), icRefresh: this.ic('RefreshLine'),
+      loginId: s.loginId, loginPw: s.loginPw, loginErr: undefined,
+      onLoginId: (e) => this.setState({ loginId: e.target.value }),
+      onLoginPw: (e) => this.setState({ loginPw: e.target.value }),
+      loginDisabled: !loginValid || s.loginBusy, loginLabel: s.loginBusy ? 'Memproses...' : 'Masuk', doLogin,
+      loginIdShown: s.deniedId || 'tl.andi@amarbank.co.id',
+      logout: () => this.setState({ screen: 'login', loginId: '', loginPw: '' }),
+
+      navSections: [{ title: 'Atur', items: [{ label: 'Manajemen Akun', value: 'users', icon: 'UserLine' }] }],
+      rows, skeleton: [1, 2, 3, 4, 5],
+      isData: ts === 'data', isLoading: ts === 'loading', isEmpty: ts === 'empty', isError: ts === 'error',
+      showCount: ts === 'data', rowCount: String(rows.length), showAddTop: ts === 'data' || ts === 'loading',
+      retry: () => { this.setState({ tableState: 'loading' }); setTimeout(() => this.setState({ tableState: 'data' }), 900); },
+      openAdd: () => this.setState({ modalOpen: true, touched: {}, serverErr: {} }),
+
+      modalOpen: s.modalOpen, confirmOpen: s.confirmOpen, saving: s.saving,
+      form: s.form, errs,
+      onEmail: (e) => this.setField('email', e.target.value),
+      onPhone: (e) => this.setField('phone', e.target.value.replace(/[^\d]/g, '').slice(0, 14)),
+      onFirst: (e) => this.setField('first', e.target.value),
+      onLast: (e) => this.setField('last', e.target.value),
+      blurEmail: () => this.blur('email'), blurPhone: () => this.blur('phone'), blurFirst: () => this.blur('first'), blurLast: () => this.blur('last'),
+      phonePrefix: React.createElement('span', { style: { padding: '0 12px', font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' } }, '+62'),
+      lastRequired: !this.lastOptional(), lastSublabel: this.lastOptional() ? '(Opsional)' : undefined,
+      roleOptions: [{ label: 'TL (Team Leader)', value: 'TL' }],
+      saveDisabled, saveLabel: s.saving ? 'Menyimpan...' : 'Simpan', saveIcon: undefined,
+      submitAdd: () => this.submitAdd(), requestCancel: () => this.requestCancel(),
+      keepEditing: () => this.setState({ confirmOpen: false }),
+      confirmActions: DS ? React.createElement('div', { style: { display: 'flex', gap: 12, justifyContent: 'flex-end', padding: '16px 20px', boxShadow: 'inset 0 1px 0 var(--stroke-soft-200)' } },
+        React.createElement(DS.Button, { variant: 'stroke', tone: 'neutral', size: 'sm', onClick: () => this.setState({ confirmOpen: false }) }, 'Lanjutkan Mengisi'),
+        React.createElement(DS.Button, { tone: 'error', size: 'sm', onClick: () => this.setState({ confirmOpen: false, modalOpen: false, form: { email: '', phone: '', first: '', last: '' }, touched: {}, serverErr: {} }) }, 'Ya, Batalkan')) : null,
+
+      hasToast: !!s.toast, toast: s.toast || {}, closeToast: () => this.setState({ toast: null }),
+
+      actShowForm: !actMsg, actShowMsg: !!actMsg, actMsg: actMsg || {},
+      actEmail: 'dimas.pratama@amarbank.co.id',
+      actPw: s.actPw, actPw2: s.actPw2,
+      onActPw: (e) => this.setState({ actPw: e.target.value }),
+      onActPw2: (e) => this.setState({ actPw2: e.target.value, actTouched2: true }),
+      actPwErr: s.actSubmitted && !pwOk ? 'Password belum memenuhi ketentuan' : undefined,
+      actPw2Err: (s.actTouched2 || s.actSubmitted) && s.actPw2.length > 0 && !matchOk ? 'Password tidak sama' : undefined,
+      policy: checks.map((c) => ({ label: c.label, color: c.ok ? 'var(--state-success-base)' : 'var(--text-sub-600)', icon: this.ic(c.ok ? 'CheckLine' : 'CloseLine', 14) })),
+      actDisabled: !s.actPw || !s.actPw2,
+      submitAct: () => { if (pwOk && matchOk) this.setState({ actDone: true }); else this.setState({ actSubmitted: true }); },
+
+      showNav: this.props.showPrototypeNav ?? true,
+      protoNav: navItems.map(([k, label]) => ({ label, go: () => this.go(k), bg: screen === k ? 'var(--bg-white-0)' : 'transparent', fg: screen === k ? 'var(--text-strong-950)' : 'var(--text-soft-400)' })),
+    };
+  }
+}
+</script>
+</body>
+</html>
