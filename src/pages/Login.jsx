@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button, ContentDivider, TextInput } from '@ds/index.js';
 import { AuthCard, AuthHero, AuthLayout } from '../components/AuthLayout.jsx';
 import { login } from '../api/mockApi.js';
+import { DEMO } from '../lib/env.js';
 
 /** W1 · Login Admin (Keycloak themed, realm sales-portal). */
 export function Login({ onLoggedIn }) {
@@ -34,7 +35,7 @@ export function Login({ onLoggedIn }) {
               value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
           </div>
           <Button type="submit" fullWidth disabled={!valid || busy}>{busy ? 'Memproses...' : 'Masuk'}</Button>
-          {import.meta.env.DEV && (
+          {DEMO && (
             <div style={{ padding: 'var(--space-10) var(--space-12)', borderRadius: 'var(--rounded-10)', background: 'var(--bg-weak-50)', font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>
               Demo: email berisi "tl" menampilkan halaman Akses ditolak; lainnya masuk ke Manajemen Akun.
             </div>

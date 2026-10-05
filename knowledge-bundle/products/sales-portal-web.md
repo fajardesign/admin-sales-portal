@@ -46,7 +46,8 @@ Role selain TL belum ada di fase ini (Select "Role" dikunci ke `TL (Team Leader)
 ## Implementasi saat ini
 - Kode: `src/` (Vite + React 19, komponen dari `design-system/`). API masih **mock** di `src/api/mockApi.js` — kontrak fungsi:
   `login(loginId, password)`, `listTeamLeaders()`, `createTeamLeader(form)`, `checkActivation(token)`, `activateAccount(password)`.
-- Skenario prototipe (state tabel, hasil simpan, status tautan, nama belakang opsional) diatur lewat **DevToolbar** (hanya mode dev), padanan props prototipe di claude.ai/design.
+- Skenario prototipe (state tabel, hasil simpan, status tautan, nama belakang opsional) diatur lewat **DevToolbar** (mode demo: dev server & build GitHub Pages `VITE_DEMO=true`), padanan props prototipe di claude.ai/design.
+- Demo publik: https://fajardesign.github.io/admin-sales-portal/ (deploy otomatis dari `main`).
 - Tes: `src/__tests__/` (`npm test`) mencakup validasi dan seluruh flow di atas.
 
 ## Pertanyaan terbuka

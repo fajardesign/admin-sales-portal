@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { navigate, useHashRoute } from './lib/router.js';
+import { DEMO } from './lib/env.js';
 import { ToasterProvider } from './components/Toaster.jsx';
 import { Login } from './pages/Login.jsx';
 import { AccessDenied } from './pages/AccessDenied.jsx';
@@ -18,9 +19,9 @@ const DEV_TL = { loginId: 'tl.andi@amarbank.co.id', role: 'TL' };
  *  #/users     W2 Manajemen Akun (hanya ADMIN)
  *  #/activate  KC1 Aktivasi akun (tautan undangan; tanpa sesi)
  */
-/** Dev: buka layar terproteksi langsung tanpa login (sesi contoh). Production: sesi apa adanya. */
+/** Demo: buka layar terproteksi langsung tanpa login (sesi contoh). Production: sesi apa adanya. */
 function devSession(path, session) {
-  if (!import.meta.env.DEV) return session;
+  if (!DEMO) return session;
   if (path === '/users' && session?.role !== 'ADMIN') return DEV_ADMIN;
   if (path === '/denied' && !session) return DEV_TL;
   return session;
@@ -43,7 +44,7 @@ export default function App() {
   return (
     <ToasterProvider>
       {screen}
-      {import.meta.env.DEV && <DevToolbar path={path} />}
+      {DEMO && <DevToolbar path={path} />}
     </ToasterProvider>
   );
 }

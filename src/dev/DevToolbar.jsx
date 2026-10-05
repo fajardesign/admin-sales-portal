@@ -9,7 +9,7 @@ const pill = (active) => ({
 });
 const select = { font: 'var(--label-xs)', borderRadius: 'var(--rounded-6)', border: 0, padding: 'var(--space-4)', background: 'var(--bg-surface-800)', color: 'var(--text-white-0)' };
 
-/** Toolbar prototipe (hanya mode development): pindah layar + atur skenario mock. */
+/** Toolbar prototipe (hanya mode demo: dev server / build Pages): pindah layar + atur skenario mock. */
 export function DevToolbar({ path }) {
   const sc = useScenario();
   return (

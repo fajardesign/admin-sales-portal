@@ -21,3 +21,8 @@ npm run gen:ds   # regenerate design-system/COMPONENTS.md + index.js dari .d.ts
 - Knowledge (wajib dibaca & dirawat): `knowledge-bundle/` — mulai dari `knowledge-bundle/index.md`.
 - Komponen: `import { Button } from '@ds/index.js'` — props di `design-system/COMPONENTS.md`.
 - API masih mock: `src/api/mockApi.js`. Sumber desain: `design-sources/sales-portal-web/`.
+
+## Deploy (GitHub Pages)
+Demo: https://fajardesign.github.io/admin-sales-portal/ — di-deploy otomatis oleh `.github/workflows/deploy-pages.yml` setiap push ke `main`
+(test → build dengan `VITE_BASE=/admin-sales-portal/` dan `VITE_DEMO=true` → deploy). Mode demo menampilkan DevToolbar & catatan demo.
+Syarat sekali saja: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
