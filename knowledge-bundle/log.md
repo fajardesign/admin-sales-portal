@@ -15,3 +15,8 @@
 - Pages sebelumnya menyajikan source mentah dari branch `main` (index.html memuat `/src/main.jsx` → tidak jalan). Diganti workflow GitHub Actions `deploy-pages.yml` yang membangun `dist/` dengan base `/admin-sales-portal/`.
 - Build Pages memakai `VITE_DEMO=true` (`src/lib/env.js`): DevToolbar, sesi contoh, dan catatan demo login tampil di demo publik; build biasa tetap tanpa itu.
 - PR #1 ter-merge sebelum commit `4a27dc1` (layar Sales Portal Web) masuk — perlu PR lanjutan dari `feat/design-system-setup`.
+
+## 2026-10-05 — Export implementasi ke Figma
+- 23 state layar (W1, W2a, W2b, KC1) di-capture dari aplikasi ke Figma file `6ezrFIAonEuXZAgMhAbBlY`, Page 5, section `426:7544`.
+- Ditambahkan preset layar demo `src/dev/presets.js` (`/?preset=<nama>`), script capture Figma dimuat hanya bila URL memuat `#figmacapture=` (mode demo).
+- Perbaikan mock: skenario tabel `loading` kini tetap loading (sebelumnya selesai setelah 900 ms).

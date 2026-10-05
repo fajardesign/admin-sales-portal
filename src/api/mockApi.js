@@ -29,6 +29,7 @@ export async function login(loginId) {
 /** W2a — daftar Team Leader, terbaru di atas. Skenario error/empty diabaikan saat retry (seperti prototipe). */
 export async function listTeamLeaders({ retry = false } = {}) {
   const { tableState } = getScenario();
+  if (!retry && tableState === 'loading') return new Promise(() => {}); // skenario: tetap loading
   await wait(900);
   if (!retry && tableState === 'error') throw new ApiError('LOAD_FAILED');
   if (!retry && tableState === 'empty') return [];

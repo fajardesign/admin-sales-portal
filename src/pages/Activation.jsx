@@ -4,6 +4,7 @@ import { AuthCard, AuthHero, AuthLayout, StatusMessage } from '../components/Aut
 import { activateAccount, checkActivation } from '../api/mockApi.js';
 import { useScenario } from '../dev/scenario.js';
 import { passwordPolicy } from '../lib/validation.js';
+import { preset } from '../dev/presets.js';
 
 const MESSAGES = {
   expired: { status: 'error', icon: 'TimeLine', title: 'Tautan tidak berlaku', body: 'Tautan sudah kedaluwarsa. Hubungi Admin.' },
@@ -19,11 +20,12 @@ export function Activation() {
 
 function ActivationView() {
   const [link, setLink] = useState(null);
-  const [pw, setPw] = useState('');
-  const [pw2, setPw2] = useState('');
-  const [touched2, setTouched2] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [done, setDone] = useState(false);
+  const init = preset?.activation ?? {};
+  const [pw, setPw] = useState(init.pw ?? '');
+  const [pw2, setPw2] = useState(init.pw2 ?? '');
+  const [touched2, setTouched2] = useState(init.touched2 ?? false);
+  const [submitted, setSubmitted] = useState(init.submitted ?? false);
+  const [done, setDone] = useState(init.done ?? false);
 
   useEffect(() => { checkActivation().then(setLink); }, []);
 

@@ -3,6 +3,7 @@ import { Button, Modal, ModalFooter, ModalHeader, Select, StatusModal, TextInput
 import { validateUserForm } from '../../lib/validation.js';
 import { ApiError, createTeamLeader } from '../../api/mockApi.js';
 import { useToast } from '../../components/Toaster.jsx';
+import { preset } from '../../dev/presets.js';
 
 const EMPTY = { email: '', phone: '', firstName: '', lastName: '' };
 const FIELDS = Object.keys(EMPTY);
@@ -12,11 +13,12 @@ const DUPLICATE_MSG = { email: 'Email sudah terdaftar', phone: 'Nomor telepon su
 /** W2b · Tambah Pengguna — form buat akun TL + konfirmasi batal bila form sudah diisi. */
 export function AddUserModal({ open, onClose, onCreated, lastNameOptional }) {
   const toast = useToast();
-  const [form, setForm] = useState(EMPTY);
-  const [touched, setTouched] = useState({});
-  const [serverErr, setServerErr] = useState({});
-  const [saving, setSaving] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const init = preset?.addUser ?? {};
+  const [form, setForm] = useState(init.form ?? EMPTY);
+  const [touched, setTouched] = useState(init.touched ?? {});
+  const [serverErr, setServerErr] = useState(init.serverErr ?? {});
+  const [saving, setSaving] = useState(init.saving ?? false);
+  const [confirmOpen, setConfirmOpen] = useState(init.confirmOpen ?? false);
 
   const allErrs = validateUserForm(form, { lastNameOptional });
   const errs = Object.fromEntries(FIELDS.map((k) => [k, serverErr[k] || (touched[k] ? allErrs[k] : undefined)]));

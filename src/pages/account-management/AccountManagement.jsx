@@ -6,6 +6,7 @@ import { listTeamLeaders } from '../../api/mockApi.js';
 import { useScenario } from '../../dev/scenario.js';
 import { TeamLeaderTable } from './TeamLeaderTable.jsx';
 import { AddUserModal } from './AddUserModal.jsx';
+import { preset } from '../../dev/presets.js';
 import emptyUsers from '../../assets/empty-users.png';
 import emptyError from '../../assets/empty-error.png';
 
@@ -19,12 +20,13 @@ function AccountManagementView({ user, onLogout }) {
   const { lastNameOptional } = useScenario();
   const [rows, setRows] = useState([]);
   const [status, setStatus] = useState('loading'); // loading | data | error
-  const [modalOpen, setModalOpen] = useState(false);
-  const [highlightId, setHighlightId] = useState(null);
+  const init = preset?.users ?? {};
+  const [modalOpen, setModalOpen] = useState(init.modalOpen ?? false);
+  const [highlightId, setHighlightId] = useState(init.newUser?.id ?? null);
   const hlTimer = useRef();
 
   const fetchRows = useCallback((opts) => {
-    listTeamLeaders(opts).then((r) => { setRows(r); setStatus('data'); }, () => setStatus('error'));
+    listTeamLeaders(opts).then((r) => { setRows(preset?.users?.newUser ? [preset.users.newUser, ...r] : r); setStatus('data'); }, () => setStatus('error'));
   }, []);
   useEffect(() => fetchRows(), [fetchRows]);
   const retry = () => { setStatus('loading'); fetchRows({ retry: true }); };
