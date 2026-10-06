@@ -6,7 +6,7 @@ user-invocable: true
 
 Every Admin Sales Portal UI must be built with the design system in `design-system/`.
 
-1. Read the knowledge bundle `knowledge-bundle/design-system/` first: overview.md (rules, setup, gaps), foundations.md (tokens), components.md, layout-patterns.md, content-guidelines.md.
+1. Read the knowledge bundle `/Users/amarbank/Documents/okf_repository_design/products/sales_dashboard/design_system/` first: overview.md (rules, setup, gaps), foundations.md (tokens), components.md, layout_patterns.md, content_guidelines.md.
 2. Look up exact props in `design-system/COMPONENTS.md` (or the component's `.d.ts`/JSDoc).
 3. Import components from `design-system/index.js`; import `design-system/styles.core.css` once at the app entry (full `styles.css` only when rendering the Figma-generated sets).
 4. Follow the reference screens in `design-system/ui_kits/bisnis-web/` (Shell = Sidebar + PageHeader layout).
