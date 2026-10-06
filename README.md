@@ -18,7 +18,7 @@ npm run gen:ds   # regenerate design-system/COMPONENTS.md + index.js dari .d.ts
 | `#/users` | W2 Manajemen Akun (+ modal Tambah Pengguna) |
 | `#/activate` | KC1 Aktivasi akun |
 
-- Knowledge (wajib dibaca & dirawat): `knowledge-bundle/` — mulai dari `knowledge-bundle/index.md`.
+- Knowledge (wajib dibaca & dirawat): `/Users/amarbank/Documents/okf_repository_design/products/sales_dashboard/` — mulai dari `index.md` (aturan di `/Users/amarbank/Documents/okf_repository_design/CLAUDE.md`).
 - Komponen: `import { Button } from '@ds/index.js'` — props di `design-system/COMPONENTS.md`.
 - Preset layar (mode demo): `/?preset=<nama>` membuka satu state langsung, mis. `/?preset=add-user-dup-email` — daftar di `src/dev/presets.js`.
 - API masih mock: `src/api/mockApi.js`. Sumber desain: `design-sources/sales-portal-web/`.

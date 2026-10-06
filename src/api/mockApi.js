@@ -1,5 +1,5 @@
 // Mock API — ganti dengan integrasi Keycloak + backend Sales Portal.
-// Perilaku mengikuti prototipe "Sales Portal Web" (lihat knowledge-bundle/flows/).
+// Perilaku mengikuti prototipe "Sales Portal Web" (lihat okf_repository_design/products/sales_dashboard/flows_web/).
 import { getScenario } from '../dev/scenario.js';
 import { normalizePhone } from '../lib/format.js';
 
