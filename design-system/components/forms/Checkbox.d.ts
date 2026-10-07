@@ -18,6 +18,7 @@ export declare function CheckboxLabel(props: CheckboxLabelProps): React.ReactEle
 export interface ChoiceTextProps { label?: React.ReactNode;
   sublabel?: React.ReactNode;
   description?: React.ReactNode;
+  descriptionSize?: "sm" | "xs";
   disabled?: boolean;
   onClick?: () => void; }
 export declare function ChoiceText(props: ChoiceTextProps): React.ReactElement | null;

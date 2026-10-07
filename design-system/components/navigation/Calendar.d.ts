@@ -1,5 +1,6 @@
 import * as React from 'react';
 export interface CalendarProps { month?: Date;
+  onMonthChange?: (month: Date) => void;
   value?: Date | [Date, Date | null];
   onChange?: (v: any) => void;
   mode?: "single" | "range";
