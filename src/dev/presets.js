@@ -2,38 +2,40 @@ import { DEMO } from '../lib/env.js';
 import { setScenario } from './scenario.js';
 
 /**
- * Preset state layar untuk dokumentasi/capture ke Figma (hanya mode demo).
- * Buka `/?preset=<nama>` — rute, skenario mock, dan state awal komponen langsung terisi,
- * DevToolbar disembunyikan. Nama preset mengikuti penamaan frame Figma.
+ * Preset state layar untuk dokumentasi/capture (hanya mode demo).
+ * Buka `/?preset=<nama>` — rute, sesi, skenario mock, dan state awal komponen langsung terisi; DevToolbar disembunyikan.
  */
-const FILLED = { email: 'budi.santoso@amarbank.co.id', phone: '81299998888', firstName: 'Budi', lastName: 'Santoso' };
-const ALL_TOUCHED = { email: true, phone: true, firstName: true, lastName: true };
-const NEW_USER = { id: 999, firstName: 'Budi', lastName: 'Santoso', email: 'budi.santoso@amarbank.co.id', phone: '81299998888', active: false, createdAt: new Date('2026-10-05T04:30:00Z') };
-
 export const PRESETS = {
-  'login': { name: '01 | Admin Login', route: '/login' },
-  'login-filled': { name: '01 | Admin Login | Filled', route: '/login', login: { loginId: 'rina.saraswati@amarbank.co.id', password: 'rahasia123' } },
-  'denied': { name: '01 | Admin Login | Akses Ditolak', route: '/denied' },
-  'users': { name: '02 | Account Management', route: '/users' },
-  'users-loading': { name: '02 | Account Management | Loading', route: '/users', scenario: { tableState: 'loading' } },
-  'users-empty': { name: '02 | Account Management | Empty', route: '/users', scenario: { tableState: 'empty' } },
-  'users-error': { name: '02 | Account Management | Error | Failed to Load Data', route: '/users', scenario: { tableState: 'error' } },
-  'users-created': { name: '02 | Account Management | Success | User Created', route: '/users', users: { newUser: NEW_USER }, toast: ['success', 'Pengguna berhasil dibuat. Undangan aktivasi telah dikirim.'] },
-  'users-invite-failed': { name: '02 | Account Management | Warning | Invitation Email Failed', route: '/users', users: { newUser: NEW_USER }, toast: ['warning', 'Pengguna dibuat, tetapi email undangan gagal dikirim. Hubungi tim teknis.'] },
-  'add-user': { name: '03 | Add User', route: '/users', users: { modalOpen: true } },
-  'add-user-filled': { name: '03 | Add User | Filled', route: '/users', users: { modalOpen: true }, addUser: { form: FILLED } },
-  'add-user-incomplete': { name: '03 | Add User | Error | Incomplete Information', route: '/users', users: { modalOpen: true }, addUser: { form: { ...FILLED, phone: '', lastName: '' }, touched: ALL_TOUCHED } },
-  'add-user-invalid': { name: '03 | Add User | Error | Invalid Format', route: '/users', users: { modalOpen: true }, addUser: { form: { ...FILLED, email: 'budi.santoso@amarbank', phone: '0212345' }, touched: ALL_TOUCHED } },
-  'add-user-saving': { name: '03 | Add User | Loading', route: '/users', users: { modalOpen: true }, addUser: { form: FILLED, saving: true } },
-  'add-user-dup-email': { name: '03 | Add User | Error | Duplicate Email', route: '/users', users: { modalOpen: true }, addUser: { form: { ...FILLED, email: 'dimas.pratama@amarbank.co.id' }, serverErr: { email: 'Email sudah terdaftar' } } },
-  'add-user-dup-phone': { name: '03 | Add User | Error | Duplicate Phone', route: '/users', users: { modalOpen: true }, addUser: { form: { ...FILLED, phone: '81234567890' }, serverErr: { phone: 'Nomor telepon sudah terdaftar' } } },
-  'add-user-kc-failed': { name: '03 | Add User | Error | Account Creation Failed', route: '/users', users: { modalOpen: true }, addUser: { form: FILLED }, toast: ['error', 'Gagal membuat akun. Coba lagi.'] },
-  'add-user-confirm-cancel': { name: '03 | Add User | Confirm Cancel', route: '/users', users: { modalOpen: true }, addUser: { form: FILLED, confirmOpen: true } },
-  'activate': { name: '04 | Account Activation', route: '/activate' },
-  'activate-policy': { name: '04 | Account Activation | Error | Password Policy', route: '/activate', activation: { pw: 'rahasia', pw2: 'rahasia1', submitted: true, touched2: true } },
-  'activate-success': { name: '04 | Account Activation | Success', route: '/activate', activation: { done: true } },
-  'activate-expired': { name: '04 | Account Activation | Error | Link Expired', route: '/activate', scenario: { activationState: 'expired' } },
-  'activate-already': { name: '04 | Account Activation | Already Active', route: '/activate', scenario: { activationState: 'already' } },
+  'login': { name: 'W1 | Login', route: '/login' },
+  'login-error': { name: 'W1 | Login | Error | Wrong Credential', route: '/login', login: { loginId: 'rina.saraswati', error: 'Email/username atau password salah. Silakan coba lagi.' } },
+  'login-locked': { name: 'W1 | Login | Error | Locked', route: '/login', login: { loginId: 'rina.saraswati', error: 'Akun terkunci sementara. Coba lagi dalam 15 menit.' } },
+  'denied': { name: 'W1 | Access Denied', route: '/denied', session: 'andi.pratama' },
+  'beranda': { name: 'W0 | Admin Home', route: '/beranda', session: 'rina.saraswati' },
+  'pipeline': { name: 'W3a | Partner Pipeline', route: '/partner-pipeline', session: 'rina.saraswati' },
+  'pipeline-all': { name: 'W3a | Partner Pipeline | All', route: '/partner-pipeline?status=semua', session: 'rina.saraswati' },
+  'pipeline-loading': { name: 'W3a | Partner Pipeline | Loading', route: '/partner-pipeline', session: 'rina.saraswati', scenario: { tableState: 'loading' } },
+  'pipeline-empty': { name: 'W3a | Partner Pipeline | Empty', route: '/partner-pipeline', session: 'rina.saraswati', scenario: { tableState: 'empty' } },
+  'pipeline-error': { name: 'W3a | Partner Pipeline | Error', route: '/partner-pipeline', session: 'rina.saraswati', scenario: { tableState: 'error' } },
+  'detail-review': { name: 'W3b | Partner Detail | Under Review', route: '/partner-pipeline/REG2026-0147', session: 'rina.saraswati' },
+  'detail-docs': { name: 'W3b | Partner Detail | Documents', route: '/partner-pipeline/REG2026-0147', session: 'rina.saraswati', detail: { tab: 'docs' } },
+  'detail-revision': { name: 'W3c | Request Revision', route: '/partner-pipeline/REG2026-0146', session: 'rina.saraswati', detail: { revision: true } },
+  'detail-verify': { name: 'W3d | Change Status | Verified', route: '/partner-pipeline/REG2026-0148', session: 'rina.saraswati', detail: { action: 'VERIFIED' } },
+  'detail-pks-sent': { name: 'W3d | Change Status | PKS Sent', route: '/partner-pipeline/REG2026-0142', session: 'rina.saraswati', detail: { action: 'WAITING_PKS' } },
+  'detail-activate': { name: 'W3d | Change Status | Activate', route: '/partner-pipeline/REG2026-0140', session: 'rina.saraswati', detail: { action: 'ACTIVE' } },
+  'detail-active-stores': { name: 'W3b | Partner Detail | Stores', route: '/partner-pipeline/REG2026-0139', session: 'rina.saraswati', detail: { tab: 'stores' } },
+  'users': { name: 'W2a | Account Management', route: '/account-management', session: 'rina.saraswati' },
+  'add-user': { name: 'W2b | Add User', route: '/account-management', session: 'rina.saraswati', users: { adding: true } },
+  'add-user-tl': { name: 'W2b | Add User | TL', route: '/account-management', session: 'rina.saraswati', users: { adding: true }, addUser: { form: { email: 'gilang.ramadhan@amarbank.co.id', phone: '81277776666', username: 'gilang.ramadhan', fullName: 'Gilang Ramadhan', role: 'TL', tlLevel: 'JUNIOR', areaIds: [2], leaderId: '4' } } },
+  'add-user-no-leader': { name: 'W2b | Add User | Error | No Leader', route: '/account-management', session: 'rina.saraswati', users: { adding: true }, addUser: { form: { role: 'TL', areaIds: [6] } } },
+  'activate': { name: 'KC1 | Account Activation', route: '/activate?user=10' },
+  'activate-expired': { name: 'KC1 | Account Activation | Expired', route: '/activate?user=14' },
+  'apl': { name: 'A1 | APL Summary', route: '/apl', session: 'lestari.wulandari' },
+  'apl-performance': { name: 'A4 | APL Performance', route: '/apl/performa?tab=sales', session: 'lestari.wulandari' },
+  'apl-incentive': { name: 'A5 | APL Incentive', route: '/apl/insentif?m=2026-09', session: 'hasan.basri' },
+  'apl-stores': { name: 'A2 | APL Partner & Toko', route: '/apl/partner', session: 'hasan.basri' },
+  'apl-team': { name: 'A3 | APL Team', route: '/apl/tim', session: 'hasan.basri' },
+  'schemes': { name: 'S1 | Incentive Schemes', route: '/skema-insentif', session: 'hendra.wijaya' },
+  'scheme-edit': { name: 'S2 | Incentive Scheme | Edit', route: '/skema-insentif', session: 'hendra.wijaya', scheme: { open: 'SA', editing: true } },
 };
 
 const key = DEMO && typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('preset') : null;
