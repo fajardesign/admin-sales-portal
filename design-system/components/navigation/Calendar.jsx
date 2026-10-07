@@ -35,9 +35,12 @@ export function DateSelector({ label, onPrev, onNext, style }) {
   );
 }
 
-/** Calendar month grid (Day Labels + Day Cells) — 328 wide: 7 x 40 columns, 8px column & row gap, Date Selector on top. Weeks start Monday. mode single | range. */
-export function Calendar({ month: m0, value, onChange, mode = 'single', marked = [], minDate, style }) {
-  const [month, setMonth] = React.useState(() => { const d = m0 || (Array.isArray(value) ? value[0] : value) || new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
+/** Calendar month grid (Day Labels + Day Cells) — 328 wide: 7 x 40 columns, 8px column & row gap, Date Selector on top. Weeks start Monday. mode single | range.
+ * month is the initial month; pass onMonthChange to control it (month then follows the prop). */
+export function Calendar({ month: m0, onMonthChange, value, onChange, mode = 'single', marked = [], minDate, style }) {
+  const [own, setOwn] = React.useState(() => { const d = m0 || (Array.isArray(value) ? value[0] : value) || new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
+  const month = onMonthChange && m0 ? new Date(m0.getFullYear(), m0.getMonth(), 1) : own;
+  const setMonth = onMonthChange || setOwn;
   const first = (month.getDay() + 6) % 7;
   const daysIn = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
   const cells = Array.from({ length: Math.ceil((first + daysIn) / 7) * 7 }, (_, i) => new Date(month.getFullYear(), month.getMonth(), i - first + 1));
@@ -50,8 +53,8 @@ export function Calendar({ month: m0, value, onChange, mode = 'single', marked =
         {DAYS.map((d, i) => <DayLabel key={i}>{d}</DayLabel>)}
         {cells.map((d, i) => {
           const muted = d.getMonth() !== month.getMonth();
-          const active = same(d, a) || same(d, b);
-          const inRange = a && b && d > a && d < b;
+          const active = !muted && (same(d, a) || same(d, b));
+          const inRange = !muted && a && b && d > a && d < b;
           return <DayCell key={i} day={d.getDate()} muted={muted} active={active} inRange={inRange} marked={marked.some((x) => same(x, d))} disabled={minDate && d < minDate} onClick={() => pick(d)} />;
         })}
       </div>
@@ -70,16 +73,22 @@ export function PeriodRange({ children, active = false, onClick }) {
   );
 }
 
-/** Date & Range Picker [1.1] — 368-wide card (r20, regular-shadow/medium = --shadow-modal): optional 200px presets column (pad 20/16, gap 8), calendar (pad 20), footer (pad 16, gap 16). */
+/** Date & Range Picker [1.1] — card (r20, stroke + regular-shadow/medium = --shadow-modal): optional 200px presets column (pad 20/16/2/16, gap 8);
+ * mode single = one 368 panel, mode range = two 368 panels (consecutive months, divider between, arrows move both); panels pad 20; footer pad 16 (16/16/16/24 with presets), gap 16. */
 export function DateRangePicker({ value, onChange, presets = ['Hari ini', '7 hari terakhir', '30 hari terakhir', '3 bulan terakhir', '12 bulan terakhir', 'Kustom'], mode = 'range', footer, style }) {
   const [preset, setPreset] = React.useState(() => (presets ? presets[presets.length - 1] : null));
+  const [month, setMonth] = React.useState(() => { const d = (Array.isArray(value) ? value[0] : value) || new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
+  const two = mode === 'range';
+  const next = new Date(month.getFullYear(), month.getMonth() + 1, 1);
+  const panel = { padding: 20 };
   return (
     <div style={{ display: 'inline-flex', flexDirection: 'column', borderRadius: 20, background: 'var(--bg-white-0)', boxShadow: 'var(--shadow-stroke), var(--shadow-modal)', overflow: 'hidden', ...style }}>
       <div style={{ display: 'flex' }}>
         {presets && <div style={{ width: 200, boxSizing: 'border-box', padding: '20px 16px 2px', display: 'flex', flexDirection: 'column', gap: 8, boxShadow: 'inset -1px 0 0 var(--stroke-soft-200)' }}>{presets.map((p) => <PeriodRange key={p} active={p === preset} onClick={() => setPreset(p)}>{p}</PeriodRange>)}</div>}
-        <div style={{ padding: 20 }}><Calendar mode={mode} value={value} onChange={onChange} /></div>
+        <div style={two ? { ...panel, boxShadow: 'inset -1px 0 0 var(--stroke-soft-200)' } : panel}><Calendar mode={mode} value={value} onChange={onChange} month={month} onMonthChange={setMonth} /></div>
+        {two && <div style={panel}><Calendar mode={mode} value={value} onChange={onChange} month={next} onMonthChange={(m) => setMonth(new Date(m.getFullYear(), m.getMonth() - 1, 1))} /></div>}
       </div>
-      {footer && <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 16, padding: presets ? '16px 16px 16px 24px' : 16, boxShadow: 'inset 0 1px 0 var(--stroke-soft-200)' }}>{footer}</div>}
+      {footer && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 16, padding: presets ? '16px 16px 16px 24px' : 16, boxShadow: 'inset 0 1px 0 var(--stroke-soft-200)' }}>{footer}</div>}
     </div>
   );
 }

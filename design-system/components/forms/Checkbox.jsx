@@ -37,14 +37,17 @@ export function CheckboxLabel({ label, sublabel, description, checked, defaultCh
   );
 }
 
-export function ChoiceText({ label, sublabel, description, disabled, onClick }) {
+/** Shared label text for Checkbox/Radio/Switch Label [1.1]: label (Label/Small with description, else Paragraph/Small) + sublabel (Paragraph/X Small) + description.
+ * descriptionSize: 'sm' Paragraph/Small (Checkbox, Switch) | 'xs' Paragraph/X Small (Radio). */
+export function ChoiceText({ label, sublabel, description, descriptionSize = 'sm', disabled, onClick }) {
+  const d = descriptionSize === 'xs' ? 'paragraph-xs' : 'paragraph-sm';
   return (
     <span onClick={onClick} style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingTop: 0 }}>
       <span style={{ display: 'flex', gap: 4, alignItems: 'baseline' }}>
         <span style={{ font: description ? 'var(--label-sm)' : 'var(--paragraph-sm)', letterSpacing: 'var(--label-sm-ls)', color: disabled ? 'var(--text-disabled-300)' : 'var(--text-strong-950)' }}>{label}</span>
-        {sublabel && <span style={{ font: 'var(--paragraph-xs)', color: disabled ? 'var(--text-disabled-300)' : 'var(--text-sub-600)' }}>{sublabel}</span>}
+        {sublabel && <span style={{ font: 'var(--paragraph-xs)', letterSpacing: 'var(--paragraph-xs-ls)', color: disabled ? 'var(--text-disabled-300)' : 'var(--text-sub-600)' }}>{sublabel}</span>}
       </span>
-      {description && <span style={{ font: 'var(--paragraph-sm)', letterSpacing: 'var(--paragraph-sm-ls)', color: disabled ? 'var(--text-disabled-300)' : 'var(--text-sub-600)' }}>{description}</span>}
+      {description && <span style={{ font: `var(--${d})`, letterSpacing: `var(--${d}-ls)`, color: disabled ? 'var(--text-disabled-300)' : 'var(--text-sub-600)' }}>{description}</span>}
     </span>
   );
 }

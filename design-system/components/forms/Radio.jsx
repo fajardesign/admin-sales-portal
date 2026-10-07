@@ -28,12 +28,12 @@ export function Radio({ checked = false, disabled = false, onChange, style }) {
   );
 }
 
-/** Radio Label [1.1] — radio + label (+ sublabel / description), gap 8. Label: Paragraph/Small (Label/Small with description). Note: Figma description is Paragraph/X Small; shared ChoiceText (Checkbox.jsx) still renders Paragraph/Small. */
+/** Radio Label [1.1] — radio + label (+ sublabel / description), gap 8. Label: Paragraph/Small (Label/Small with description). Description: Paragraph/X Small. */
 export function RadioLabel({ label, sublabel, description, checked = false, disabled, flip = false, onChange, style }) {
   return (
     <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, flexDirection: flip ? 'row-reverse' : 'row', justifyContent: flip ? 'space-between' : 'flex-start', cursor: disabled ? 'not-allowed' : 'pointer', ...style }}>
       <Radio checked={checked} disabled={disabled} onChange={onChange} />
-      <ChoiceText label={label} sublabel={sublabel} description={description} disabled={disabled} onClick={() => !disabled && onChange && onChange(true)} />
+      <ChoiceText label={label} sublabel={sublabel} description={description} descriptionSize="xs" disabled={disabled} onClick={() => !disabled && onChange && onChange(true)} />
     </label>
   );
 }

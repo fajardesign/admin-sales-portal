@@ -229,6 +229,7 @@ export interface ChoiceTextProps {
   label?: React.ReactNode;
   sublabel?: React.ReactNode;
   description?: React.ReactNode;
+  descriptionSize?: "sm" | "xs";
   disabled?: boolean;
   onClick?: () => void;
   }
@@ -1391,6 +1392,7 @@ Weeks start Monday.
 ```ts
 export interface CalendarProps {
   month?: Date;
+  onMonthChange?: (month: Date) => void;
   value?: Date | [Date, Date | null];
   onChange?: (v: any) => void;
   mode?: "single" | "range";
