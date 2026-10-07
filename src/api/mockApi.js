@@ -8,6 +8,7 @@ import {
 import {
   attendance, CURRENT_MONTH, loans, mfp, MONTHS, now, owningTl, partners, schemes, superAdmins, targets, users, visits, wibDate,
 } from './db.js';
+import { hydrateUsers, syncUser } from './supabaseSync.js';
 
 const TEST = import.meta.env.MODE === 'test';
 const wait = (ms) => new Promise((r) => setTimeout(r, TEST ? 0 : ms));
@@ -17,6 +18,8 @@ const clone = (o) => structuredClone(o);
 const listeners = new Set();
 export const onDataChange = (fn) => { listeners.add(fn); return () => listeners.delete(fn); };
 const emitChange = () => listeners.forEach((fn) => fn());
+// Akun dari Supabase (bila sinkronisasi aktif) menimpa data contoh, lalu layar yang terbuka dimuat ulang.
+hydrateUsers(users).then((changed) => { if (changed) emitChange(); });
 
 export class ApiError extends Error {
   constructor(code, field) { super(code); this.code = code; this.field = field; }
@@ -223,6 +226,7 @@ export async function changeStatus(pid, to, opts, session) {
     if (u && u.status !== 'DISABLED') {
       Object.assign(u, { status: 'DISABLED', disabledAt: now(), disabledBy: 'Sistem (partner Inactive)', disabledReason: 'Partner dinonaktifkan di Partner Pipeline' });
       u.log.push({ at: now(), text: 'Akun dinonaktifkan: partner Inactive' });
+      syncUser(u);
     }
   }
   if (to === 'REVISION_REQUIRED') throw new ApiError('CONFLICT'); // lewat requestRevision
@@ -242,6 +246,7 @@ function createPicAccount(p, actor) {
     password: null, fails: 0, lockUntil: null,
     log: [{ at: now(), text: `Akun partner dibuat otomatis saat partner Active, tautan aktivasi dikirim ke ${p.pic.email}` }],
   });
+  syncUser(users.at(-1));
 }
 
 /** "Coba buat ulang" bila akun PIC gagal dibuat saat aktivasi. */
@@ -386,6 +391,7 @@ export async function createUser(form, session) {
     log: [{ at: now(), text: inviteSent ? `Akun dibuat di Keycloak, tautan aktivasi dikirim ke ${email}` : 'Akun dibuat di Keycloak, email undangan gagal dikirim' }],
   };
   users.push(u);
+  syncUser(u);
   return { user: enrichUser(u), inviteSent };
 }
 
@@ -396,6 +402,7 @@ export async function resendInvite(id, session) {
   if (!['PENDING', 'EXPIRED'].includes(accountStatus(u))) throw new ApiError('CONFLICT');
   Object.assign(u, { status: 'PENDING', inviteSentAt: now(), inviteResendCount: u.inviteResendCount + 1 });
   u.log.push({ at: now(), text: `Tautan aktivasi dikirim ulang oleh ${actorOf(session)} (tautan lama tidak berlaku)` });
+  syncUser(u);
   return enrichUser(u);
 }
 
@@ -406,6 +413,7 @@ export async function disableUser(id, reason, session) {
   if (u.id === session.userId || u.status === 'DISABLED') throw new ApiError('CONFLICT');
   Object.assign(u, { status: 'DISABLED', disabledAt: now(), disabledBy: actorOf(session), disabledReason: reason });
   u.log.push({ at: now(), text: `Akun dinonaktifkan: ${reason}` });
+  syncUser(u);
   return enrichUser(u);
 }
 
@@ -433,11 +441,13 @@ export async function activateAccount(userId, password, mode = 'activate') {
   if (u && mode === 'reset' && u.resetSentAt) {
     Object.assign(u, { password, resetSentAt: null });
     u.log.push({ at: now(), text: 'Password diatur ulang melalui tautan reset' });
+    syncUser(u, password);
     return { ok: true };
   }
   if (u && accountStatus(u) === 'PENDING') {
     Object.assign(u, { status: 'ACTIVE', activatedAt: u.activatedAt ?? now(), password });
     u.log.push({ at: now(), text: 'Password dibuat, akun aktif' });
+    syncUser(u, password);
   }
   return { ok: true };
 }
@@ -450,6 +460,7 @@ export async function sendResetPassword(id, session) {
   if (accountStatus(u) !== 'ACTIVE') throw new ApiError('CONFLICT');
   u.resetSentAt = now();
   u.log.push({ at: now(), text: `Tautan reset password dikirim ke ${u.email} oleh ${actorOf(session)}; sesi aktif diakhiri` });
+  syncUser(u);
   return enrichUser(u);
 }
 
@@ -472,6 +483,7 @@ export async function changeEmail(id, newEmail, reason, sendReset, session) {
   }
   u.log.push({ at: now(), text: `Email diubah dari ${old} ke ${email} oleh ${actorOf(session)}: ${reason}. Pemberitahuan dikirim ke email lama` });
   if (sendReset && accountStatus(u) === 'ACTIVE') { u.resetSentAt = now(); u.log.push({ at: now(), text: `Tautan reset password dikirim ke ${email}` }); }
+  syncUser(u);
   return enrichUser(u);
 }
 
@@ -496,7 +508,7 @@ export async function updatePartnerData(pid, changes, reason, session) {
     obj[key] = c.value;
   });
   const u = users.find((x) => x.partnerId === p.id);
-  if (u) u.fullName = p.pic.name;
+  if (u) { u.fullName = p.pic.name; syncUser(u); }
   log(p, { from: null, to: null, by: actorOf(session), reason: `Data partner diubah (${changes.map((c) => c.label).join(', ')}): ${reason}` });
   return enrich(p);
 }
