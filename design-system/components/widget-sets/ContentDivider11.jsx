@@ -40,7 +40,7 @@ export function _ContentDivider11(_p = {}) {
       </svg>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -72,7 +72,7 @@ export function _ContentDivider11(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         lineHeight: "16px",
@@ -101,7 +101,7 @@ export function _ContentDivider11(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         lineHeight: "16px",

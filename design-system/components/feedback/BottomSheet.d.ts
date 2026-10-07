@@ -19,4 +19,11 @@ export interface BottomSheetFooterProps { left?: React.ReactNode;
   stretch?: boolean;
   style?: React.CSSProperties; }
 export declare function BottomSheetFooter(props: BottomSheetFooterProps): React.ReactElement | null;
+export interface StatusBottomSheetProps { status?: "error" | "warning" | "success" | "information" | "feature";
+  title?: React.ReactNode;
+  children?: React.ReactNode;
+  footer?: React.ReactNode;
+  width?: number;
+  style?: React.CSSProperties; }
+export declare function StatusBottomSheet(props: StatusBottomSheetProps): React.ReactElement | null;
 export default BottomSheet;

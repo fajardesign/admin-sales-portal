@@ -127,7 +127,7 @@ export function _RatingReview10(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           whiteSpace: "nowrap",
@@ -215,7 +215,7 @@ export function _RatingReview10(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           whiteSpace: "nowrap",
@@ -357,7 +357,7 @@ export function _RatingReview10(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           whiteSpace: "nowrap",
@@ -445,7 +445,7 @@ export function _RatingReview10(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           whiteSpace: "nowrap",

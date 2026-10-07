@@ -45,7 +45,7 @@ export function Buttons11NeutralStroke17(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           whiteSpace: "nowrap",

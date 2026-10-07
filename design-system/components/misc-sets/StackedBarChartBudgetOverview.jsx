@@ -31,7 +31,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -42,7 +42,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
         }}>{props.text1 ?? "20k"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -53,7 +53,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
         }}>{props.text2 ?? "15k"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -64,7 +64,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
         }}>{props.text3 ?? "10k"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -142,7 +142,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -207,7 +207,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -280,7 +280,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -353,7 +353,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -426,7 +426,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -499,7 +499,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -572,7 +572,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -645,7 +645,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -718,7 +718,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -791,7 +791,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -864,7 +864,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -937,7 +937,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -975,7 +975,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -986,7 +986,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
         }}>{props.text1 ?? "20k"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -997,7 +997,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
         }}>{props.text2 ?? "15k"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -1008,7 +1008,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
         }}>{props.text3 ?? "10k"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -1086,7 +1086,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -1151,7 +1151,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -1224,7 +1224,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -1297,7 +1297,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -1370,7 +1370,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -1443,7 +1443,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -1516,7 +1516,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -1554,7 +1554,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -1565,7 +1565,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
         }}>{props.text1 ?? "20k"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -1576,7 +1576,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
         }}>{props.text2 ?? "15k"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -1587,7 +1587,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
         }}>{props.text3 ?? "10k"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -1673,7 +1673,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -1746,7 +1746,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -1819,7 +1819,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -1892,7 +1892,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -1965,7 +1965,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -2038,7 +2038,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -2076,7 +2076,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -2087,7 +2087,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
         }}>{props.text1 ?? "20k"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -2098,7 +2098,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
         }}>{props.text2 ?? "15k"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -2109,7 +2109,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
         }}>{props.text3 ?? "10k"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -2195,7 +2195,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -2268,7 +2268,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -2341,7 +2341,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",
@@ -2414,7 +2414,7 @@ export function StackedBarChartBudgetOverview(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             textAlign: "center",

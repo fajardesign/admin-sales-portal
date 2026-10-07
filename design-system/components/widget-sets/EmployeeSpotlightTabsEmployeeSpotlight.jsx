@@ -43,7 +43,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -54,7 +54,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
           }}>Label</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -65,7 +65,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
           }}>*</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -122,7 +122,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
             </div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -183,7 +183,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -209,7 +209,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -235,7 +235,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -259,7 +259,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 18,
           textAlign: "center",
@@ -272,7 +272,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
         }}>{props.text1 ?? "Matthew Johnson"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           textAlign: "center",
@@ -366,7 +366,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 12,
         textAlign: "center",
@@ -412,7 +412,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -423,7 +423,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
           }}>Label</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -434,7 +434,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
           }}>*</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -491,7 +491,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
             </div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -552,7 +552,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -580,7 +580,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -606,7 +606,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -655,7 +655,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 12,
               lineHeight: "16px",
@@ -666,7 +666,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
             }}>{props.text1 ?? "James Brown"}</span>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 14,
               lineHeight: "20px",
@@ -717,7 +717,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 12,
               lineHeight: "16px",
@@ -728,7 +728,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
             }}>{props.text3 ?? "Lena Müller"}</span>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 14,
               lineHeight: "20px",
@@ -789,7 +789,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 12,
               lineHeight: "16px",
@@ -799,7 +799,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
             }}>Juma Omondi</span>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 14,
               lineHeight: "20px",
@@ -869,7 +869,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -934,7 +934,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -945,7 +945,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
           }}>Label</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -956,7 +956,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
           }}>*</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -1013,7 +1013,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
             </div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -1074,7 +1074,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -1100,7 +1100,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -1128,7 +1128,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -1152,7 +1152,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 18,
           textAlign: "center",
@@ -1165,7 +1165,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
         }}>{props.text1 ?? "$50 Gift Card for Nike"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           textAlign: "center",
@@ -1270,7 +1270,7 @@ export function EmployeeSpotlightTabsEmployeeSpotlight(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 12,
         textAlign: "center",

@@ -26,7 +26,7 @@ export function InlineTipsDocumentation(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 18,
         lineHeight: "32px",
@@ -59,7 +59,7 @@ export function InlineTipsDocumentation(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 18,
         lineHeight: "32px",
@@ -92,7 +92,7 @@ export function InlineTipsDocumentation(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 18,
         lineHeight: "32px",
@@ -125,7 +125,7 @@ export function InlineTipsDocumentation(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 18,
         lineHeight: "32px",
@@ -158,7 +158,7 @@ export function InlineTipsDocumentation(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 18,
         lineHeight: "32px",
@@ -191,7 +191,7 @@ export function InlineTipsDocumentation(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 18,
         lineHeight: "32px",
@@ -224,7 +224,7 @@ export function InlineTipsDocumentation(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 18,
         lineHeight: "32px",

@@ -85,7 +85,7 @@ export function SectionsDocumentation11(_p = {}) {
             }}>{props.icon1 ?? <GlobalLine style={{ transform: "scale(0.833, 0.833)", transformOrigin: "0 0" }} />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             textAlign: "right",
@@ -135,7 +135,7 @@ export function SectionsDocumentation11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "right",
@@ -148,7 +148,7 @@ export function SectionsDocumentation11(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             textAlign: "right",
@@ -162,7 +162,7 @@ export function SectionsDocumentation11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 18,
           lineHeight: "32px",
@@ -234,7 +234,7 @@ export function SectionsDocumentation11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 12,
               textAlign: "center",
@@ -248,7 +248,7 @@ export function SectionsDocumentation11(_p = {}) {
             }}>{props.text2 ?? "Email"}</span>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 16,
               textAlign: "center",
@@ -323,7 +323,7 @@ export function SectionsDocumentation11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 12,
               textAlign: "center",
@@ -337,7 +337,7 @@ export function SectionsDocumentation11(_p = {}) {
             }}>{props.text4 ?? "BUY FROM"}</span>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 16,
               textAlign: "center",
@@ -416,7 +416,7 @@ export function SectionsDocumentation11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 12,
               textAlign: "center",
@@ -429,7 +429,7 @@ export function SectionsDocumentation11(_p = {}) {
             }}>DOCS</span>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 16,
               textAlign: "center",
@@ -468,7 +468,7 @@ export function SectionsDocumentation11(_p = {}) {
           }}>{props.pickBrand ?? <Notion style={{ transform: "scale(0.625, 0.625)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           whiteSpace: "nowrap",
@@ -479,7 +479,7 @@ export function SectionsDocumentation11(_p = {}) {
         }}>Documentation</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           whiteSpace: "nowrap",
@@ -490,7 +490,7 @@ export function SectionsDocumentation11(_p = {}) {
         }}>→</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           whiteSpace: "nowrap",

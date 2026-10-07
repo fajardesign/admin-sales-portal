@@ -47,7 +47,7 @@ export function ConnectionStatusTopbar10(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Mulish, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -128,7 +128,7 @@ export function ConnectionStatusTopbar10(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Mulish, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",

@@ -31,4 +31,7 @@ export interface PeriodRangeProps { children?: React.ReactNode;
   active?: boolean;
   onClick?: () => void; }
 export declare function PeriodRange(props: PeriodRangeProps): React.ReactElement | null;
+export interface DayLabelProps { children?: React.ReactNode;
+  style?: React.CSSProperties; }
+export declare function DayLabel(props: DayLabelProps): React.ReactElement | null;
 export default Calendar;

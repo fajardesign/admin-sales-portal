@@ -39,7 +39,7 @@ export function HeroDocumentation(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           lineHeight: "20px",
@@ -51,7 +51,7 @@ export function HeroDocumentation(_p = {}) {
         }}>{props.text1 ?? "Overview"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           lineHeight: "20px",
@@ -64,7 +64,7 @@ export function HeroDocumentation(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 16,
         lineHeight: "24px",
@@ -123,7 +123,7 @@ export function HeroDocumentation(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           whiteSpace: "nowrap",
@@ -134,7 +134,7 @@ export function HeroDocumentation(_p = {}) {
         }}>{props.text4 ?? "Guide & Best Practices"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           whiteSpace: "nowrap",
@@ -145,7 +145,7 @@ export function HeroDocumentation(_p = {}) {
         }}>→</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           whiteSpace: "nowrap",
@@ -184,7 +184,7 @@ export function HeroDocumentation(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           textAlign: "center",
@@ -198,7 +198,7 @@ export function HeroDocumentation(_p = {}) {
         }}>{props.text1 ?? "core elements"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "\"Inter Display\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-display)",
           fontWeight: 500,
           fontSize: 56,
           textAlign: "center",
@@ -265,7 +265,7 @@ export function HeroDocumentation(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -276,7 +276,7 @@ export function HeroDocumentation(_p = {}) {
           }}>{props.text3 ?? "Learn more about Color Palette"}</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -321,7 +321,7 @@ export function HeroDocumentation(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           lineHeight: "20px",
@@ -334,7 +334,7 @@ export function HeroDocumentation(_p = {}) {
         }}>{props.text1 ?? "Free component"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "\"Inter Display\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-display)",
           fontWeight: 500,
           fontSize: 56,
           lineHeight: "64px",
@@ -347,7 +347,7 @@ export function HeroDocumentation(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 16,
         lineHeight: "24px",
@@ -379,7 +379,7 @@ export function HeroDocumentation(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             lineHeight: "24px",
@@ -391,7 +391,7 @@ export function HeroDocumentation(_p = {}) {
           }}>{props.text3 ?? "Radix UI Integration"}</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             lineHeight: "20px",
@@ -414,7 +414,7 @@ export function HeroDocumentation(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             lineHeight: "24px",
@@ -425,7 +425,7 @@ export function HeroDocumentation(_p = {}) {
           }}>Polymorphic Components</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             lineHeight: "20px",
@@ -448,7 +448,7 @@ export function HeroDocumentation(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             lineHeight: "24px",
@@ -459,7 +459,7 @@ export function HeroDocumentation(_p = {}) {
           }}>Built with React</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             lineHeight: "20px",
@@ -482,7 +482,7 @@ export function HeroDocumentation(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             lineHeight: "24px",
@@ -493,7 +493,7 @@ export function HeroDocumentation(_p = {}) {
           }}>Styled with Tailwind</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             lineHeight: "20px",
@@ -530,7 +530,7 @@ export function HeroDocumentation(_p = {}) {
           }}>{props.icon1 ?? <React style={{ transform: "scale(0.625, 0.625)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           whiteSpace: "nowrap",
@@ -541,7 +541,7 @@ export function HeroDocumentation(_p = {}) {
         }}>View in Code Library</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           whiteSpace: "nowrap",
@@ -552,7 +552,7 @@ export function HeroDocumentation(_p = {}) {
         }}>→</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           whiteSpace: "nowrap",

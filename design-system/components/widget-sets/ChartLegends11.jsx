@@ -26,7 +26,7 @@ export function _ChartLegends11(_p = {}) {
         }}>{props.icon1 ?? <ChartLegendDots11 colors={"🩶 gray"} size={"sm"} />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 18,
         whiteSpace: "nowrap",
@@ -58,7 +58,7 @@ export function _ChartLegends11(_p = {}) {
         }}>{props.icon1 ?? <ChartLegendDots11 colors={"🤍 light gray"} size={"sm"} />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -89,7 +89,7 @@ export function _ChartLegends11(_p = {}) {
         }}>{props.icon1 ?? <ChartLegendDots11 colors={"💙 blue"} size={"sm"} />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -120,7 +120,7 @@ export function _ChartLegends11(_p = {}) {
         }}>{props.icon1 ?? <ChartLegendDots11 colors={"🧡 orange"} size={"sm"} />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -151,7 +151,7 @@ export function _ChartLegends11(_p = {}) {
         }}>{props.icon1 ?? <ChartLegendDots11 colors={"💔 red"} size={"sm"} />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -182,7 +182,7 @@ export function _ChartLegends11(_p = {}) {
         }}>{props.icon1 ?? <ChartLegendDots11 colors={"💚 green"} size={"sm"} />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -213,7 +213,7 @@ export function _ChartLegends11(_p = {}) {
         }}>{props.icon1 ?? <ChartLegendDots11 colors={"💛 yellow"} size={"sm"} />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -244,7 +244,7 @@ export function _ChartLegends11(_p = {}) {
         }}>{props.icon1 ?? <ChartLegendDots11 colors={"💜 purple"} size={"sm"} />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -275,7 +275,7 @@ export function _ChartLegends11(_p = {}) {
         }}>{props.icon1 ?? <ChartLegendDots11 colors={"🩵 sky"} size={"sm"} />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -306,7 +306,7 @@ export function _ChartLegends11(_p = {}) {
         }}>{props.icon1 ?? <ChartLegendDots11 colors={"🩷 pink"} size={"sm"} />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -337,7 +337,7 @@ export function _ChartLegends11(_p = {}) {
         }}>{props.icon1 ?? <ChartLegendDots11 colors={"🩵 teal"} size={"sm"} />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -379,7 +379,7 @@ export function _ChartLegends11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",

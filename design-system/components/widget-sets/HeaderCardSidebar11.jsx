@@ -49,7 +49,7 @@ export function HeaderCardSidebar11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             lineHeight: "20px",
@@ -60,7 +60,7 @@ export function HeaderCardSidebar11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",

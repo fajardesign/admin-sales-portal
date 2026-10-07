@@ -52,7 +52,7 @@ export function _FileFormatIcons11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 600,
           fontSize: 11,
           whiteSpace: "nowrap",
@@ -113,7 +113,7 @@ export function _FileFormatIcons11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 600,
           fontSize: 11,
           whiteSpace: "nowrap",
@@ -174,7 +174,7 @@ export function _FileFormatIcons11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 600,
           fontSize: 11,
           whiteSpace: "nowrap",
@@ -235,7 +235,7 @@ export function _FileFormatIcons11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 600,
           fontSize: 11,
           whiteSpace: "nowrap",
@@ -296,7 +296,7 @@ export function _FileFormatIcons11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 600,
           fontSize: 11,
           whiteSpace: "nowrap",
@@ -357,7 +357,7 @@ export function _FileFormatIcons11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 600,
           fontSize: 11,
           whiteSpace: "nowrap",
@@ -418,7 +418,7 @@ export function _FileFormatIcons11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 600,
           fontSize: 11,
           whiteSpace: "nowrap",
@@ -479,7 +479,7 @@ export function _FileFormatIcons11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 600,
           fontSize: 11,
           whiteSpace: "nowrap",
@@ -540,7 +540,7 @@ export function _FileFormatIcons11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 600,
           fontSize: 11,
           whiteSpace: "nowrap",
@@ -601,7 +601,7 @@ export function _FileFormatIcons11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 600,
           fontSize: 8.800000190734863,
           whiteSpace: "nowrap",
@@ -662,7 +662,7 @@ export function _FileFormatIcons11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 600,
           fontSize: 8.800000190734863,
           whiteSpace: "nowrap",
@@ -723,7 +723,7 @@ export function _FileFormatIcons11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 600,
           fontSize: 8.800000190734863,
           whiteSpace: "nowrap",
@@ -784,7 +784,7 @@ export function _FileFormatIcons11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 600,
           fontSize: 8.800000190734863,
           whiteSpace: "nowrap",
@@ -845,7 +845,7 @@ export function _FileFormatIcons11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 600,
           fontSize: 8.800000190734863,
           whiteSpace: "nowrap",
@@ -906,7 +906,7 @@ export function _FileFormatIcons11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 600,
           fontSize: 8.800000190734863,
           whiteSpace: "nowrap",
@@ -967,7 +967,7 @@ export function _FileFormatIcons11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 600,
           fontSize: 8.800000190734863,
           whiteSpace: "nowrap",
@@ -1028,7 +1028,7 @@ export function _FileFormatIcons11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 600,
           fontSize: 8.800000190734863,
           whiteSpace: "nowrap",
@@ -1089,7 +1089,7 @@ export function _FileFormatIcons11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 600,
           fontSize: 8.800000190734863,
           whiteSpace: "nowrap",

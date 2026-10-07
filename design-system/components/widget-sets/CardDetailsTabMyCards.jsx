@@ -40,7 +40,7 @@ export function CardDetailsTabMyCards(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -51,7 +51,7 @@ export function CardDetailsTabMyCards(_p = {}) {
           }}>Label</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -62,7 +62,7 @@ export function CardDetailsTabMyCards(_p = {}) {
           }}>*</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -119,7 +119,7 @@ export function CardDetailsTabMyCards(_p = {}) {
             </div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -180,7 +180,7 @@ export function CardDetailsTabMyCards(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -207,7 +207,7 @@ export function CardDetailsTabMyCards(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -252,7 +252,7 @@ export function CardDetailsTabMyCards(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             lineHeight: "20px",
@@ -263,7 +263,7 @@ export function CardDetailsTabMyCards(_p = {}) {
           }}>{props.text1 ?? "Card Number"}</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -285,7 +285,7 @@ export function CardDetailsTabMyCards(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             lineHeight: "20px",
@@ -296,7 +296,7 @@ export function CardDetailsTabMyCards(_p = {}) {
           }}>{props.text3 ?? "Expiry Date"}</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -318,7 +318,7 @@ export function CardDetailsTabMyCards(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             lineHeight: "20px",
@@ -328,7 +328,7 @@ export function CardDetailsTabMyCards(_p = {}) {
           }}>CVC</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -350,7 +350,7 @@ export function CardDetailsTabMyCards(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             lineHeight: "20px",
@@ -360,7 +360,7 @@ export function CardDetailsTabMyCards(_p = {}) {
           }}>Spending Limit</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -407,7 +407,7 @@ export function CardDetailsTabMyCards(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -418,7 +418,7 @@ export function CardDetailsTabMyCards(_p = {}) {
           }}>Label</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -429,7 +429,7 @@ export function CardDetailsTabMyCards(_p = {}) {
           }}>*</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -486,7 +486,7 @@ export function CardDetailsTabMyCards(_p = {}) {
             </div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -547,7 +547,7 @@ export function CardDetailsTabMyCards(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -576,7 +576,7 @@ export function CardDetailsTabMyCards(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -621,7 +621,7 @@ export function CardDetailsTabMyCards(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             lineHeight: "20px",
@@ -632,7 +632,7 @@ export function CardDetailsTabMyCards(_p = {}) {
           }}>{props.text1 ?? "Card Number"}</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -654,7 +654,7 @@ export function CardDetailsTabMyCards(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             lineHeight: "20px",
@@ -665,7 +665,7 @@ export function CardDetailsTabMyCards(_p = {}) {
           }}>{props.text3 ?? "Expiry Date"}</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -687,7 +687,7 @@ export function CardDetailsTabMyCards(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             lineHeight: "20px",
@@ -697,7 +697,7 @@ export function CardDetailsTabMyCards(_p = {}) {
           }}>CVC</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -719,7 +719,7 @@ export function CardDetailsTabMyCards(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             lineHeight: "20px",
@@ -729,7 +729,7 @@ export function CardDetailsTabMyCards(_p = {}) {
           }}>Spending Limit</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",

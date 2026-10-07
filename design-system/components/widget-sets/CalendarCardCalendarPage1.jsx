@@ -35,7 +35,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           whiteSpace: "nowrap",
@@ -49,7 +49,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         }}>{props.editTitle}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           lineHeight: "20px",
@@ -89,7 +89,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           whiteSpace: "nowrap",
@@ -102,7 +102,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         }}>{props.editTitle}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 11,
           lineHeight: "12px",
@@ -143,7 +143,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           whiteSpace: "nowrap",
@@ -156,7 +156,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         }}>{props.editTitle}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 11,
           lineHeight: "12px",
@@ -198,7 +198,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           whiteSpace: "nowrap",
@@ -211,7 +211,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         }}>{props.editTitle}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 11,
           lineHeight: "12px",
@@ -264,7 +264,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -274,7 +274,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         }}>{props.text1 ?? "+4"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           textAlign: "center",
@@ -315,7 +315,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           whiteSpace: "nowrap",
@@ -328,7 +328,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         }}>{props.editTitle}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 11,
           lineHeight: "12px",
@@ -381,7 +381,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -391,7 +391,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         }}>{props.text1 ?? "+4"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           textAlign: "center",
@@ -432,7 +432,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           whiteSpace: "nowrap",
@@ -445,7 +445,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         }}>{props.editTitle}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 11,
           lineHeight: "12px",
@@ -475,7 +475,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
           }}>{props.icon1 ?? <MapPin2Fill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           whiteSpace: "nowrap",
@@ -518,7 +518,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           whiteSpace: "nowrap",
@@ -531,7 +531,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         }}>{props.editTitle}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 11,
           lineHeight: "12px",
@@ -561,7 +561,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
           }}>{props.icon1 ?? <MapPin2Fill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           whiteSpace: "nowrap",
@@ -603,7 +603,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           lineHeight: "16px",
@@ -613,7 +613,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         }}>{props.editTitle}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 11,
           lineHeight: "12px",
@@ -666,7 +666,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -676,7 +676,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         }}>{props.text1 ?? "+4"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           textAlign: "center",
@@ -717,7 +717,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           lineHeight: "16px",
@@ -727,7 +727,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         }}>{props.editTitle}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 11,
           lineHeight: "12px",
@@ -780,7 +780,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -790,7 +790,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         }}>{props.text1 ?? "+4"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           textAlign: "center",
@@ -831,7 +831,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           lineHeight: "16px",
@@ -841,7 +841,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         }}>{props.editTitle}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 11,
           lineHeight: "12px",
@@ -871,7 +871,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
           }}>{props.icon1 ?? <MapPin2Fill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           whiteSpace: "nowrap",
@@ -913,7 +913,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           lineHeight: "16px",
@@ -923,7 +923,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         }}>{props.editTitle}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 11,
           lineHeight: "12px",
@@ -953,7 +953,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
           }}>{props.icon1 ?? <MapPin2Fill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           whiteSpace: "nowrap",
@@ -995,7 +995,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           lineHeight: "16px",
@@ -1005,7 +1005,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         }}>{props.editTitle}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 11,
           lineHeight: "12px",
@@ -1058,7 +1058,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -1068,7 +1068,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         }}>{props.text1 ?? "+4"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           textAlign: "center",
@@ -1109,7 +1109,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           lineHeight: "16px",
@@ -1119,7 +1119,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         }}>{props.editTitle}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 11,
           lineHeight: "12px",
@@ -1172,7 +1172,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -1182,7 +1182,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         }}>{props.text1 ?? "+4"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           textAlign: "center",
@@ -1223,7 +1223,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           lineHeight: "16px",
@@ -1233,7 +1233,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         }}>{props.editTitle}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 11,
           lineHeight: "12px",
@@ -1263,7 +1263,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
           }}>{props.icon1 ?? <MapPin2Fill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           whiteSpace: "nowrap",
@@ -1305,7 +1305,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           lineHeight: "16px",
@@ -1315,7 +1315,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
         }}>{props.editTitle}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 11,
           lineHeight: "12px",
@@ -1345,7 +1345,7 @@ export function CalendarCardCalendarPage1(_p = {}) {
           }}>{props.icon1 ?? <MapPin2Fill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           whiteSpace: "nowrap",

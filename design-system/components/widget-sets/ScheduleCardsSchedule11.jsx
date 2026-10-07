@@ -50,7 +50,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             lineHeight: "24px",
@@ -62,7 +62,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
           }}>{props.text1 ?? "Meeting with James Brown"}</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 12,
             lineHeight: "16px",
@@ -127,7 +127,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           lineHeight: "20px",
@@ -180,7 +180,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             lineHeight: "20px",
@@ -191,7 +191,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
           }}>{props.text1 ?? "Tesla 4th year Celebration Party"}</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 12,
             lineHeight: "16px",
@@ -275,7 +275,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -296,7 +296,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -313,7 +313,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
           }}>{props.icon3 ?? <User6Fill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           whiteSpace: "nowrap",
@@ -361,7 +361,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             lineHeight: "20px",
@@ -373,7 +373,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
           }}>{props.text1 ?? "Christmas Holiday"}</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 12,
             lineHeight: "16px",
@@ -418,7 +418,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             textAlign: "center",
@@ -431,7 +431,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           lineHeight: "20px",
@@ -443,7 +443,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -491,7 +491,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             lineHeight: "24px",
@@ -503,7 +503,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
           }}>{props.text1 ?? "Meeting with Laura Perez"}</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 12,
             lineHeight: "16px",
@@ -570,7 +570,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -622,7 +622,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             lineHeight: "20px",
@@ -634,7 +634,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
           }}>{props.text1 ?? "Designing Camp for AlignUI"}</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 12,
             lineHeight: "16px",
@@ -718,7 +718,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           lineHeight: "20px",
@@ -740,7 +740,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -757,7 +757,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
           }}>{props.icon3 ?? <User6Fill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           whiteSpace: "nowrap",
@@ -805,7 +805,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             lineHeight: "20px",
@@ -817,7 +817,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
           }}>{props.text1 ?? "Woman’s Day"}</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 12,
             lineHeight: "16px",
@@ -862,7 +862,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             textAlign: "center",
@@ -875,7 +875,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           lineHeight: "20px",
@@ -887,7 +887,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -935,7 +935,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             lineHeight: "20px",
@@ -947,7 +947,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
           }}>{props.text1 ?? "Meeting with Arthur Taylor"}</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 12,
             lineHeight: "16px",
@@ -1013,7 +1013,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -1065,7 +1065,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             lineHeight: "20px",
@@ -1077,7 +1077,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
           }}>{props.text1 ?? "AlignUI Launch Party"}</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 12,
             lineHeight: "16px",
@@ -1161,7 +1161,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           lineHeight: "20px",
@@ -1183,7 +1183,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -1200,7 +1200,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
           }}>{props.icon3 ?? <User6Fill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           whiteSpace: "nowrap",
@@ -1248,7 +1248,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             lineHeight: "20px",
@@ -1260,7 +1260,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
           }}>{props.text1 ?? "Workers’ Day"}</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 12,
             lineHeight: "16px",
@@ -1305,7 +1305,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             textAlign: "center",
@@ -1318,7 +1318,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           lineHeight: "20px",
@@ -1330,7 +1330,7 @@ export function ScheduleCardsSchedule11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 12,
         whiteSpace: "nowrap",

@@ -50,7 +50,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           lineHeight: "20px",
@@ -62,7 +62,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         }}>{props.text1 ?? "Daily Meeting"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           lineHeight: "20px",
@@ -116,7 +116,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           lineHeight: "20px",
@@ -128,7 +128,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         }}>{props.text1 ?? "Daily Meeting"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -181,7 +181,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           lineHeight: "20px",
@@ -194,7 +194,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         <span style={{
           position: "relative",
           opacity: 0.8,
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -247,7 +247,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           lineHeight: "20px",
@@ -259,7 +259,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         }}>{props.text1 ?? "Daily Meeting"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -300,7 +300,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           whiteSpace: "nowrap",
@@ -363,7 +363,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           lineHeight: "20px",
@@ -375,7 +375,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         }}>{props.text1 ?? "Cloud Capacity"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -434,7 +434,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           lineHeight: "20px",
@@ -446,7 +446,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         }}>{props.text1 ?? "Cloud Capacity"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -505,7 +505,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           lineHeight: "20px",
@@ -518,7 +518,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         <span style={{
           position: "relative",
           opacity: 0.8,
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -593,7 +593,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           lineHeight: "20px",
@@ -605,7 +605,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         }}>{props.text1 ?? "Cloud Capacity"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -656,7 +656,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           whiteSpace: "nowrap",
@@ -728,7 +728,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 12,
         textAlign: "center",
@@ -788,7 +788,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 14,
         textAlign: "center",
@@ -849,7 +849,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 14,
         textAlign: "center",
@@ -907,7 +907,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 14,
         textAlign: "center",
@@ -948,7 +948,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           whiteSpace: "nowrap",
@@ -1030,7 +1030,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           lineHeight: "20px",
@@ -1042,7 +1042,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         }}>{props.text1 ?? "Claim your gift!"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -1104,7 +1104,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           lineHeight: "20px",
@@ -1116,7 +1116,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         }}>{props.text1 ?? "Claim your gift!"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -1178,7 +1178,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           lineHeight: "20px",
@@ -1191,7 +1191,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         <span style={{
           position: "relative",
           opacity: 0.8,
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -1253,7 +1253,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 14,
           lineHeight: "20px",
@@ -1265,7 +1265,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         }}>{props.text1 ?? "Claim your gift!"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -1323,7 +1323,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           whiteSpace: "nowrap",
@@ -1333,7 +1333,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         }}>{props.text1 ?? "File Syncing"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           lineHeight: "20px",
@@ -1397,7 +1397,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           whiteSpace: "nowrap",
@@ -1407,7 +1407,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         }}>{props.text1 ?? "File Syncing"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -1465,7 +1465,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             lineHeight: "20px",
@@ -1477,7 +1477,7 @@ export function FeatureCardsSidebar11(_p = {}) {
           <span style={{
             position: "relative",
             opacity: 0.8,
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             whiteSpace: "nowrap",
@@ -1528,7 +1528,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             lineHeight: "16px",
@@ -1554,7 +1554,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           whiteSpace: "nowrap",
@@ -1564,7 +1564,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         }}>{props.text4 ?? "File Syncing"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -1621,7 +1621,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             lineHeight: "20px",
@@ -1631,7 +1631,7 @@ export function FeatureCardsSidebar11(_p = {}) {
           }}>Cloud Storage</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -1682,7 +1682,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             lineHeight: "16px",
@@ -1707,7 +1707,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           whiteSpace: "nowrap",
@@ -1717,7 +1717,7 @@ export function FeatureCardsSidebar11(_p = {}) {
         }}>{props.text1 ?? "File Syncing"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -1770,7 +1770,7 @@ export function FeatureCardsSidebar11(_p = {}) {
           }}>{props.icon1 ?? <CustomerService2Fill />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 16,
           lineHeight: "24px",
@@ -1782,7 +1782,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 14,
         lineHeight: "20px",
@@ -1830,7 +1830,7 @@ export function FeatureCardsSidebar11(_p = {}) {
           }}>{props.icon1 ?? <CustomerService2Fill />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 16,
           lineHeight: "24px",
@@ -1842,7 +1842,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 12,
         lineHeight: "16px",
@@ -1890,7 +1890,7 @@ export function FeatureCardsSidebar11(_p = {}) {
           }}>{props.icon1 ?? <CustomerService2Fill />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 16,
           lineHeight: "24px",
@@ -1903,7 +1903,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       <span style={{
         position: "relative",
         opacity: 0.8,
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 14,
         lineHeight: "20px",
@@ -1952,7 +1952,7 @@ export function FeatureCardsSidebar11(_p = {}) {
           }}>{props.icon1 ?? <CustomerService2Fill />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 16,
           lineHeight: "24px",
@@ -1964,7 +1964,7 @@ export function FeatureCardsSidebar11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 14,
         lineHeight: "20px",

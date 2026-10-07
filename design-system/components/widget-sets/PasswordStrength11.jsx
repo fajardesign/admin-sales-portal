@@ -55,7 +55,7 @@ export function _PasswordStrength11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 12,
         lineHeight: "16px",
@@ -83,7 +83,7 @@ export function _PasswordStrength11(_p = {}) {
           }}>{props.icon1 ?? <SelectBoxCircleFill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -111,7 +111,7 @@ export function _PasswordStrength11(_p = {}) {
           }}>{props.icon2 ?? <SelectBoxCircleFill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -139,7 +139,7 @@ export function _PasswordStrength11(_p = {}) {
           }}>{props.icon3 ?? <SelectBoxCircleFill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -198,7 +198,7 @@ export function _PasswordStrength11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 12,
         lineHeight: "16px",
@@ -226,7 +226,7 @@ export function _PasswordStrength11(_p = {}) {
           }}>{props.icon1 ?? <SelectBoxCircleFill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -254,7 +254,7 @@ export function _PasswordStrength11(_p = {}) {
           }}>{props.icon2 ?? <CloseCircleFill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -282,7 +282,7 @@ export function _PasswordStrength11(_p = {}) {
           }}>{props.icon3 ?? <CloseCircleFill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -341,7 +341,7 @@ export function _PasswordStrength11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 12,
         lineHeight: "16px",
@@ -369,7 +369,7 @@ export function _PasswordStrength11(_p = {}) {
           }}>{props.icon1 ?? <SelectBoxCircleFill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -397,7 +397,7 @@ export function _PasswordStrength11(_p = {}) {
           }}>{props.icon2 ?? <SelectBoxCircleFill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -425,7 +425,7 @@ export function _PasswordStrength11(_p = {}) {
           }}>{props.icon3 ?? <CloseCircleFill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -484,7 +484,7 @@ export function _PasswordStrength11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 12,
         lineHeight: "16px",
@@ -512,7 +512,7 @@ export function _PasswordStrength11(_p = {}) {
           }}>{props.icon1 ?? <SelectBoxCircleFill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -540,7 +540,7 @@ export function _PasswordStrength11(_p = {}) {
           }}>{props.icon2 ?? <SelectBoxCircleFill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -568,7 +568,7 @@ export function _PasswordStrength11(_p = {}) {
           }}>{props.icon3 ?? <SelectBoxCircleFill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",

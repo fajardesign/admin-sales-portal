@@ -46,7 +46,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -57,7 +57,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
           }}>Label</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -68,7 +68,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
           }}>*</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -125,7 +125,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
             </div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -186,7 +186,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -212,7 +212,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -238,7 +238,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -321,7 +321,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               lineHeight: "20px",
@@ -332,7 +332,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
             }}>Salary Deposit</span>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 12,
               whiteSpace: "nowrap",
@@ -356,7 +356,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -367,7 +367,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
             }}>$3,500.00</span>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 12,
               whiteSpace: "nowrap",
@@ -471,7 +471,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               lineHeight: "20px",
@@ -482,7 +482,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
             }}>Stock Dividend</span>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 12,
               whiteSpace: "nowrap",
@@ -506,7 +506,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -517,7 +517,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
             }}>$846.14</span>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 12,
               whiteSpace: "nowrap",
@@ -628,7 +628,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -639,7 +639,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
           }}>Label</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -650,7 +650,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
           }}>*</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -707,7 +707,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
             </div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -768,7 +768,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -796,7 +796,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -822,7 +822,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -935,7 +935,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               lineHeight: "20px",
@@ -946,7 +946,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
             }}>Car Repairing Expenses</span>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 12,
               whiteSpace: "nowrap",
@@ -970,7 +970,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -981,7 +981,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
             }}>-$640.00</span>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 12,
               whiteSpace: "nowrap",
@@ -1077,7 +1077,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -1088,7 +1088,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
           }}>Label</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -1099,7 +1099,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
           }}>*</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -1156,7 +1156,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
             </div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -1217,7 +1217,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -1243,7 +1243,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -1271,7 +1271,7 @@ export function TransactionDetailTabsRecentTransactions(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",

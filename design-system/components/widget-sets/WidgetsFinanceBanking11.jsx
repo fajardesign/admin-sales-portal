@@ -109,7 +109,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             }}>{props.icon1 ?? <LineChartLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -158,7 +158,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -185,7 +185,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -212,7 +212,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -239,7 +239,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -266,7 +266,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -299,7 +299,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 12,
             whiteSpace: "nowrap",
@@ -342,7 +342,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             </div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 12,
               whiteSpace: "nowrap",
@@ -354,7 +354,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "\"Inter Display\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-display)",
           fontWeight: 500,
           fontSize: 20,
           lineHeight: "28px",
@@ -438,7 +438,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           textAlign: "center",
@@ -449,7 +449,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>{"Open "}<span style={{ color: "rgb(23,23,23)" }}>{"439,59"}</span></span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           textAlign: "center",
@@ -460,7 +460,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>{props.text4 ?? "∙"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           textAlign: "center",
@@ -472,7 +472,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         <span style={{
           position: "relative",
           width: 10,
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           textAlign: "center",
@@ -482,7 +482,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>∙</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           textAlign: "center",
@@ -542,7 +542,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             }}>{props.icon1 ?? <BankCardLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -600,7 +600,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -681,7 +681,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -708,7 +708,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -735,7 +735,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -774,7 +774,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 12,
               whiteSpace: "nowrap",
@@ -797,7 +797,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             }}>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 14,
                 whiteSpace: "nowrap",
@@ -808,7 +808,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
               }}>{props.text3 ?? "$1,500.00"}</span>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 18,
                 whiteSpace: "nowrap",
@@ -906,7 +906,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             }}>{props.icon1 ?? <LineChartLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -955,7 +955,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -982,7 +982,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -1009,7 +1009,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -1036,7 +1036,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -1063,7 +1063,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -1098,7 +1098,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           textAlign: "center",
@@ -1167,7 +1167,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             }}>{props.icon1 ?? <PieChartLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -1237,7 +1237,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           top: 64,
           width: 43,
           height: 16,
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           textAlign: "center",
@@ -1253,7 +1253,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           top: 84,
           width: 112,
           height: 32,
-          fontFamily: "\"Inter Display\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-display)",
           fontWeight: 500,
           fontSize: 32,
           textAlign: "center",
@@ -1335,7 +1335,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 12,
               textAlign: "center",
@@ -1347,7 +1347,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             }}>{props.text4 ?? "Shopping"}</span>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 12,
               textAlign: "center",
@@ -1422,7 +1422,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 12,
               textAlign: "center",
@@ -1433,7 +1433,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             }}>Utilities</span>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -1509,7 +1509,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 12,
               textAlign: "center",
@@ -1520,7 +1520,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             }}>Others</span>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -1550,7 +1550,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -1618,7 +1618,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             }}>{props.icon1 ?? <BankCardLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -1676,7 +1676,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -1739,7 +1739,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           textAlign: "center",
@@ -1798,7 +1798,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -1878,7 +1878,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             }}>{props.icon1 ?? <BankCardLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -1936,7 +1936,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -2035,7 +2035,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 12,
             lineHeight: "16px",
@@ -2148,7 +2148,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
               }}>
                 <span style={{
                   position: "relative",
-                  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontWeight: 500,
                   fontSize: 14,
                   lineHeight: "20px",
@@ -2159,7 +2159,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
                 }}>Grocery Shopping</span>
                 <span style={{
                   position: "relative",
-                  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontWeight: 400,
                   fontSize: 12,
                   whiteSpace: "nowrap",
@@ -2183,7 +2183,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
               }}>
                 <span style={{
                   position: "relative",
-                  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontWeight: 500,
                   fontSize: 14,
                   whiteSpace: "nowrap",
@@ -2194,7 +2194,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
                 }}>-$84.14</span>
                 <span style={{
                   position: "relative",
-                  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontWeight: 400,
                   fontSize: 12,
                   whiteSpace: "nowrap",
@@ -2287,7 +2287,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -2367,7 +2367,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             }}>{props.icon1 ?? <BarChartBoxLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -2439,7 +2439,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             </svg>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 11,
               textAlign: "center",
@@ -2476,7 +2476,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             </svg>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 11,
               textAlign: "center",
@@ -2513,7 +2513,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             </svg>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 11,
               textAlign: "center",
@@ -2550,7 +2550,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             </svg>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 11,
               textAlign: "center",
@@ -2586,7 +2586,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             </svg>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 11,
               textAlign: "center",
@@ -2622,7 +2622,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             </svg>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 11,
               textAlign: "center",
@@ -2655,7 +2655,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             <span style={{
               position: "relative",
               width: 48,
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 12,
               lineHeight: "16px",
@@ -2684,7 +2684,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             <span style={{
               position: "relative",
               width: 48,
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 12,
               lineHeight: "16px",
@@ -2713,7 +2713,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             <span style={{
               position: "relative",
               width: 48,
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 12,
               lineHeight: "16px",
@@ -2817,7 +2817,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             }}>{props.icon1 ?? <BankCardLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -2875,7 +2875,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -2928,7 +2928,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -2939,7 +2939,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>Label</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -2950,7 +2950,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>*</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -3007,7 +3007,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             </div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -3068,7 +3068,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -3094,7 +3094,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -3130,7 +3130,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           textAlign: "center",
@@ -3189,7 +3189,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -3269,7 +3269,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             }}>{props.icon1 ?? <SpeedUpLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -3311,7 +3311,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 16,
             lineHeight: "24px",
@@ -3323,7 +3323,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>{"Your "}<span style={{ color: "rgb(23,23,23)" }}>{"credit score"}</span>{" is "}<span style={{ color: "rgb(23,23,23)" }}>{"710"}</span></span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 16,
             lineHeight: "24px",
@@ -3625,7 +3625,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             lineHeight: "16px",
@@ -3646,7 +3646,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 18,
               whiteSpace: "nowrap",
@@ -3701,7 +3701,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             </svg>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 11,
               textAlign: "center",
@@ -3736,7 +3736,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             </svg>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 11,
               textAlign: "center",
@@ -3772,7 +3772,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             <span style={{
               position: "relative",
               width: 20,
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 11,
               textAlign: "center",
@@ -3807,7 +3807,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             <span style={{
               position: "relative",
               width: 20,
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 11,
               textAlign: "center",
@@ -3842,7 +3842,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             <span style={{
               position: "relative",
               width: 20,
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 11,
               textAlign: "center",
@@ -3877,7 +3877,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             <span style={{
               position: "relative",
               width: 20,
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 11,
               textAlign: "center",
@@ -3970,7 +3970,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             }}>{props.icon1 ?? <PieChartLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -4014,7 +4014,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           textAlign: "center",
@@ -4092,7 +4092,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           lineHeight: "20px",
@@ -4114,7 +4114,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "\"Inter Display\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-display)",
             fontWeight: 500,
             fontSize: 24,
             whiteSpace: "nowrap",
@@ -4213,7 +4213,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             }}>{props.icon1 ?? <RefreshLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -4271,7 +4271,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -4350,7 +4350,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
               }}>{props.icon2 ?? <UnitedStates style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 12,
               textAlign: "center",
@@ -4470,7 +4470,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             </div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -4532,7 +4532,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             textAlign: "center",
@@ -4545,7 +4545,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>{props.text4 ?? "$100.00"}</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             textAlign: "center",
@@ -4577,7 +4577,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             textAlign: "center",
@@ -4611,7 +4611,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             lineHeight: "20px",
@@ -4621,7 +4621,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>Tax (2%)</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 12,
             textAlign: "center",
@@ -4643,7 +4643,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             lineHeight: "16px",
@@ -4652,7 +4652,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>Exchange fee (1%)</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 12,
             textAlign: "center",
@@ -4674,7 +4674,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             lineHeight: "16px",
@@ -4683,7 +4683,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
           }}>Total amount</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 12,
             textAlign: "center",
@@ -4742,7 +4742,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -4821,7 +4821,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             }}>{props.icon1 ?? <BarChartBoxLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -4893,7 +4893,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             </svg>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 11,
               textAlign: "center",
@@ -4930,7 +4930,7 @@ export function WidgetsFinanceBanking11(_p = {}) {
             </svg>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 11,
               textAlign: "center",

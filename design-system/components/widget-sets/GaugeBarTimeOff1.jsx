@@ -49,7 +49,7 @@ export function GaugeBarTimeOff1(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "\"Inter Display\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-display)",
           fontWeight: 500,
           fontSize: 32,
           textAlign: "center",
@@ -62,7 +62,7 @@ export function GaugeBarTimeOff1(_p = {}) {
         }}>{props.text1 ?? "0"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           textAlign: "center",
@@ -122,7 +122,7 @@ export function GaugeBarTimeOff1(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "\"Inter Display\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-display)",
           fontWeight: 500,
           fontSize: 32,
           textAlign: "center",
@@ -135,7 +135,7 @@ export function GaugeBarTimeOff1(_p = {}) {
         }}>{props.text1 ?? "10"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           textAlign: "center",
@@ -195,7 +195,7 @@ export function GaugeBarTimeOff1(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "\"Inter Display\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-display)",
           fontWeight: 500,
           fontSize: 32,
           textAlign: "center",
@@ -208,7 +208,7 @@ export function GaugeBarTimeOff1(_p = {}) {
         }}>{props.text1 ?? "15"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           textAlign: "center",
@@ -268,7 +268,7 @@ export function GaugeBarTimeOff1(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "\"Inter Display\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-display)",
           fontWeight: 500,
           fontSize: 32,
           textAlign: "center",
@@ -281,7 +281,7 @@ export function GaugeBarTimeOff1(_p = {}) {
         }}>{props.text1 ?? "20"}</span>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 500,
           fontSize: 12,
           textAlign: "center",
