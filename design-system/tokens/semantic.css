@@ -37,6 +37,10 @@
   --rounded-0: 0px; --rounded-2: 2px; --rounded-4: 4px; --rounded-6: 6px; --rounded-8: 8px; --rounded-10: 10px;
   --rounded-12: 12px; --rounded-16: 16px; --rounded-20: 20px; --rounded-24: 24px; --rounded-28: 28px; --rounded-full: 999px;
 
+  /* Overlay [1.1] — scrim behind Modal / Drawer / BottomSheet: overlay-dark (#333 at 75%) + background blur 10 (Figma) = CSS blur(5px). */
+  --overlay-scrim: var(--overlay-overlay-dark);
+  --overlay-scrim-blur: blur(5px);
+
   /* Shadows — copied from component definitions */
   --shadow-xs: 0px 1px 2px 0px rgba(10,13,20,0.03);
   --shadow-stroke: inset 0 0 0 1px var(--stroke-soft-200);
