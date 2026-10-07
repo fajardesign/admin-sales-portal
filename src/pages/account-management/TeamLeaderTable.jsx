@@ -1,6 +1,6 @@
 import React from 'react';
-import { StatusBadge, TableHeaderCell, TableRowCell, TableRowDivider } from '@ds/index.js';
-import { formatDateWIB, formatPhone, fullName, initials } from '../../lib/format.js';
+import { Avatar, StatusBadge, TableHeaderCell, TableRowCell, TableRowDivider } from '@ds/index.js';
+import { formatDateWIB, formatPhone, fullName } from '../../lib/format.js';
 
 const COLS = ['Nama', 'Email', 'Telepon', 'Status', 'Dibuat'];
 const SKELETON_WIDTHS = [120, 160, 110, 72, 90];
@@ -26,9 +26,7 @@ export function TeamLeaderTable({ rows, loading, highlightId }) {
             <React.Fragment key={u.id}>
             {ri > 0 && <TableRowDivider colSpan={COLS.length} />}
             <tr style={{ background: u.id === highlightId ? 'var(--primary-alpha-10)' : 'transparent', transition: 'background var(--duration-base) var(--ease-standard)' }}>
-              <TableRowCell priority="leading" media={
-                  <div style={{ width: 40, height: 40, flex: 'none', borderRadius: 'var(--rounded-full)', background: 'var(--bg-weak-50)', boxShadow: 'var(--shadow-stroke)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: 'var(--label-xs)', color: 'var(--text-sub-600)' }}>{initials(u)}</div>
-                } title={<span style={{ whiteSpace: 'nowrap' }}>{fullName(u)}</span>} />
+              <TableRowCell priority="leading" media={<Avatar size={40} color={0} name={fullName(u)} />} title={<span style={{ whiteSpace: 'nowrap' }}>{fullName(u)}</span>} />
               <TableRowCell priority="passive" title={<span style={{ whiteSpace: 'nowrap' }}>{u.email}</span>} />
               <TableRowCell priority="passive" title={<span style={{ whiteSpace: 'nowrap' }}>{formatPhone(u.phone)}</span>} />
               <TableRowCell misc>
