@@ -1,6 +1,6 @@
 ---
 name: amar-bank-design
-description: Amar Bank Internal Web design system (Jewel Blue, Inter/Mulish, AlignUI-style kit) — the mandatory component library for every Admin Sales Portal page, screen, form, table, dashboard, modal or prototype. Use before writing or changing any UI in this repo.
+description: Amar Bank Internal Web design system (Jewel Blue, Mulish, AlignUI-style kit) — the mandatory component library for every Admin Sales Portal page, screen, form, table, dashboard, modal or prototype. Use before writing or changing any UI in this repo.
 user-invocable: true
 ---
 

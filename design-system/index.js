@@ -33,7 +33,7 @@ export { ContentCard, ContentLabel } from './components/display/ContentCard.jsx'
 export { ContentDivider } from './components/display/ContentDivider.jsx';
 export { KeyIcon } from './components/display/KeyIcon.jsx';
 export { CircularProgress, ProgressBar, ProgressBarLabel, StepperDot } from './components/display/ProgressBar.jsx';
-export { SortingIcon, Table, TableHeaderCell, TableRowCell } from './components/display/Table.jsx';
+export { SortingIcon, Table, TableHeaderCell, TableRowCell, TableRowDivider } from './components/display/Table.jsx';
 export { Tag } from './components/display/Tag.jsx';
 export { Alert, Toast } from './components/feedback/Alert.jsx';
 export { BottomSheet, BottomSheetFooter, BottomSheetHeader } from './components/feedback/BottomSheet.jsx';

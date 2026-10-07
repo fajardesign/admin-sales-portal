@@ -11,8 +11,8 @@ export function BottomSheetHeader({ title, description, icon, status, onClose, s
       {m && <span style={{ padding: 10, borderRadius: 999, background: `var(--state-${m.k}-lighter)`, color: `var(--state-${m.k}-base)`, display: 'flex' }}><Icon name={m.icon} /></span>}
       {!m && icon && <span style={{ padding: 10, borderRadius: 999, boxShadow: 'var(--shadow-stroke)', color: 'var(--icon-sub-600)', display: 'flex' }}><Icon name={icon} /></span>}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <span style={{ fontFamily: 'var(--font-alt)', fontWeight: 500, fontSize: 14, lineHeight: '20px', letterSpacing: '-0.006em', color: 'var(--text-strong-950)' }}>{title}</span>
-        {description && <span style={{ fontFamily: 'var(--font-alt)', fontSize: 12, lineHeight: '16px', color: 'var(--text-sub-600)' }}>{description}</span>}
+        <span style={{ font: 'var(--label-sm)', letterSpacing: 'var(--label-sm-ls)', color: 'var(--text-strong-950)' }}>{title}</span>
+        {description && <span style={{ font: 'var(--paragraph-xs)', letterSpacing: 'var(--paragraph-xs-ls)', color: 'var(--text-sub-600)' }}>{description}</span>}
       </div>
       {onClose && <CompactButton variant="ghost" icon={<Icon name="CloseLine" />} onClick={onClose} aria-label="Close" />}
     </div>

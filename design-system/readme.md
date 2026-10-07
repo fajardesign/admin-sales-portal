@@ -5,7 +5,7 @@ Web design system for **internal Amar Bank projects** (back-office tools and the
 **Source:** `Internal Project DS Lib - Web.fig` (attached as a mounted file; no public link was provided). Scope used: Core foundations (Color Palette, Typography, System Icons, Decorative Icons, Illustration, New Illustration), all *Base Components 1.1* pages, Widgets, the Finance & Banking Dashboard example and Presentation Assets. Out of scope pages (Brand, Country Flags, Emojis, App Store Badges, Grid, Shadows, Motion, Corner Radius pages) were not read, except the Amar Bank logo components that the in-scope Sidebar instances.
 
 ## Index
-- `styles.css` — entry point (imports only) → `tokens/fonts.css`, `tokens/fig-tokens.css` (all 313 Figma Variables, light/dark + theme modes), `tokens/fig-typography.css` (empty: the file has no published text styles), `tokens/semantic.css` (type scale, px spacing/radius, shadows, aliases), `tokens/base.css`.
+- `styles.css` — entry point (imports only) → `tokens/fonts.css`, `tokens/fig-tokens.css` (all 313 Figma Variables, light/dark + theme modes), `tokens/fig-typography.css` (pointer only: the Figma text styles are mapped 1:1 in semantic.css), `tokens/semantic.css` (type scale, px spacing/radius, shadows, aliases), `tokens/base.css`.
 - `components/` — React primitives (see list below). `components/icons/` holds `Icon` + `icon-data.js`.
 - `guidelines/` — foundation specimen cards (colors, type, spacing, radius, shadows, brand).
 - `assets/logos/` — 12 Amar Bank / Amar Bank Bisnis SVG lockups. `assets/avatars/` — 7 persona images. `assets/illustrations/empty-states/` — 34 empty-state PNGs (16 finance, 18 HR).
@@ -51,7 +51,7 @@ Every Figma component family is now exported. Hand-authored components are the r
 
 ## Visual foundations
 - **Color:** almost entirely neutral (gray ramp #FFFFFF → #171717) with a single accent, **Jewel Blue #009FAF** (`--primary-base`; hover `--primary-darker` #00717C). Theme modes swap the primary to purple / orange / gold (`data-mode`). Charts and the logo wordmark use **Blue #1253A5**, **Gold #B48133** and **Purple #543A97**; the logo mark gradient runs blue → teal → lime (#BBD63F). Status colors are always used as a `*-lighter` tint background + `*-base` foreground (badges, alerts, medallions). Note: the source's `gold-50…400` steps are actually sky blues — use gold 500+.
-- **Type:** Inter for everything; **Inter Display 500** for numbers/titles ≥20px (balances, page titles); **Mulish** appears in Link Buttons, Sidebar items (active = Mulish 700 16px) and Bottom Sheets. Tracking tightens with size (-0.6% at 14px, -1.5% at 18px).
+- **Type:** **Mulish** for everything (synced 2026-10-07 from the live Figma library, whose text styles are all Mulish; the original .fig import had no text styles and guessed Inter). Scale: Title H1–H6 Medium 56/48/40/32/24/20; Label & Paragraph X Large 24/32, Large 18/24, Medium 16/24, Small 16/24, X Small 12/16; Subheading Medium/Small 16/24 (+6%), X Small 12/16 (+4%), 2X Small 11/12 (+2%), uppercase. There is no 14px style. Tracking: -1.5% at 18–24px, -1.1% Medium, -0.6% Small.
 - **Spacing:** 2/4/6/8/10/12/14/16/24/32/40/48. Cards pad 16 (widgets) / 20 (modals, drawers); pages pad 32 horizontally; widget grid gap 24.
 - **Corner radii:** 4 (checkbox, kbd) · 6 (tags, status badges, compact buttons) · 8 (sm buttons, inputs sm, dropdown items) · 10 (md buttons/inputs, accordion) · 12 (cards, alerts lg, file upload) · 16 (widgets, menus, popovers) · 20 (modals, drawers, login card) · full (badges, avatars, key icons, switches).
 - **Borders & shadows:** stroke-first. Surfaces are white with `inset 0 0 0 1px stroke-soft-200` (#EBEBEB) plus a whisper `0 1px 2px rgba(10,13,20,.03)`. Floating layers (menus, modals, popovers) add `0 16px 32px -12px rgba(14,18,27,.1)`. Focus = 2px white gap + 4px 10%-alpha ring (primary for brand controls, slate for neutral inputs). FAB is the only heavy, multi-layer shadow.
@@ -71,5 +71,5 @@ Every Figma component family is now exported. Hand-authored components are the r
 - **Logos:** `assets/logos/*.svg` (Amar Bank horizontal/vertical/without-title in color/white/black; Amar Bank Bisnis horizontal/vertical). The logo-mark gradient was reconstructed from the Figma gradient stops (the extractor dropped gradient fills) — verify against official artwork.
 
 ## Caveats
-- Font binaries were not in the file: Inter & Mulish load from Google Fonts; "Inter Display" falls back to Inter (optical sizing auto). Please supply Inter Display files if you have them.
+- Font binaries were not in the file: Mulish (and Inter, kept as fallback only) load from Google Fonts.
 - Spacing/radius Figma variables are unitless; use the `--space-*` / `--rounded-*` px aliases.

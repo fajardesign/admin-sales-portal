@@ -967,9 +967,12 @@ Exports: `ProgressBar`, `ProgressBarLabel`, `CircularProgress`, `StepperDot`
 
 ```jsx
 <Table columns={[{key:'name',header:'Penerima',sortable:true},{key:'amount',header:'Nominal',align:'right'}]} rows={rows} />
+
+<TableRowCell priority="leading" media={<KeyIcon size="md" />} title="Budi Santoso" description="budi@amarbank.co.id" />
+<TableRowCell misc><StatusBadge status="completed">Aktif</StatusBadge></TableRowCell>
 ```
 
-Header row is bg-weak-50 with rounded ends; rows have 1px soft dividers.
+Header row is 40px bg-weak-50 with rounded ends (Paragraph/Small sub-600, 20px sort icons) and an 8px gap before the body; rows are separated by `TableRowDivider` (4px gap, 1px line, 4px gap). Row cell priority: leading = Label/Small strong, regular = Paragraph/Small strong, passive = Paragraph/Small sub-600.
 
 ```ts
 export interface TableProps {
@@ -979,7 +982,8 @@ export interface TableProps {
   render?: (row: any) => React.ReactNode;
   align?: "left" | "right" | "center";
   width?: number | string;
-  sortable?: boolean }[];
+  sortable?: boolean;
+  misc?: boolean }[];
   rows?: any[];
   size?: "lg" | "xl";
   onRowClick?: (row: any) => void;
@@ -993,19 +997,43 @@ export interface TableHeaderCellProps {
   width?: number | string;
   first?: boolean;
   last?: boolean;
+  disabled?: boolean;
+  checkbox?: {
+  checked?: boolean;
+  indeterminate?: boolean;
+  disabled?: boolean;
+  onChange?: (v: boolean) => void };
   style?: React.CSSProperties;
   }
 export interface TableRowCellProps {
   children?: React.ReactNode;
   size?: "lg" | "xl";
   align?: string;
+  priority?: "leading" | "regular" | "passive";
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+  media?: React.ReactNode;
+  checkbox?: {
+  checked?: boolean;
+  indeterminate?: boolean;
+  disabled?: boolean;
+  onChange?: (v: boolean) => void };
+  radio?: {
+  checked?: boolean;
+  disabled?: boolean;
+  onChange?: (v: boolean) => void };
+  misc?: boolean;
   style?: React.CSSProperties;
+  }
+export interface TableRowDividerProps {
+  colSpan: number;
   }
 export interface SortingIconProps {
   dir?: "none" | "asc" | "desc";
+  disabled?: boolean;
   }
 ```
-Exports: `Table`, `TableHeaderCell`, `TableRowCell`, `SortingIcon`
+Exports: `Table`, `TableHeaderCell`, `TableRowCell`, `TableRowDivider`, `SortingIcon`
 
 ### Tag  ·  `components/display/Tag.jsx`
 

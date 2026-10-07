@@ -1,4 +1,5 @@
-import { StatusBadge, TableHeaderCell, TableRowCell } from '@ds/index.js';
+import React from 'react';
+import { StatusBadge, TableHeaderCell, TableRowCell, TableRowDivider } from '@ds/index.js';
 import { formatDateWIB, formatPhone, fullName, initials } from '../../lib/format.js';
 
 const COLS = ['Nama', 'Email', 'Telepon', 'Status', 'Dibuat'];
@@ -16,28 +17,26 @@ export function TeamLeaderTable({ rows, loading, highlightId }) {
         </tr>
       </thead>
       <tbody>
-        {loading ? [1, 2, 3, 4, 5].map((k) => <SkeletonRow key={k} />) : rows.map((u) => {
+        <tr aria-hidden="true" style={{ height: 'var(--space-8)' }} />
+        {loading ? [1, 2, 3, 4, 5].map((k) => (
+          <React.Fragment key={k}>{k > 1 && <TableRowDivider colSpan={COLS.length} />}<SkeletonRow /></React.Fragment>
+        )) : rows.map((u, ri) => {
           const created = formatDateWIB(u.createdAt);
           return (
-            <tr key={u.id} style={{ background: u.id === highlightId ? 'var(--primary-alpha-10)' : 'transparent', transition: 'background var(--duration-base) var(--ease-standard)' }}>
-              <TableRowCell>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-12)' }}>
-                  <div style={{ width: 32, height: 32, flex: 'none', borderRadius: 'var(--rounded-full)', background: 'var(--bg-weak-50)', boxShadow: 'var(--shadow-stroke)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: 'var(--label-xs)', color: 'var(--text-sub-600)' }}>{initials(u)}</div>
-                  <span style={{ font: 'var(--label-sm)', color: 'var(--text-strong-950)', whiteSpace: 'nowrap' }}>{fullName(u)}</span>
-                </div>
-              </TableRowCell>
-              <TableRowCell><span style={{ color: 'var(--text-sub-600)', whiteSpace: 'nowrap' }}>{u.email}</span></TableRowCell>
-              <TableRowCell><span style={{ color: 'var(--text-sub-600)', whiteSpace: 'nowrap' }}>{formatPhone(u.phone)}</span></TableRowCell>
-              <TableRowCell>
+            <React.Fragment key={u.id}>
+            {ri > 0 && <TableRowDivider colSpan={COLS.length} />}
+            <tr style={{ background: u.id === highlightId ? 'var(--primary-alpha-10)' : 'transparent', transition: 'background var(--duration-base) var(--ease-standard)' }}>
+              <TableRowCell priority="leading" media={
+                  <div style={{ width: 40, height: 40, flex: 'none', borderRadius: 'var(--rounded-full)', background: 'var(--bg-weak-50)', boxShadow: 'var(--shadow-stroke)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: 'var(--label-xs)', color: 'var(--text-sub-600)' }}>{initials(u)}</div>
+                } title={<span style={{ whiteSpace: 'nowrap' }}>{fullName(u)}</span>} />
+              <TableRowCell priority="passive" title={<span style={{ whiteSpace: 'nowrap' }}>{u.email}</span>} />
+              <TableRowCell priority="passive" title={<span style={{ whiteSpace: 'nowrap' }}>{formatPhone(u.phone)}</span>} />
+              <TableRowCell misc>
                 <StatusBadge status={u.active ? 'completed' : 'pending'} dot>{u.active ? 'Aktif' : 'Belum aktif'}</StatusBadge>
               </TableRowCell>
-              <TableRowCell>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-                  <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-strong-950)', whiteSpace: 'nowrap' }}>{created.date}</span>
-                  <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-soft-400)' }}>{created.time}</span>
-                </div>
-              </TableRowCell>
+              <TableRowCell title={<span style={{ whiteSpace: 'nowrap' }}>{created.date}</span>} description={created.time} />
             </tr>
+            </React.Fragment>
           );
         })}
       </tbody>
@@ -48,13 +47,12 @@ export function TeamLeaderTable({ rows, loading, highlightId }) {
 const bar = (width, height = 12, round = 'var(--rounded-6)') => (
   <div style={{ width, height, borderRadius: round, background: 'var(--bg-soft-200)', animation: 'sk-pulse 1.4s ease-in-out infinite' }} />
 );
-const td = { height: 64, padding: 'var(--space-12)', borderBottom: '1px solid var(--stroke-soft-200)' };
 
 function SkeletonRow() {
   return (
     <tr>
-      <td style={td}><div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-12)' }}>{bar(32, 32, 'var(--rounded-full)')}{bar(SKELETON_WIDTHS[0])}</div></td>
-      {SKELETON_WIDTHS.slice(1).map((w, i) => <td key={i} style={td}>{bar(w, i === 2 ? 20 : 12)}</td>)}
+      <TableRowCell media={bar(40, 40, 'var(--rounded-full)')} title={bar(SKELETON_WIDTHS[0])} />
+      {SKELETON_WIDTHS.slice(1).map((w, i) => <TableRowCell key={i} misc={i === 2}>{bar(w, i === 2 ? 20 : 12)}</TableRowCell>)}
     </tr>
   );
 }

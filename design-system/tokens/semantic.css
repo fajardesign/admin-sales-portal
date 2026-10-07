@@ -1,26 +1,31 @@
 /* Semantic aliases + px-unit scales on top of fig-tokens.css (Figma Variables).
    fig-tokens.css spacing/radius are unitless; use these px versions in CSS. */
 :root {
-  /* Type families */
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-display: "Inter Display", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-alt: "Mulish", "Inter", sans-serif;
+  /* Type families — the Figma library (Internal Project DS Lib - Web) sets every text style in Mulish */
+  --font-sans: "Mulish", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: var(--font-sans);
+  --font-alt: var(--font-sans);
 
-  /* Type scale — size / line-height / tracking (Inter Display 500 for titles; Inter 400/500 below 20px) */
+  /* Type scale — 1:1 with the Figma text styles (Title/*, Label/*, Paragraph/*, Subheading/*).
+     Note: Figma "Small" and "Medium" are both 16/24 and differ only in tracking; there is no 14px style. */
   --title-h1: 500 56px/64px var(--font-display);   --title-h1-ls: -0.01em;
   --title-h2: 500 48px/56px var(--font-display);   --title-h2-ls: -0.01em;
   --title-h3: 500 40px/48px var(--font-display);   --title-h3-ls: -0.01em;
   --title-h4: 500 32px/40px var(--font-display);   --title-h4-ls: -0.005em;
   --title-h5: 500 24px/32px var(--font-display);   --title-h5-ls: 0em;
   --title-h6: 500 20px/28px var(--font-display);   --title-h6-ls: 0em;
+  --label-xl: 500 24px/32px var(--font-sans);      --label-xl-ls: -0.015em;
   --label-lg: 500 18px/24px var(--font-sans);      --label-lg-ls: -0.015em;
   --label-md: 500 16px/24px var(--font-sans);      --label-md-ls: -0.011em;
-  --label-sm: 500 14px/20px var(--font-sans);      --label-sm-ls: -0.006em;
+  --label-sm: 500 16px/24px var(--font-sans);      --label-sm-ls: -0.006em;
   --label-xs: 500 12px/16px var(--font-sans);      --label-xs-ls: 0em;
+  --paragraph-xl: 400 24px/32px var(--font-sans);  --paragraph-xl-ls: -0.015em;
   --paragraph-lg: 400 18px/24px var(--font-sans);  --paragraph-lg-ls: -0.015em;
   --paragraph-md: 400 16px/24px var(--font-sans);  --paragraph-md-ls: -0.011em;
-  --paragraph-sm: 400 14px/20px var(--font-sans);  --paragraph-sm-ls: -0.006em;
+  --paragraph-sm: 400 16px/24px var(--font-sans);  --paragraph-sm-ls: -0.006em;
   --paragraph-xs: 400 12px/16px var(--font-sans);  --paragraph-xs-ls: 0em;
+  --subheading-md: 500 16px/24px var(--font-sans); --subheading-md-ls: 0.06em;  /* UPPERCASE */
+  --subheading-sm: 500 16px/24px var(--font-sans); --subheading-sm-ls: 0.06em;  /* UPPERCASE */
   --subheading-xs: 500 12px/16px var(--font-sans); --subheading-xs-ls: 0.04em;  /* UPPERCASE */
   --subheading-2xs: 500 11px/12px var(--font-sans);--subheading-2xs-ls: 0.02em; /* UPPERCASE */
 
