@@ -33,7 +33,7 @@ export function DrawerFooter({ left, children, stretch = true, style }) {
 export function Drawer({ open = true, onClose, width = 400, header, footer, children, style }) {
   if (!open) return null;
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'var(--overlay-overlay-soft)', display: 'flex', justifyContent: 'flex-end', padding: 8, animation: 'ab-fade-in var(--duration-base)' }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'var(--overlay-scrim)', backdropFilter: 'var(--overlay-scrim-blur)', WebkitBackdropFilter: 'var(--overlay-scrim-blur)', display: 'flex', justifyContent: 'flex-end', padding: 8, animation: 'ab-fade-in var(--duration-base)' }}>
       <aside onClick={(e) => e.stopPropagation()} style={{ width, maxWidth: '100%', height: '100%', borderRadius: 20, overflow: 'hidden', background: 'var(--bg-white-0)', boxShadow: 'var(--shadow-stroke), var(--shadow-modal)', display: 'flex', flexDirection: 'column', animation: 'ab-slide-in-right var(--duration-base) var(--ease-standard)', ...style }}>
         {header}
         <div style={{ flex: 1, overflow: 'auto' }}>{children}</div>

@@ -44,12 +44,12 @@ export function ModalFooter({ left, children, stretch = false, style }) {
   );
 }
 
-/** Modal — overlay + radius-20 dialog (440px). Compose with ModalHeader / body / ModalFooter. */
+/** Modal — Overlay [1.1] scrim (--overlay-scrim + blur) + radius-20 dialog (440px). Compose with ModalHeader / body / ModalFooter. */
 export function Modal({ open = true, onClose, width = 440, children, style }) {
   React.useEffect(() => { if (!open) return; const k = (e) => e.key === 'Escape' && onClose && onClose(); window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k); }, [open, onClose]);
   if (!open) return null;
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'var(--overlay-overlay-soft)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, animation: 'ab-fade-in var(--duration-base)' }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'var(--overlay-scrim)', backdropFilter: 'var(--overlay-scrim-blur)', WebkitBackdropFilter: 'var(--overlay-scrim-blur)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, animation: 'ab-fade-in var(--duration-base)' }}>
       <div role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()} style={{ width, maxWidth: '100%', borderRadius: 20, overflow: 'hidden', background: 'var(--bg-white-0)', boxShadow: 'var(--shadow-stroke), var(--shadow-modal)', animation: 'ab-pop-in var(--duration-base) var(--ease-standard)', ...style }}>
         {children}
       </div>

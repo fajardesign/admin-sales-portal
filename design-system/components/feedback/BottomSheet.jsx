@@ -57,7 +57,7 @@ export function StatusBottomSheet({ status = 'success', title, children, footer,
 export function BottomSheet({ open = true, onClose, header, footer, children, width = 440, style }) {
   if (!open) return null;
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'var(--overlay-overlay-soft)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', animation: 'ab-fade-in var(--duration-base)' }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'var(--overlay-scrim)', backdropFilter: 'var(--overlay-scrim-blur)', WebkitBackdropFilter: 'var(--overlay-scrim-blur)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', animation: 'ab-fade-in var(--duration-base)' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width, maxWidth: '100%', borderRadius: '20px 20px 0 0', background: 'var(--bg-white-0)', boxShadow: 'var(--shadow-modal)', overflow: 'hidden', ...style }}>
         {header}<div>{children}</div>{footer}
       </div>
