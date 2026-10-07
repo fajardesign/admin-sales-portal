@@ -64,25 +64,65 @@ describe('W1 Login & akses per role', () => {
 
   it('TL masuk ke Akses ditolak lalu bisa Keluar', async () => {
     const user = await start('andi.pratama');
-    expect(await screen.findByText('Akses ditolak. Akun ini tidak memiliki akses ke portal web.', {}, T)).toBeTruthy();
+    expect(await screen.findByText('Akses ditolak. Akun ini tidak memiliki akses ke aplikasi ini.', {}, T)).toBeTruthy();
+    expect(screen.getByText('TL, SR, dan SA masuk melalui aplikasi Android Sales Portal.')).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'Keluar' }));
     expect(await screen.findByText('Masuk ke S&P Portal', {}, T)).toBeTruthy();
   });
 
   it.each([
-    ['rina.saraswati', 'Ringkasan Partner Pipeline dan Account Management.'],
-    ['hasan.basri', 'Performa pipeline pinjaman di area Anda: Makassar.'],
-    ['hendra.wijaya', 'Kelola tarif insentif SA/SR, TL, dan Partner yang dipakai untuk menghitung estimasi insentif.'],
+    ['rina.saraswati', 'Perlu tindakan Anda'],
+    ['hasan.basri', 'Penjualan dan produktivitas di area Anda: Makassar.'],
+    ['hendra.wijaya', 'Kelola komponen, tier, dan tanggal bayar insentif. Skema ini dipakai untuk semua estimasi insentif.'],
   ])('%s masuk ke beranda role-nya', async (id, desc) => {
     await start(id);
     expect(await screen.findByText(desc, {}, T)).toBeTruthy();
   });
 
-  it('rute milik role lain dialihkan ke beranda role sendiri', async () => {
-    await start('hasan.basri');
-    await screen.findByText(/Performa pipeline pinjaman di area Anda/, {}, T);
+  it('rute tanpa feature access menampilkan Akses ditolak di dalam shell', async () => {
+    const user = await start('hasan.basri');
+    await screen.findByText(/Penjualan dan produktivitas di area Anda/, {}, T);
     go('/account-management');
-    expect(await screen.findByText(/Performa pipeline pinjaman di area Anda/, {}, T)).toBeTruthy();
+    expect(await screen.findByText('Akun Anda tidak memiliki akses ke halaman ini.', {}, T)).toBeTruthy();
+    expect(screen.queryByText('Account Management')).toBeNull(); // menu disembunyikan
+    await user.click(screen.getByRole('button', { name: 'Ke halaman utama' }));
+    expect(await screen.findByText(/Penjualan dan produktivitas di area Anda/, {}, T)).toBeTruthy();
+  });
+
+  it('Lupa password menampilkan arahan ke Admin', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('button', { name: 'Lupa password?' }));
+    expect(screen.getByText('Hubungi Admin untuk mengatur ulang password Anda.')).toBeTruthy();
+  });
+
+  it('gangguan layanan menampilkan halaman error dengan Coba lagi', async () => {
+    setScenario({ service: 'outage' });
+    const user = await start('rina.saraswati');
+    expect(await screen.findByText('Gagal memuat data. Coba lagi.', {}, T)).toBeTruthy();
+    setScenario({ service: 'ok' });
+    await user.click(screen.getByRole('button', { name: 'Coba lagi' }));
+    expect(screen.getByRole('button', { name: 'Masuk' })).toBeTruthy();
+  });
+
+  it('kembali ke halaman semula setelah login', async () => {
+    go('/account-management?status=expired');
+    const user = userEvent.setup();
+    render(<App />);
+    await login(user, 'rina.saraswati');
+    await waitFor(() => expect(window.location.hash).toBe('#/account-management?status=expired'), T);
+  });
+});
+
+describe('W0 Beranda Admin', () => {
+  it('kartu tindakan, widget, dan aktivitas tampil; kartu membuka daftar terfilter', async () => {
+    const user = await start('rina.saraswati');
+    expect(await screen.findByText('Antrean review terlama', {}, T)).toBeTruthy();
+    expect(screen.getByText('Tindak lanjut PKS')).toBeTruthy();
+    expect(screen.getByText('Aktivitas terbaru')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: /PKS perlu dikirim/ }));
+    await waitFor(() => expect(window.location.hash).toContain('status=verified'), T);
+    expect(await screen.findByText('Prima Phone Store', {}, T)).toBeTruthy();
   });
 });
 
@@ -178,6 +218,25 @@ describe('W3 Partner Pipeline', () => {
   });
 });
 
+describe('W3 Ubah Data Partner (US-P09)', () => {
+  it('partner Active: ubah nama PIC dengan alasan, tercatat di riwayat; rekening terkunci', async () => {
+    const user = await start('rina.saraswati');
+    go('/partner-pipeline/REG2026-0139');
+    await user.click(await screen.findByRole('button', { name: 'Ubah Data Partner' }, T));
+    expect(screen.getAllByText('Data rekening tidak dapat diubah setelah partner aktif.').length).toBeGreaterThan(0);
+    const name = screen.getByDisplayValue('Rudi Hartono');
+    await user.clear(name);
+    await user.type(name, 'Rudi Hartono Saputra');
+    await user.click(screen.getByRole('button', { name: 'Simpan Perubahan' }));
+    expect(await screen.findByText('Informasi wajib diisi', {}, T)).toBeTruthy();
+    await user.type(screen.getByPlaceholderText(/Partner pindah alamat/), 'Permintaan partner via email');
+    await user.click(screen.getByRole('button', { name: 'Simpan Perubahan' }));
+    expect(await screen.findByText('Data partner berhasil diperbarui.', {}, T)).toBeTruthy();
+    await user.click(screen.getByRole('tab', { name: 'Riwayat Status' }));
+    expect(await screen.findByText('Nama PIC: Rudi Hartono → Rudi Hartono Saputra', {}, T)).toBeTruthy();
+  });
+});
+
 describe('W2 Account Management', () => {
   it('daftar menampilkan status Keycloak dan aksi baris', async () => {
     await start('rina.saraswati');
@@ -240,6 +299,34 @@ describe('W2 Account Management', () => {
     expect(await screen.findByText('Tautan aktivasi berhasil dikirim ulang.', {}, T)).toBeTruthy();
   });
 
+  it('reset password akun Active lalu tautan reset dipakai', async () => {
+    const user = await start('rina.saraswati');
+    go('/account-management?q=bayu');
+    await user.click(await screen.findByText('Bayu Prasetyo', {}, T));
+    await user.click(await screen.findByRole('button', { name: 'Reset Password' }, T));
+    expect(await screen.findByText('Kirim tautan reset password ke bayu.prasetyo@amarbank.co.id?', {}, T)).toBeTruthy();
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Kirim Tautan' }));
+    expect(await screen.findByText('Tautan reset password berhasil dikirim.', {}, T)).toBeTruthy();
+  });
+
+  it('ubah email: wajib alasan, unik, dan berlaku langsung', async () => {
+    const user = await start('rina.saraswati');
+    go('/account-management?q=bayu');
+    await user.click(await screen.findByText('Bayu Prasetyo', {}, T));
+    await user.click(await screen.findByRole('button', { name: 'Ubah Email' }, T));
+    const dlg = await screen.findByRole('dialog', {}, T);
+    await user.type(within(dlg).getByPlaceholderText('nama@amarbank.co.id'), 'rina.saraswati@amarbank.co.id');
+    await user.type(within(dlg).getByPlaceholderText('Contoh: Email kantor berubah'), 'Salah ketik');
+    await user.click(within(dlg).getByRole('button', { name: 'Simpan' }));
+    expect(await screen.findByText('Email sudah terdaftar', {}, T)).toBeTruthy();
+    const input = within(dlg).getByPlaceholderText('nama@amarbank.co.id');
+    await user.clear(input);
+    await user.type(input, 'bayu.p@amarbank.co.id');
+    await user.click(within(dlg).getByRole('button', { name: 'Simpan' }));
+    expect(await screen.findByText('Email berhasil diubah.', {}, T)).toBeTruthy();
+    expect((await screen.findAllByText('bayu.p@amarbank.co.id', {}, T)).length).toBeGreaterThan(0);
+  });
+
   it('aktivasi akun Pending dari tautan membuat akun bisa login', async () => {
     const user = userEvent.setup();
     go('/activate?user=10');
@@ -254,57 +341,96 @@ describe('W2 Account Management', () => {
 });
 
 describe('APL', () => {
-  it('Partner & Toko hanya menampilkan toko di area APL', async () => {
-    await start('hasan.basri');
-    go('/apl/partner');
-    expect((await screen.findAllByText(/Jaya Abadi Cellular/, {}, T)).length).toBeGreaterThan(0);
-    expect(screen.queryByText(/Galaxy Phone Center/)).toBeNull();
+  it('Dashboard menampilkan kartu penjualan & produktivitas dan membuka Kinerja Penjualan', async () => {
+    const user = await start('hasan.basri');
+    expect(await screen.findByText('Tingkat kehadiran', {}, T)).toBeTruthy();
+    expect(screen.getByText('Top 5 TL')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: /Pinjaman diajukan/ }));
+    expect(await screen.findByText('Telusuri kinerja pinjaman dari area hingga toko.', {}, T)).toBeTruthy();
   });
 
-  it('Tim, Performa, dan Insentif bisa dibuka', async () => {
+  it('Kinerja Penjualan: drill-down sampai toko lalu daftar pinjaman tersamar', async () => {
+    const user = await start('hasan.basri');
+    go('/apl/kinerja');
+    await user.click(await screen.findByText('Makassar', { selector: 'span' }, T));
+    await user.click(await screen.findByText('Andi Pratama', {}, T));
+    await user.click(await screen.findByText('Siti Rahmawati', {}, T));
+    await user.click(await screen.findByText('Jaya Abadi Cellular', {}, T));
+    await user.click(await screen.findByText('Jaya Abadi Cellular Mall Panakkukang', {}, T));
+    expect(await screen.findByText(/Pinjaman · Jaya Abadi Cellular Mall Panakkukang/, {}, T)).toBeTruthy();
+    expect((await screen.findAllByText(/APP-••••\d{4}/, {}, T)).length).toBeGreaterThan(0);
+  });
+
+  it('Produktivitas absensi & kunjungan dengan detail per orang', async () => {
+    const user = await start('hasan.basri');
+    go('/apl/produktivitas');
+    await user.click(await screen.findByText('Eko Saputra', {}, T));
+    expect(await screen.findByText(/Absensi · Oktober 2026/, {}, T)).toBeTruthy();
+    await user.click(screen.getByRole('tab', { name: 'Mingguan' }));
+    expect((await screen.findAllByText(/Minggu /, {}, T)).length).toBeGreaterThan(0);
+  });
+
+  it('Partner hanya area APL, bisa dibuka ke toko', async () => {
+    const user = await start('hasan.basri');
+    go('/apl/partner');
+    expect(await screen.findByText('Jaya Abadi Cellular', {}, T)).toBeTruthy();
+    expect(screen.queryByText(/Galaxy Phone Center/)).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Buka toko Jaya Abadi Cellular' }));
+    expect(await screen.findByText('Jaya Abadi Cellular Sudiang', {}, T)).toBeTruthy();
+  });
+
+  it('Tim dan Insentif (TL, SA/SR, Partner)', async () => {
     const user = await start('hasan.basri');
     go('/apl/tim');
     expect(await screen.findByText('Andi Pratama', {}, T)).toBeTruthy();
     expect(screen.queryByText('Budi Santoso')).toBeNull();
-    go('/apl/performa');
-    await user.click(await screen.findByRole('tab', { name: 'SA/SR' }, T));
-    expect(await screen.findByText('Eko Saputra', {}, T)).toBeTruthy();
     go('/apl/insentif?m=2026-09');
-    expect(await screen.findByText('Total estimasi insentif', {}, T)).toBeTruthy();
+    expect(await screen.findByText('Leader Incentive', { exact: false }, T)).toBeTruthy();
+    await user.click(screen.getByRole('tab', { name: 'Partner' }));
+    expect(await screen.findByText(/Volume Incentive/, {}, T)).toBeTruthy();
   });
 });
 
 describe('Super Admin', () => {
-  it('ubah daily fee SA dan simpan', async () => {
+  it('buat versi baru, ubah daily fee, terbitkan mulai bulan depan', async () => {
     const user = await start('hendra.wijaya');
-    await user.click(await screen.findByText('Sales Agent (SA) · Offline Retail', {}, T));
-    await user.click(await screen.findByRole('button', { name: 'Ubah Skema' }, T));
-    const fee = screen.getByDisplayValue('108000');
+    await user.click(await screen.findByText('Sales Agent (SA)', {}, T));
+    await user.click(await screen.findByRole('button', { name: 'Buat Versi Baru' }, T));
+    const fee = await screen.findByDisplayValue('108000', {}, T);
     await user.clear(fee);
     await user.type(fee, '115000');
-    await user.click(screen.getByRole('button', { name: 'Simpan Perubahan' }));
-    await user.click(within(await screen.findByRole('dialog', {}, T)).getByRole('button', { name: 'Simpan' }));
-    expect(await screen.findByText('Skema insentif berhasil diperbarui.', {}, T)).toBeTruthy();
-    expect(await screen.findByText(/Daily Fee Rp 108.000 → Rp 115.000/, {}, T)).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Terbitkan' }));
+    const dlg = await screen.findByRole('dialog', {}, T);
+    expect(within(dlg).getByText(/\[TBD: Apakah versi baru perlu persetujuan approver kedua/)).toBeTruthy();
+    await user.click(within(dlg).getByRole('button', { name: 'Terbitkan' }));
+    expect(await screen.findByText('Versi skema berhasil diterbitkan.', {}, T)).toBeTruthy();
+    expect(await screen.findByText('Terjadwal', {}, T)).toBeTruthy();
   });
 
-  it('tier tidak urut ditolak', async () => {
+  it('batas tier harus naik', async () => {
     const user = await start('hendra.wijaya');
-    await user.click(await screen.findByText('Sales Agent (SA) · Offline Retail', {}, T));
-    await user.click(await screen.findByRole('button', { name: 'Ubah Skema' }, T));
-    const t2 = screen.getByLabelText('Batas tier 2');
+    await user.click(await screen.findByText('Sales Agent (SA)', {}, T));
+    await user.click(await screen.findByRole('button', { name: 'Buat Versi Baru' }, T));
+    const t2 = await screen.findByLabelText('Sampai tier 2', {}, T);
     await user.clear(t2);
-    await user.type(t2, '130');
-    await user.click(screen.getByRole('button', { name: 'Simpan Perubahan' }));
-    expect(await screen.findByText('Harus lebih kecil dari tier di atas', {}, T)).toBeTruthy();
+    await user.type(t2, '40');
+    await user.click(screen.getByRole('button', { name: 'Simpan Draf' }));
+    expect(await screen.findByText('Harus lebih dari 55%', {}, T)).toBeTruthy();
+  });
+
+  it('Hasil Perhitungan menampilkan versi skema dan status', async () => {
+    await start('hendra.wijaya');
+    go('/hasil-perhitungan?m=2026-09');
+    expect((await screen.findAllByText('Versi 1', {}, T)).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText("Dibayar", {}, T)).length).toBeGreaterThan(0);
   });
 });
 
 describe('Tidak ada layar buntu', () => {
   it.each([
     ['rina.saraswati', ['/beranda', '/partner-pipeline', '/partner-pipeline/REG2026-0133', '/account-management']],
-    ['lestari.wulandari', ['/apl', '/apl/performa', '/apl/insentif', '/apl/partner', '/apl/tim']],
-    ['hendra.wijaya', ['/skema-insentif']],
+    ['lestari.wulandari', ['/apl', '/apl/kinerja', '/apl/produktivitas', '/apl/partner', '/apl/tim', '/apl/insentif']],
+    ['hendra.wijaya', ['/skema-insentif', '/hasil-perhitungan']],
   ])('%s: setiap layar punya navigasi sidebar dan Keluar', async (id, paths) => {
     await start(id);
     for (const p of paths) {

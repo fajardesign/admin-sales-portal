@@ -1,26 +1,28 @@
-import { SegmentedControl, Select } from '@ds/index.js';
+import { Badge, SegmentedControl, Select, TextInput } from '@ds/index.js';
+import { perfMonths, todayDate } from '../../api/mockApi.js';
 import { areaName } from '../../lib/constants.js';
 import { monthLabel } from '../../lib/format.js';
 import { navigate, withQuery } from '../../lib/router.js';
 
-/** Filter periode "Bulan" / "Periode" + Area (bila APL memegang >1 area). Disimpan di URL: mode, m, from, to, area. */
-export function PeriodFilter({ path, query, user, period, monthOnly = false }) {
+/** Filter periode (Bulan / Rentang) + Area untuk halaman APL. Nilai disimpan di URL agar ikut terbawa antar halaman. */
+export function PeriodFilter({ path, query, user, period, monthOnly = false, children }) {
   const q = Object.fromEntries(query.entries());
   const set = (patch) => navigate(withQuery(path, { ...q, ...patch }));
-  const monthOpts = period.months.map((x) => ({ value: x, label: monthLabel(x, true) }));
+  const months = perfMonths();
   return (
     <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
-      {!monthOnly && <SegmentedControl value={period.mode} onChange={(v) => set({ mode: v })} items={[{ value: 'bulan', label: 'Bulan' }, { value: 'periode', label: 'Periode' }]} />}
-      {(monthOnly || period.mode === 'bulan')
-        ? <div style={{ width: 200 }}><Select size="sm" value={period.m} options={monthOpts} onChange={(v) => set({ m: v })} placeholder="Pilih bulan" /></div>
-        : (
-          <>
-            <div style={{ width: 180 }}><Select size="sm" value={period.from} options={monthOpts} onChange={(v) => set({ from: v })} placeholder="Dari" /></div>
-            <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)', paddingBottom: 'var(--space-8)' }}>s/d</span>
-            <div style={{ width: 180 }}><Select size="sm" value={period.to} options={monthOpts.filter((o) => o.value >= period.from)} onChange={(v) => set({ to: v })} placeholder="Sampai" /></div>
-          </>
-        )}
+      {!monthOnly && <SegmentedControl value={period.mode} onChange={(v) => set({ mode: v === 'bulan' ? '' : v })} items={[{ value: 'bulan', label: 'Bulan' }, { value: 'rentang', label: 'Rentang' }]} />}
+      {monthOnly || period.mode === 'bulan' ? (
+        <div style={{ width: 200 }}><Select size="sm" value={period.month ?? months[months.length - 1]} placeholder="Pilih bulan" onChange={(v) => set({ m: v })} options={months.map((m) => ({ value: m, label: monthLabel(m, true) }))} /></div>
+      ) : (
+        <>
+          <div style={{ width: 180 }}><TextInput size="sm" type="date" aria-label="Dari tanggal" value={period.from} min={`${months[0]}-01`} max={todayDate()} onChange={(e) => set({ from: e.target.value })} /></div>
+          <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)', paddingBottom: 'var(--space-8)' }}>s/d</span>
+          <div style={{ width: 180 }}><TextInput size="sm" type="date" aria-label="Sampai tanggal" value={period.to} min={period.from} max={todayDate()} onChange={(e) => set({ to: e.target.value })} /></div>
+        </>
+      )}
       <AreaSelect path={path} query={query} user={user} />
+      {children}
     </div>
   );
 }
@@ -37,3 +39,5 @@ export function AreaSelect({ path, query, user }) {
   );
 }
 
+/** Badge perubahan vs periode sebelumnya ("+5%", "-3%"). */
+export const DeltaBadge = ({ d }) => (d ? <Badge color={d.color} size="md">{`${d.text} vs periode sebelumnya`}</Badge> : <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-soft-400)' }}>Belum ada data periode sebelumnya</span>);

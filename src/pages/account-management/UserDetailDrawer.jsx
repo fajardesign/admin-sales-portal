@@ -18,7 +18,7 @@ const Section = ({ title, children }) => (
 );
 
 /** W2c · Detail pengguna (PRD §3C): informasi, role & akses, aktivasi, nonaktif, riwayat; aksi footer sesuai status. */
-export function UserDetailDrawer({ userId, user, version, onClose, onResend, onDisable }) {
+export function UserDetailDrawer({ userId, user, version, onClose, onResend, onDisable, onReset, onChangeEmail }) {
   const [u, setU] = useState(null);
   useEffect(() => { getUser(userId).then(setU); }, [userId, version]);
   if (!u) return <Drawer open width={480} onClose={onClose} header={<DrawerHeader title="Detail Pengguna" onClose={onClose} />} />;
@@ -28,12 +28,13 @@ export function UserDetailDrawer({ userId, user, version, onClose, onResend, onD
   const areas = u.role === 'REVIEWER' ? 'Semua area' : u.areaIds.map(areaName).join(', ');
   return (
     <Drawer open width={480} onClose={onClose}
-      header={<DrawerHeader title={u.fullName} description={`${ROLES[u.role].label} · ${areas}`} badge={<AccountStatusBadge status={st} />} onClose={onClose} />}
+      header={<DrawerHeader size="lg" title={u.fullName} description={`${ROLES[u.role].label} · ${areas}`} badge={<AccountStatusBadge status={st} />} onClose={onClose} />}
       footer={(
-        <DrawerFooter>
-          <Button variant="stroke" tone="neutral" size="sm" onClick={onClose}>Tutup</Button>
-          {st !== 'DISABLED' && u.id !== user.userId && <Button variant="stroke" tone="error" size="sm" onClick={() => onDisable(u)}>Nonaktifkan</Button>}
+        <DrawerFooter left={st !== 'DISABLED' && u.id !== user.userId && <Button variant="ghost" tone="error" size="sm" onClick={() => onDisable(u)}>Nonaktifkan</Button>}>
+          {st !== 'DISABLED' && <Button variant="stroke" tone="neutral" size="sm" onClick={() => onChangeEmail(u)}>Ubah Email</Button>}
+          {st === 'ACTIVE' && <Button size="sm" onClick={() => onReset(u)}>Reset Password</Button>}
           {pending && <Button size="sm" onClick={() => onResend(u)}>Kirim Ulang Aktivasi</Button>}
+          {st === 'DISABLED' && <Button variant="stroke" tone="neutral" size="sm" onClick={onClose}>Tutup</Button>}
         </DrawerFooter>
       )}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-24)', padding: 'var(--space-16) var(--space-24) var(--space-24)' }}>
@@ -50,7 +51,8 @@ export function UserDetailDrawer({ userId, user, version, onClose, onResend, onD
             { label: 'Area', value: areas },
             { label: 'Leader (Atasan)', value: u.leader ? `${u.leader.name} (${u.leader.role})` : null },
             { label: 'Bawahan aktif', value: u.subordinates.length ? u.subordinates.map((s) => `${s.name} (${s.role})`).join(', ') : null, full: true },
-            { label: 'Role Keycloak', value: ROLES[u.role].keycloak.join(' + '), full: true },
+            { label: 'Realm role', value: ROLES[u.role].realm }, { label: 'Akses platform', value: ROLES[u.role].platform },
+            { label: 'Akses fitur', value: ROLES[u.role].features.join(', '), full: true },
             u.partner && { label: 'Partner terkait', full: true, value: <LinkButton onClick={() => navigate(`/partner-pipeline/${u.partner.id}`)} rightIcon={<Icon name="ArrowRightSLine" size={16} />}>{u.partner.name} · {u.partner.id}</LinkButton> },
           ]} />
         </Section>
@@ -61,8 +63,14 @@ export function UserDetailDrawer({ userId, user, version, onClose, onResend, onD
             pending && { label: 'Berlaku sampai', value: formatDateTime(expires), hint: st === 'PENDING' ? `${formatDuration(expires - now())} lagi` : 'Kedaluwarsa' },
             { label: 'Jumlah kirim ulang', value: String(u.inviteResendCount) },
             { label: 'Diaktivasi pada', value: formatDateTime(u.activatedAt) },
+            u.resetSentAt && { label: 'Tautan reset terakhir', value: formatDateTime(u.resetSentAt) },
             { label: 'Dibuat oleh / pada', value: `${u.createdBy} · ${formatDateTime(u.createdAt)}`, full: true },
           ]} />
+          {DEMO && st === 'ACTIVE' && u.resetSentAt && (
+            <Button variant="lighter" tone="neutral" size="xs" leftIcon={<Icon name="ExternalLinkLine" />} onClick={() => navigate(`/activate?user=${u.id}&mode=reset`)} style={{ alignSelf: 'flex-start' }}>
+              Mode demo: buka tautan reset password
+            </Button>
+          )}
           {DEMO && st === 'PENDING' && (
             <Button variant="lighter" tone="neutral" size="xs" leftIcon={<Icon name="ExternalLinkLine" />} onClick={() => navigate(`/activate?user=${u.id}`)} style={{ alignSelf: 'flex-start' }}>
               Mode demo: buka tautan aktivasi

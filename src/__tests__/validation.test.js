@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { passwordPolicy, validatePksFile, validateReason, validateUserForm } from '../lib/validation.js';
 import { formatDateTime, formatDateWIB, formatPhone, formatRp, normalizePhone } from '../lib/format.js';
-import { tierRate } from '../api/mockApi.js';
+import { tierFor, tierLabel } from '../api/mockApi.js';
 
 const ok = { email: 'budi@amarbank.co.id', phone: '081234567890', username: 'budi.santoso', fullName: 'Budi Santoso', role: 'REVIEWER', tlLevel: '', areaIds: [], leaderId: '' };
 const leaders = [{ value: '3', label: 'Hasan Basri' }];
@@ -59,17 +59,24 @@ describe('passwordPolicy', () => {
   it('menolak username', () => expect(passwordPolicy('Dimas.Pratama1', 'dimas.pratama1').find((c) => c.label === 'Tidak sama dengan username').ok).toBe(false));
 });
 
-describe('tier insentif (FSD hlm. 61–62)', () => {
-  const sales = { type: 'tierAbove', tiers: [{ above: 120, rate: 1 }, { above: 100, rate: 0.9 }, { above: 85, rate: 0.85 }, { above: 70, rate: 0.7 }, { above: 55, rate: 0.55 }] };
-  const mfp = { type: 'tierBelow', tiers: [{ below: 10, rate: 0.1 }, { below: 13, rate: 0.05 }] };
-  it('pencapaian > batas', () => {
-    expect(tierRate(sales, 121)).toBe(1);
-    expect(tierRate(sales, 120)).toBe(0.9);
-    expect(tierRate(sales, 55)).toBe(0);
+describe('tier insentif (rentang dari–sampai, PRD v3 §E2)', () => {
+  const T = (rows) => ({ tiers: rows.map(([from, to, rate]) => ({ from, to, rate })) });
+  const sales = T([[0, 55, 0], [55, 70, 0.55], [70, 85, 0.7], [85, 100, 0.85], [100, 120, 0.9], [120, null, 1]]);
+  const mfp = T([[0, 10, 0.1], [10, 13, 0.05], [13, null, 0]]);
+  it('pencapaian > dari dan ≤ sampai', () => {
+    expect(tierFor(sales, 121).rate).toBe(1);
+    expect(tierFor(sales, 120).rate).toBe(0.9);
+    expect(tierFor(sales, 55).rate).toBe(0);
+    expect(tierFor(sales, 0).rate).toBe(0);
   });
-  it('MFP < batas', () => {
-    expect(tierRate(mfp, 9.9)).toBe(0.1);
-    expect(tierRate(mfp, 12)).toBe(0.05);
-    expect(tierRate(mfp, 13)).toBe(0);
+  it('MFP', () => {
+    expect(tierFor(mfp, 9.9).rate).toBe(0.1);
+    expect(tierFor(mfp, 12).rate).toBe(0.05);
+    expect(tierFor(mfp, 13.5).rate).toBe(0);
+  });
+  it('label tier', () => {
+    expect(tierLabel({ from: 0, to: 55 })).toBe('0% s/d 55%');
+    expect(tierLabel({ from: 85, to: 100 })).toBe('> 85% s/d 100%');
+    expect(tierLabel({ from: 120, to: null })).toBe('> 120%');
   });
 });

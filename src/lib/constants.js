@@ -91,15 +91,19 @@ export const DOC_TYPES = [
   { key: 'FOTO_SAMPING', label: 'Foto Toko – Tampak Samping', level: 'STORE', INDIVIDU: 'M', COMPANY: 'M' },
 ];
 
-/** Role akun (PRD §3). */
+/**
+ * Role akun & pemetaan Keycloak (PRD v3 "Role mapping"): realm role, platform access role, feature access roles.
+ * Menu dan API mengikuti feature access roles; login web butuh platform "web-access".
+ */
+const SALES_COMMON = ['ATTENDANCE', 'VISIT_EXECUTION', 'LOAN_TRACKING', 'SALES_PERFORMANCE', 'PRODUCTIVITY_PERFORMANCE_CHECK_IN', 'PRODUCTIVITY_PERFORMANCE_VISIT_PLAN', 'INCENTIVE_ESTIMATION', 'PARTNER_VIEW'];
 export const ROLES = {
-  REVIEWER: { label: 'Admin (Reviewer)', short: 'Admin', keycloak: ['ADMIN', 'ACCOUNT_CREATION'] },
-  APL: { label: 'APL', short: 'APL', keycloak: ['APL'] },
-  TL: { label: 'TL', short: 'TL', keycloak: ['TL', 'PARTNER_ACQUISITION'] },
-  SR: { label: 'SR', short: 'SR', keycloak: ['SR', 'PARTNER_ACQUISITION'] },
-  SA: { label: 'SA', short: 'SA', keycloak: ['SA'] },
-  PARTNER: { label: 'Partner (PIC)', short: 'Partner', keycloak: ['PARTNER'] },
-  SUPER_ADMIN: { label: 'Super Admin', short: 'Super Admin', keycloak: ['SUPER_ADMIN'] },
+  REVIEWER: { label: 'Admin (Reviewer)', short: 'Admin', realm: 'ADMIN', platform: 'web-access', features: ['DASHBOARD', 'PARTNER_PIPELINE', 'ACCOUNT_CREATION'] },
+  APL: { label: 'APL', short: 'APL', realm: 'APL', platform: 'web-access', features: ['SALES_PERFORMANCE', 'PRODUCTIVITY_PERFORMANCE_CHECK_IN', 'PRODUCTIVITY_PERFORMANCE_VISIT_PLAN', 'INCENTIVE_ESTIMATION', 'PARTNER_VIEW', 'TEAM_VIEW'] },
+  TL: { label: 'TL', short: 'TL', realm: 'TL', platform: 'sales-app-access', features: ['PARTNER_ACQUISITION', 'SALES_ASSIGNMENT', 'VISIT_PLAN_MANAGEMENT', ...SALES_COMMON, 'TEAM_VIEW'] },
+  SR: { label: 'SR', short: 'SR', realm: 'SR', platform: 'sales-app-access', features: ['PARTNER_ACQUISITION', ...SALES_COMMON] },
+  SA: { label: 'SA', short: 'SA', realm: 'SA', platform: 'sales-app-access', features: SALES_COMMON },
+  PARTNER: { label: 'Partner (PIC)', short: 'Partner', realm: 'PARTNER', platform: 'partner-web-access', features: ['PARTNER_SALES_DASHBOARD', 'PARTNER_COMMISSION', 'PARTNER_PROFILE', 'TRANSACTION_INQUIRY', 'DOCUMENT_REPOSITORY'] },
+  SUPER_ADMIN: { label: 'Super Admin', short: 'Super Admin', realm: 'SUPER_ADMIN', platform: 'web-access', features: ['INCENTIVE_SCHEME'] },
 };
 export const CREATABLE_ROLES = ['REVIEWER', 'APL', 'TL', 'SR', 'SA'];
 export const TL_LEVEL = { JUNIOR: 'Junior', SENIOR: 'Senior' };

@@ -35,7 +35,7 @@ function user(id, fullName, role, extra = {}) {
     activatedAt: status === 'ACTIVE' ? (extra.activatedAt ?? new Date(createdAt.getTime() + 5 * 3600e3)) : null,
     disabledAt: extra.disabledAt ?? null, disabledBy: extra.disabledBy ?? null, disabledReason: extra.disabledReason ?? null,
     createdBy: extra.createdBy ?? 'Rina Saraswati (Admin)', createdAt,
-    password: DEMO_PASSWORD, fails: 0, lockUntil: null,
+    password: DEMO_PASSWORD, fails: 0, lockUntil: null, resetSentAt: null,
     log: extra.log ?? [
       { at: createdAt, text: `Akun dibuat, tautan aktivasi dikirim ke ${extra.email ?? `${local}@amarbank.co.id`}` },
       ...(status === 'ACTIVE' ? [{ at: new Date(createdAt.getTime() + 5 * 3600e3), text: 'Password dibuat, akun aktif' }] : []),
@@ -157,7 +157,7 @@ function partner(n, name, entity, areaId, status, submitterId, cfg = {}) {
     status, privyId: cfg.privyId ?? null,
     pks: { inviteEmail: null, sentVia: null, sentAt: null, status: 'NOT_SENT', confirmedBy: null, confirmedAt: null, file: null },
     merchantCode: null, picAccountFailed: false,
-    revisedSections: [], fieldChanges: [], revisionRequest: null,
+    revisedSections: [], fieldChanges: [], changeLog: [], revisionRequest: null,
     history: [{ at: submittedAt, from: null, to: 'UNDER_REVIEW', by: submitterId, reason: 'Pengajuan dikirim dari aplikasi mobile' }],
     stores: [],
     documents: [],
@@ -266,85 +266,170 @@ let uid = 100;
   users.push(u);
 });
 
-// ---------------------------------------------------------------- pinjaman, target, kehadiran (untuk APL)
-/** Bulan data performa: Mei–Okt 2026 (Okt berjalan sampai tanggal 7). */
+// ---------------------------------------------------------------- pinjaman, absensi, kunjungan (APL, PRD v3 §B)
+/** Bulan data: Mei–Okt 2026 (Okt berjalan sampai 07 Okt 2026 10:30 WIB). */
 export const MONTHS = ['2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10'];
 export const CURRENT_MONTH = '2026-10';
-const monthStart = (ym) => new Date(`${ym}-01T00:00:00Z`);
+const DATA_START = Date.parse('2026-05-01T00:00:00+07:00');
+const DAY_MS = 864e5;
+/** Tanggal WIB "YYYY-MM-DD" dari Date. */
+export const wibDate = (d) => new Date(new Date(d).getTime() + 7 * 3600e3).toISOString().slice(0, 10);
+/** Date dari tanggal WIB + jam:menit WIB. */
+const atWib = (ymd, h, m = 0) => new Date(`${ymd}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00+07:00`);
+const isWorkday = (ymd) => new Date(`${ymd}T12:00:00+07:00`).getUTCDay() !== 0; // Senin–Sabtu
+const TODAY = wibDate(BASE);
+/** Daftar tanggal WIB dari `from` (Date) s/d hari ini. */
+function daysFrom(from) {
+  const out = [];
+  for (let t = Math.max(DATA_START, new Date(`${wibDate(from)}T00:00:00+07:00`).getTime()); wibDate(t) <= TODAY; t += DAY_MS) out.push(wibDate(t));
+  return out;
+}
 
-/** loans: agregat per toko per bulan, diatribusikan ke SA/SR yang ditugaskan dan TL-nya. */
-export const loanStats = [];
-/** targets: target paid out amount per entitas per bulan. key `${kind}:${id}:${ym}` */
-export const targets = {};
-/** attendance: hari kerja hadir per SA/SR/TL per bulan. key `${userId}:${ym}` */
-export const attendance = {};
-/** mfp: rasio MFP (collection) per toko per bulan, dalam persen. */
-export const mfp = {};
+/** TL pemilik partner: TL yang mengajukan, atau TL atasan SR yang mengajukan (PRD v3 §C). */
+export function owningTl(p) {
+  const sub = users.find((u) => u.id === p.submittedBy);
+  return sub?.role === 'TL' ? sub.id : sub?.supervisorId ?? null;
+}
 
+const FIRST = ['Ahmad', 'Siti', 'Budi', 'Dewi', 'Rizal', 'Nur', 'Agus', 'Rina', 'Hendra', 'Yuni', 'Fajar', 'Lia', 'Dodi', 'Maya', 'Joko', 'Intan', 'Wahyu', 'Ratna', 'Bayu', 'Sari'];
+const LAST = ['Saputra', 'Wijaya', 'Lestari', 'Hidayat', 'Pratama', 'Kusuma', 'Siregar', 'Nasution', 'Santoso', 'Rahayu', 'Gunawan', 'Halim', 'Utami', 'Purnomo', 'Sitompul'];
+const REJECT = ['Skor kredit tidak memenuhi syarat', 'Data penghasilan tidak sesuai', 'Dokumen identitas tidak valid', 'Pengajuan ganda'];
+
+/**
+ * loans: aplikasi pinjaman hasil sinkronisasi CRM (read-only). status CRM disederhanakan:
+ * SUBMITTED Pengajuan · IN_PROCESS Diproses · APPROVED Disetujui · REJECTED Ditolak · PAID_OUT Dicairkan.
+ */
+export const loans = [];
+let loanSeq = 4100000;
 partners.filter((p) => p.activatedAt).forEach((p) => {
+  const tlId = owningTl(p);
   p.stores.forEach((s) => {
-    const activeFrom = new Date(Math.max(p.activatedAt, s.addedAt));
-    MONTHS.forEach((ym) => {
-      const end = new Date(monthStart(ym)); end.setUTCMonth(end.getUTCMonth() + 1);
-      const stoppedAt = p.status === 'INACTIVE' ? p.statusUpdatedAt : null;
-      if (activeFrom >= end || (stoppedAt && stoppedAt < monthStart(ym))) return;
-      const frac = (ym === CURRENT_MONTH ? 7 / 31 : 1) * (activeFrom > monthStart(ym) ? 0.5 : 1);
-      const submitted = Math.max(1, Math.round(between(22, 64) * frac));
-      const accepted = Math.round(submitted * (0.55 + rnd() * 0.2));
-      const paidOutApps = Math.round(accepted * (0.7 + rnd() * 0.2));
-      const paidOutUnits = paidOutApps + Math.round(paidOutApps * rnd() * 0.3);
-      const paidOutAmount = paidOutApps * between(60, 120) * 1e5;
-      const salesId = s.assigned[0] ?? null;
-      const tlId = salesId ? users.find((u) => u.id === salesId).supervisorId : users.find((u) => u.role === 'TL' && u.areaIds.includes(p.areaId))?.id ?? null;
-      loanStats.push({ partnerId: p.id, storeId: s.id, areaId: p.areaId, salesId, tlId, month: ym, submitted, accepted, paidOutApps, paidOutUnits, paidOutAmount });
-      // Target bulan berjalan = target s/d hari ini (prorata), agar pencapaian sebanding.
-      const expected = (paidOutAmount / frac) * (ym === CURRENT_MONTH ? 7 / 31 : 1);
-      targets[`store:${s.id}:${ym}`] = Math.round((expected * (0.75 + rnd() * 0.65)) / 1e6) * 1e6;
-      mfp[`${s.id}:${ym}`] = +(6 + rnd() * 9).toFixed(1);
+    const start = new Date(Math.max(p.activatedAt, s.addedAt));
+    const stop = p.status === 'INACTIVE' ? wibDate(p.statusUpdatedAt) : '9999';
+    const rate = 0.9 + rnd() * 1.4; // rata-rata aplikasi per hari kerja
+    daysFrom(start).filter((d) => d < stop && isWorkday(d)).forEach((d) => {
+      const n = Math.floor(rate + rnd() - 0.5 + (rnd() < 0.15 ? 1 : 0));
+      for (let i = 0; i < n; i += 1) {
+        const submittedAt = atWib(d, between(9, 19), between(0, 59));
+        if (submittedAt > new Date(BASE)) continue;
+        const ageDays = (BASE - submittedAt) / DAY_MS;
+        const r = rnd();
+        const status = ageDays < 1 ? (r < 0.6 ? 'SUBMITTED' : 'IN_PROCESS') : ageDays < 3 ? (r < 0.3 ? 'IN_PROCESS' : r < 0.55 ? 'APPROVED' : r < 0.75 ? 'REJECTED' : 'PAID_OUT')
+          : (r < 0.28 ? 'REJECTED' : r < 0.36 ? 'APPROVED' : 'PAID_OUT');
+        const amount = between(30, 150) * 1e5;
+        const updatedAt = new Date(Math.min(BASE, submittedAt.getTime() + between(2, 72) * 3600e3));
+        loans.push({
+          id: `APP${++loanSeq}`, partnerId: p.id, storeId: s.id, areaId: p.areaId, channel: p.channel, salesId: s.assigned[0] ?? null, tlId,
+          customer: `${FIRST[between(0, FIRST.length - 1)]} ${LAST[between(0, LAST.length - 1)]}`,
+          amount, units: rnd() < 0.2 ? 2 : 1, submittedAt, status,
+          rejectionReason: status === 'REJECTED' ? REJECT[between(0, REJECT.length - 1)] : null,
+          paidOutAt: status === 'PAID_OUT' ? updatedAt : null, updatedAt,
+        });
+      }
     });
   });
 });
-// Target SA/SR & TL = jumlah target toko yang dipegang (SA: 1 toko, SR: maks. 3) — tanpa hitung ganda.
-loanStats.forEach((l) => {
-  const t = targets[`store:${l.storeId}:${l.month}`];
-  if (l.salesId) targets[`sales:${l.salesId}:${l.month}`] = (targets[`sales:${l.salesId}:${l.month}`] ?? 0) + t;
-  if (l.tlId) targets[`tl:${l.tlId}:${l.month}`] = (targets[`tl:${l.tlId}:${l.month}`] ?? 0) + t;
-});
-users.filter((u) => ['SA', 'SR', 'TL'].includes(u.role) && u.status === 'ACTIVE').forEach((u) => {
-  MONTHS.forEach((ym) => { attendance[`${u.id}:${ym}`] = ym === CURRENT_MONTH ? between(3, 5) : between(19, 24); });
+
+/** targets: target nominal paid out per toko per bulan (read-only; sumber target masih TBD). Bulan berjalan = prorata s/d hari ini. */
+export const targets = {};
+/** mfp: rasio MFP (collection) per toko per bulan, dalam persen. */
+export const mfp = {};
+partners.filter((p) => p.activatedAt).forEach((p) => p.stores.forEach((s) => MONTHS.forEach((ym) => {
+  const paid = loans.filter((l) => l.storeId === s.id && l.status === 'PAID_OUT' && wibDate(l.paidOutAt).startsWith(ym)).reduce((a, l) => a + l.amount, 0);
+  if (!paid) return;
+  targets[`${s.id}:${ym}`] = Math.round((paid * (0.75 + rnd() * 0.65)) / 1e6) * 1e6;
+  mfp[`${s.id}:${ym}`] = +(6 + rnd() * 9).toFixed(1);
+})));
+
+/** attendance: absensi harian (Senin–Sabtu) TL, SR, SA aktif. status ON_TIME | LATE | ABSENT. Hari ini bisa belum check-in. */
+export const attendance = [];
+users.filter((u) => ['TL', 'SR', 'SA'].includes(u.role) && u.status === 'ACTIVE').forEach((u) => {
+  const area = AREAS.find((a) => a.id === u.areaIds[0]);
+  daysFrom(u.activatedAt).filter(isWorkday).forEach((d) => {
+    const today = d === TODAY;
+    const r = rnd();
+    if (today && r < 0.15) return; // belum check-in
+    const status = r < 0.05 && !today ? 'ABSENT' : r < 0.2 ? 'LATE' : 'ON_TIME';
+    const inAt = status === 'ABSENT' ? null : status === 'LATE' ? atWib(d, 8, between(1, 59)) : atWib(d, 7, between(25, 59));
+    attendance.push({
+      userId: u.id, date: d, status, clockInAt: inAt,
+      clockOutAt: inAt && !today ? atWib(d, between(17, 18), between(0, 59)) : null,
+      lat: +(area.lat + (rnd() - 0.5) * 0.03).toFixed(6), lng: +(area.lng + (rnd() - 0.5) * 0.03).toFixed(6),
+    });
+  });
 });
 
-// ---------------------------------------------------------------- skema insentif (Super Admin)
-// Isi awal dari FSD Salestraxx hlm. 61–62. Tier "above": pencapaian > batas → tarif; di bawah semua batas → 0%.
-const SALES_TIERS = [{ above: 120, rate: 1.0 }, { above: 100, rate: 0.9 }, { above: 85, rate: 0.85 }, { above: 70, rate: 0.7 }, { above: 55, rate: 0.55 }];
-const LEADER_TIERS = [{ above: 120, rate: 0.33 }, { above: 100, rate: 0.3 }, { above: 85, rate: 0.28 }, { above: 70, rate: 0.23 }, { above: 55, rate: 0.18 }];
+/**
+ * visits: rencana kunjungan harian dari TL. SA: 1 kunjungan ke toko-nya; SR: tiap toko yang dipegang (maks. 3); TL: 1 toko miliknya.
+ * status SCHEDULED | DONE | MISSED | CANCELLED; outcome ON_TIME | LATE untuk DONE.
+ */
+export const visits = [];
+let visitSeq = 0;
+const storesOf = (uid) => partners.flatMap((p) => p.stores.filter((s) => s.assigned.includes(uid) && s.status === 'ACTIVE').map((s) => ({ p, s })));
+users.filter((u) => ['TL', 'SR', 'SA'].includes(u.role) && u.status === 'ACTIVE').forEach((u) => {
+  const own = u.role === 'TL' ? partners.filter((p) => p.status === 'ACTIVE' && owningTl(p) === u.id).flatMap((p) => p.stores.filter((s) => s.status === 'ACTIVE').map((s) => ({ p, s }))) : storesOf(u.id);
+  if (!own.length) return;
+  daysFrom(u.activatedAt).filter(isWorkday).forEach((d, di) => {
+    const plan = u.role === 'TL' ? [own[di % own.length]] : own.slice(0, u.role === 'SA' ? 1 : 3);
+    plan.forEach(({ p, s }, i) => {
+      if (s.addedAt > atWib(d, 23)) return;
+      const hour = u.role === 'TL' ? 14 : [10, 13, 16][i];
+      const plannedAt = atWib(d, hour);
+      const att = attendance.find((a) => a.userId === u.id && a.date === d);
+      const r = rnd();
+      let status; let outcome = null;
+      if (plannedAt > new Date(BASE)) status = 'SCHEDULED';
+      else if (!att || att.status === 'ABSENT' || r < 0.07) status = 'MISSED';
+      else if (r < 0.11) status = 'CANCELLED';
+      else { status = 'DONE'; outcome = r < 0.25 ? 'LATE' : 'ON_TIME'; }
+      const inAt = status === 'DONE' ? new Date(plannedAt.getTime() + (outcome === 'LATE' ? between(16, 70) : between(-10, 14)) * 60000) : null;
+      visits.push({
+        id: ++visitSeq, userId: u.id, partnerId: p.id, storeId: s.id, date: d, plannedAt, status, outcome,
+        checkInAt: inAt, checkOutAt: inAt ? new Date(inAt.getTime() + between(25, 110) * 60000) : null, lat: s.lat, lng: s.lng,
+      });
+    });
+  });
+});
+
+// ---------------------------------------------------------------- skema insentif (Super Admin, PRD v3 §E)
+/**
+ * Versi skema per penerima. Tier memakai rentang: cocok bila nilai > from dan ≤ to (tier pertama mulai 0% inklusif; to null = tak terbatas).
+ * Isi awal dari BRD V2.2 (PRD v3 §E1). status versi: ACTIVE | SCHEDULED | ARCHIVED; draft disimpan terpisah.
+ */
+const T = (rows) => rows.map(([from, to, rate]) => ({ from, to, rate }));
+const SALES_TIERS = T([[0, 55, 0], [55, 70, 0.55], [70, 85, 0.7], [85, 100, 0.85], [100, 120, 0.9], [120, null, 1.0]]);
+const LEADER_TIERS = T([[0, 55, 0], [55, 70, 0.18], [70, 85, 0.23], [85, 100, 0.28], [100, 120, 0.3], [120, null, 0.33]]);
+const HS = 'Hendra Wijaya (Super Admin)';
 const scheme = (id, name, recipient, payday, components) => ({
-  id, name, recipient, payday, effectiveFrom: '2026-08', updatedAt: day('2026-07-28'), updatedBy: 'Hendra Wijaya (Super Admin)',
-  components, history: [{ at: day('2026-07-28'), by: 'Hendra Wijaya (Super Admin)', text: 'Skema dibuat, berlaku mulai Agu 2026' }],
+  id, name, recipient, draft: null,
+  versions: [{ version: 1, status: 'ACTIVE', effectiveFrom: '2026-08', payday, components, createdBy: HS, createdAt: day('2026-07-28'), publishedAt: day('2026-07-28') }],
 });
 export const schemes = [
-  scheme('SA', 'Sales Agent (SA) · Offline Retail', 'SA', 10, [
+  scheme('SA', 'Sales Agent (SA)', 'SA', 10, [
     { key: 'dailyFee', type: 'fixed', label: 'Daily Fee', amount: 108000, basis: 'per hari kerja' },
-    { key: 'paidOut', type: 'tierAbove', label: 'Paid Out Incentive', basis: 'pencapaian target paid out', tiers: SALES_TIERS },
+    { key: 'paidOut', type: 'tier', label: 'Paid Out Incentive', basis: 'pencapaian target paid out', metric: 'Pencapaian', tiers: SALES_TIERS },
   ]),
-  scheme('SR', 'Sales Representative (SR) · Offline Retail', 'SR', 10, [
+  scheme('SR', 'Sales Representative (SR)', 'SR', 10, [
     { key: 'dailyFee', type: 'fixed', label: 'Daily Fee', amount: 126000, basis: 'per hari kerja' },
-    { key: 'paidOut', type: 'tierAbove', label: 'Paid Out Incentive', basis: 'pencapaian target paid out', tiers: SALES_TIERS },
+    { key: 'paidOut', type: 'tier', label: 'Paid Out Incentive', basis: 'pencapaian target paid out', metric: 'Pencapaian', tiers: SALES_TIERS },
   ]),
-  scheme('TL_SENIOR', 'Team Leader Senior · Offline Retail', 'TL_SENIOR', 10, [
+  scheme('TL_SENIOR', 'Team Leader Senior', 'TL_SENIOR', 10, [
     { key: 'dailyFee', type: 'fixed', label: 'Daily Fee', amount: 165000, basis: 'per hari kerja' },
-    { key: 'leader', type: 'tierAbove', label: 'Leader Incentive', basis: 'pencapaian target paid out tim', tiers: LEADER_TIERS },
+    { key: 'leader', type: 'tier', label: 'Leader Incentive', basis: 'pencapaian target paid out tim', metric: 'Pencapaian', tiers: LEADER_TIERS },
   ]),
-  scheme('TL_JUNIOR', 'Team Leader Junior · Offline Retail', 'TL_JUNIOR', 10, [
+  scheme('TL_JUNIOR', 'Team Leader Junior', 'TL_JUNIOR', 10, [
     { key: 'dailyFee', type: 'fixed', label: 'Daily Fee', amount: 126000, basis: 'per hari kerja' },
-    { key: 'leader', type: 'tierAbove', label: 'Leader Incentive', basis: 'pencapaian target paid out tim', tiers: LEADER_TIERS },
+    { key: 'leader', type: 'tier', label: 'Leader Incentive', basis: 'pencapaian target paid out tim', metric: 'Pencapaian', tiers: LEADER_TIERS },
   ]),
-  scheme('PARTNER_RETAIL', 'Partner · Offline Retailer Store', 'PARTNER_RETAIL', 15, [
-    { key: 'volume', type: 'tierAbove', label: 'Volume Incentive', basis: 'pencapaian target paid out toko', tiers: [{ above: 100, rate: 0.3 }, { above: 85, rate: 0.2 }, { above: 70, rate: 0.1 }, { above: 55, rate: 0.05 }] },
-    { key: 'collection', type: 'tierBelow', label: 'Collection Incentive (MFP)', basis: 'rasio MFP toko', tiers: [{ below: 10, rate: 0.1 }, { below: 13, rate: 0.05 }] },
+  scheme('PARTNER_RETAIL', 'Partner · Offline Retailer', 'PARTNER_RETAIL', 15, [
+    { key: 'volume', type: 'tier', label: 'Volume Incentive', basis: 'pencapaian target paid out partner', metric: 'Pencapaian', tiers: T([[0, 55, 0], [55, 70, 0.05], [70, 85, 0.1], [85, 100, 0.2], [100, null, 0.3]]) },
+    { key: 'collection', type: 'tier', label: 'Collection Incentive (MFP)', basis: 'rasio MFP partner', metric: 'MFP', tiers: T([[0, 10, 0.1], [10, 13, 0.05], [13, null, 0]]) },
   ]),
   scheme('PARTNER_AFFILIATE', 'Partner · Affiliate / Sales Agency', 'PARTNER_AFFILIATE', 15, [
-    { key: 'commission', type: 'percent', label: 'Commission', rate: 5, basis: 'dari total paid out' },
+    { key: 'commission', type: 'percent', label: 'Commission', rate: 5, basis: 'dari total disbursement' },
+  ]),
+  scheme('CRP', 'Customer Referral Program (CRP)', 'CRP', 15, [
+    { key: 'commission', type: 'percent', label: 'CRP Commission', rate: 3, basis: 'dari total disbursement' },
   ]),
 ];
-export const RECIPIENT_LABEL = { SA: 'SA', SR: 'SR', TL_SENIOR: 'TL Senior', TL_JUNIOR: 'TL Junior', PARTNER_RETAIL: 'Partner (Offline Retailer)', PARTNER_AFFILIATE: 'Partner (Affiliate)' };
+export const RECIPIENT_LABEL = { SA: 'SA', SR: 'SR', TL_SENIOR: 'TL Senior', TL_JUNIOR: 'TL Junior', PARTNER_RETAIL: 'Partner (Offline Retailer)', PARTNER_AFFILIATE: 'Partner (Affiliate)', CRP: 'Customer (CRP)' };

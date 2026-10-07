@@ -39,6 +39,8 @@ export function DataTable({ columns, rows, rowKey = (r) => r.id, highlight, load
   );
 }
 
+const RIGHT_FONT = { leading: ['var(--label-sm)', 'var(--text-strong-950)'], regular: ['var(--paragraph-sm)', 'var(--text-strong-950)'], passive: ['var(--paragraph-sm)', 'var(--text-sub-600)'] };
+
 function Row({ columns, row, highlighted, onClick }) {
   const [hover, setHover] = useState(false);
   return (
@@ -50,7 +52,20 @@ function Row({ columns, row, highlighted, onClick }) {
     >
       {columns.map((c) => {
         const out = c.render ? c.render(row) : row[c.key];
-        if (out && typeof out === 'object' && !React.isValidElement(out)) return <TableRowCell key={c.key} align={c.align} {...out} />;
+        const obj = out && typeof out === 'object' && !React.isValidElement(out);
+        // TableRowCell DS menata title/description dalam flex (abaikan textAlign) — kolom rata kanan dirender manual.
+        if (c.align === 'right' && !(obj && out.misc)) {
+          const o = obj ? out : { title: out ?? '-', priority: 'passive' };
+          return (
+            <TableRowCell key={c.key} align="right">
+              <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 'var(--space-2)' }}>
+                <span style={{ font: RIGHT_FONT[o.priority ?? 'regular'][0], color: RIGHT_FONT[o.priority ?? 'regular'][1] }}>{o.title}</span>
+                {o.description != null && <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>{o.description}</span>}
+              </span>
+            </TableRowCell>
+          );
+        }
+        if (obj) return <TableRowCell key={c.key} align={c.align} {...out} />;
         return <TableRowCell key={c.key} align={c.align} priority="passive" title={out ?? '-'} />;
       })}
     </tr>

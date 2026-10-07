@@ -1,6 +1,6 @@
 import { Sidebar, PageHeader, Avatar, Button, Icon, AmarBankLogo } from '@ds/index.js';
 import { navigate } from '../lib/router.js';
-import { NAV_BY_ROLE } from '../lib/nav.js';
+import { navFor } from '../lib/nav.js';
 
 
 /** Shell portal: Sidebar gelap 272px + PageHeader (ikon, judul, deskripsi, chip pengguna, Keluar) + konten pad 24/32. */
@@ -8,7 +8,7 @@ export function AdminShell({ active, icon, title, description, user, onLogout, h
   return (
     <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-white-0)' }}>
       <Sidebar theme="dark" company="" logo={<AmarBankLogo lockup="horizontal" color="white" height={26} />}
-        sections={NAV_BY_ROLE[user.role] ?? []} value={active} onChange={(v) => navigate(v)} />
+        sections={navFor(user)} value={active} onChange={(v) => navigate(v)} />
       <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <PageHeader
           media={(

@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Alert, Button, ContentDivider, TextInput } from '@ds/index.js';
-import { AuthCard, AuthHero, AuthLayout } from '../components/AuthLayout.jsx';
+import { Alert, Button, ContentDivider, Icon, LinkButton, TextInput } from '@ds/index.js';
+import { AuthCard, AuthHero, AuthLayout, StatusMessage } from '../components/AuthLayout.jsx';
 import { ApiError, login } from '../api/mockApi.js';
-import { DEMO_PASSWORD } from '../api/db.js';
+import { DEMO_PASSWORD, users } from '../api/db.js';
 import { DEMO } from '../lib/env.js';
 import { preset } from '../dev/presets.js';
 
@@ -21,6 +21,7 @@ const DEMO_ACCOUNTS = [
   ['lestari.wulandari', 'APL · Bandung, Jakarta'],
   ['hendra.wijaya', 'Super Admin'],
   ['andi.pratama', 'TL → Akses ditolak'],
+  [users.find((u) => u.role === 'PARTNER' && u.status === 'ACTIVE')?.username, 'Partner (PIC) → Akses ditolak'],
   ['fajar.nugroho', 'Pending → belum diaktivasi'],
   ['rizky.ramadhan', 'Disabled → akun tidak aktif'],
 ];
@@ -32,6 +33,8 @@ export function Login({ onLoggedIn, notice }) {
   const [password, setPassword] = useState(init.password ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(init.error ?? null);
+  const [forgot, setForgot] = useState(false);
+  const [outage, setOutage] = useState(init.outage ?? false);
   const valid = loginId.trim().length > 0 && password.length > 0;
 
   async function submit(e) {
@@ -45,9 +48,22 @@ export function Login({ onLoggedIn, notice }) {
       onLoggedIn(session);
     } catch (err) {
       setBusy(false);
+      if (err instanceof ApiError && err.code === 'OUTAGE') { setOutage(true); return; }
       setPassword('');
       setError(err instanceof ApiError ? LOGIN_ERRORS[err.code] ?? LOGIN_ERRORS.INVALID : LOGIN_ERRORS.INVALID);
     }
+  }
+
+  // Halaman gangguan layanan (PRD v3: full-page error dengan "Coba lagi").
+  if (outage) {
+    return (
+      <AuthLayout label="Sales & Partner Portal">
+        <AuthCard center gap="var(--space-16)">
+          <StatusMessage status="error" icon="ErrorWarningFill" title="Layanan tidak tersedia">Gagal memuat data. Coba lagi.</StatusMessage>
+          <Button fullWidth leftIcon={<Icon name="RefreshLine" />} onClick={() => setOutage(false)}>Coba lagi</Button>
+        </AuthCard>
+      </AuthLayout>
+    );
   }
 
   return (
@@ -66,6 +82,10 @@ export function Login({ onLoggedIn, notice }) {
               value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
           </div>
           <Button type="submit" fullWidth disabled={!valid || busy}>{busy ? 'Memproses...' : 'Masuk'}</Button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-8)' }}>
+            <LinkButton onClick={() => setForgot((f) => !f)}>Lupa password?</LinkButton>
+            {forgot && <Alert status="information" size="sm" title="Hubungi Admin untuk mengatur ulang password Anda." />}
+          </div>
           {DEMO && !preset && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', padding: 'var(--space-12)', borderRadius: 'var(--rounded-10)', background: 'var(--bg-weak-50)' }}>
               <span style={{ font: 'var(--label-xs)', color: 'var(--text-sub-600)' }}>Mode demo · password semua akun: {DEMO_PASSWORD}</span>

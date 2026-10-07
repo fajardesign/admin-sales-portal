@@ -11,18 +11,22 @@ const MESSAGES = {
   expired: { status: 'error', icon: 'TimeLine', title: 'Tautan tidak berlaku', body: 'Tautan aktivasi sudah kedaluwarsa. Hubungi Admin Anda.' },
   already: { status: 'information', icon: 'InformationLine', title: 'Akun sudah aktif', body: 'Akun Anda sudah aktif. Silakan masuk melalui aplikasi.' },
   done: { status: 'success', icon: 'ShieldCheckLine', title: 'Aktivasi berhasil', body: 'Akun Anda sudah aktif. Silakan masuk melalui aplikasi.' },
+  // Copy reset password belum ditetapkan PRD (TBD) — memakai pola pesan aktivasi.
+  resetDone: { status: 'success', icon: 'ShieldCheckLine', title: 'Password berhasil diubah', body: 'Silakan masuk melalui aplikasi dengan password baru.' },
+  resetExpired: { status: 'error', icon: 'TimeLine', title: 'Tautan tidak berlaku', body: 'Tautan reset password sudah kedaluwarsa. Hubungi Admin Anda.' },
 };
 
 /**
- * KC1 · Aktivasi akun (web view Keycloak dari tautan undangan email).
+ * KC1 · Aktivasi akun / reset password (web view Keycloak dari tautan email; `&mode=reset` untuk reset).
  * `#/activate?user=<id>` memakai status akun sebenarnya; tanpa parameter memakai skenario DevToolbar.
  */
-export function Activation({ userId, onBackToLogin }) {
+export function Activation({ userId, mode = 'activate', onBackToLogin }) {
   const { activationState } = useScenario();
-  return <ActivationView key={`${userId}-${activationState}`} userId={userId} onBackToLogin={onBackToLogin} />;
+  return <ActivationView key={`${userId}-${mode}-${activationState}`} userId={userId} mode={mode} onBackToLogin={onBackToLogin} />;
 }
 
-function ActivationView({ userId, onBackToLogin }) {
+function ActivationView({ userId, mode, onBackToLogin }) {
+  const reset = mode === 'reset';
   const [link, setLink] = useState(null);
   const init = preset?.activation ?? {};
   const [pw, setPw] = useState(init.pw ?? '');
@@ -32,20 +36,20 @@ function ActivationView({ userId, onBackToLogin }) {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(init.done ?? false);
 
-  useEffect(() => { checkActivation(userId).then(setLink); }, [userId]);
+  useEffect(() => { checkActivation(userId, mode).then(setLink); }, [userId, mode]);
 
   if (!link) return <AuthLayout label="Sales & Partner Portal" />;
 
   const checks = passwordPolicy(pw, link.user.username);
   const pwOk = checks.every((c) => c.ok);
   const matchOk = pw2.length > 0 && pw2 === pw;
-  const msg = done ? MESSAGES.done : MESSAGES[link.status];
+  const msg = done ? (reset ? MESSAGES.resetDone : MESSAGES.done) : link.status === 'expired' && reset ? MESSAGES.resetExpired : MESSAGES[link.status];
 
   async function submit(e) {
     e.preventDefault();
     if (!pwOk || !matchOk) { setSubmitted(true); setTouched2(true); return; }
     setBusy(true);
-    await activateAccount(userId, pw);
+    await activateAccount(userId, pw, mode);
     setBusy(false);
     setDone(true);
   }
@@ -60,7 +64,7 @@ function ActivationView({ userId, onBackToLogin }) {
       ) : (
         <form onSubmit={submit} style={{ display: 'contents' }}>
           <AuthCard>
-            <AuthHero icon="Lock2Line" title="Aktivasi akun Anda" description={`Halo ${link.user.fullName.split(' ')[0]}, buat password untuk ${link.user.email}`} />
+            <AuthHero icon="Lock2Line" title={reset ? 'Atur ulang password' : 'Aktivasi akun Anda'} description={`Halo ${link.user.fullName.split(' ')[0]}, buat password ${reset ? 'baru ' : ''}untuk ${link.user.email}`} />
             <ContentDivider />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-12)' }}>
               <TextInput label="Password Baru" required type="password" leftIcon="Lock2Line" placeholder="••••••••" autoComplete="new-password"

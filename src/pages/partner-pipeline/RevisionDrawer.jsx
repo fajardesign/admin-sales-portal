@@ -64,7 +64,7 @@ export function RevisionDrawer({ partner, user, onClose, onDone }) {
   return (
     <>
       <Drawer open width={520} onClose={confirm ? undefined : onClose}
-        header={<DrawerHeader title="Minta Revisi" description={`${partner.partnerName} · ${partner.registrationNumber}`} icon="EditLine" onClose={onClose} />}
+        header={<DrawerHeader size="lg" title="Minta Revisi" description={`${partner.partnerName} · ${partner.registrationNumber}`} icon="EditLine" onClose={onClose} />}
         footer={(
           <DrawerFooter left={<span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>{keys.length} item dipilih</span>}>
             <Button variant="stroke" tone="neutral" size="sm" onClick={onClose}>Batal</Button>
