@@ -1,12 +1,14 @@
 import { Sidebar, PageHeader, Avatar, Button, Icon, AmarBankLogo } from '@ds/index.js';
+import { navigate } from '../lib/router.js';
+import { NAV_BY_ROLE } from '../lib/nav.js';
 
-const NAV = [{ title: 'Atur', items: [{ label: 'Manajemen Akun', value: 'users', icon: 'UserLine' }] }];
 
-/** Shell portal admin: Sidebar gelap 272px + PageHeader (ikon, judul, deskripsi, chip pengguna, Keluar). */
-export function AdminShell({ active, icon, title, description, user, onLogout, children }) {
+/** Shell portal: Sidebar gelap 272px + PageHeader (ikon, judul, deskripsi, chip pengguna, Keluar) + konten pad 24/32. */
+export function AdminShell({ active, icon, title, description, user, onLogout, headerExtra, children }) {
   return (
     <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-white-0)' }}>
-      <Sidebar theme="dark" company="" logo={<AmarBankLogo lockup="horizontal" color="white" height={26} />} sections={NAV} value={active} />
+      <Sidebar theme="dark" company="" logo={<AmarBankLogo lockup="horizontal" color="white" height={26} />}
+        sections={NAV_BY_ROLE[user.role] ?? []} value={active} onChange={(v) => navigate(v)} />
       <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <PageHeader
           media={(
@@ -23,6 +25,7 @@ export function AdminShell({ active, icon, title, description, user, onLogout, c
             </>
           )}
         />
+        {headerExtra}
         <div style={{ flex: 1, overflow: 'auto', padding: 'var(--space-24) var(--space-32) var(--space-32)', display: 'flex', flexDirection: 'column', gap: 'var(--space-16)' }}>
           {children}
         </div>

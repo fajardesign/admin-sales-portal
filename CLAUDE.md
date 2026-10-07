@@ -30,3 +30,7 @@ Setiap perubahan atau penambahan (kode, desain, layar, komponen) **tidak boleh l
   (capture `generate_figma_design`, `use_figma` yang mengubah canvas, membuat frame/section/komponen/variable).
 - Approval berlaku untuk satu permintaan itu saja; perubahan berikutnya perlu approval baru.
 - Membaca Figma (metadata, screenshot, variable, design context) untuk audit atau referensi boleh tanpa approval.
+
+## Git & merge
+- Selama task belum selesai, kerjakan di branch fitur dan **jangan langsung push/buat PR/merge ke GitHub**.
+- Push, buka PR, atau merge ke `main` hanya bila user memintanya secara eksplisit.

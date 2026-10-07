@@ -1,45 +1,81 @@
 import { useState } from 'react';
-import { Button, ContentDivider, TextInput } from '@ds/index.js';
+import { Alert, Button, ContentDivider, TextInput } from '@ds/index.js';
 import { AuthCard, AuthHero, AuthLayout } from '../components/AuthLayout.jsx';
-import { login } from '../api/mockApi.js';
+import { ApiError, login } from '../api/mockApi.js';
+import { DEMO_PASSWORD } from '../api/db.js';
 import { DEMO } from '../lib/env.js';
 import { preset } from '../dev/presets.js';
 
-/** W1 · Login Admin (Keycloak themed, realm sales-portal). */
-export function Login({ onLoggedIn }) {
+/** Pesan error login (PRD §1 tabel cek; identitas = email atau username sesuai keputusan Q1). */
+const LOGIN_ERRORS = {
+  INVALID: 'Email/username atau password salah. Silakan coba lagi.',
+  DISABLED: 'Akun Anda tidak aktif. Hubungi Admin.',
+  NOT_ACTIVATED: 'Akun belum diaktivasi. Cek email undangan Anda.',
+  LOCKED: 'Akun terkunci sementara. Coba lagi dalam 15 menit.',
+};
+
+/** Akun contoh mode demo (password sama untuk semua). */
+const DEMO_ACCOUNTS = [
+  ['rina.saraswati', 'Admin (Reviewer)'],
+  ['hasan.basri', 'APL · Makassar'],
+  ['lestari.wulandari', 'APL · Bandung, Jakarta'],
+  ['hendra.wijaya', 'Super Admin'],
+  ['andi.pratama', 'TL → Akses ditolak'],
+  ['fajar.nugroho', 'Pending → belum diaktivasi'],
+  ['rizky.ramadhan', 'Disabled → akun tidak aktif'],
+];
+
+/** W1 · Login (Keycloak themed, realm sales-portal). */
+export function Login({ onLoggedIn, notice }) {
   const init = preset?.login ?? {};
   const [loginId, setLoginId] = useState(init.loginId ?? '');
   const [password, setPassword] = useState(init.password ?? '');
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(init.error ?? null);
   const valid = loginId.trim().length > 0 && password.length > 0;
 
   async function submit(e) {
     e.preventDefault();
     if (!valid || busy) return;
     setBusy(true);
-    const session = await login(loginId.trim(), password);
-    setBusy(false);
-    setPassword('');
-    onLoggedIn(session);
+    setError(null);
+    try {
+      const session = await login(loginId, password);
+      setBusy(false);
+      onLoggedIn(session);
+    } catch (err) {
+      setBusy(false);
+      setPassword('');
+      setError(err instanceof ApiError ? LOGIN_ERRORS[err.code] ?? LOGIN_ERRORS.INVALID : LOGIN_ERRORS.INVALID);
+    }
   }
 
   return (
-    <AuthLayout label="Sales Portal · Admin"
+    <AuthLayout label="Sales & Partner Portal"
       footer={<><span>© 2026 Amar Bank</span><span>Didukung Keycloak · realm sales-portal</span></>}>
       <form onSubmit={submit} style={{ display: 'contents' }}>
         <AuthCard>
-          <AuthHero icon="User6Line" title="Masuk ke Sales Portal" description="Masukkan email atau nomor telepon dan password Anda." />
+          <AuthHero icon="User6Line" title="Masuk ke S&P Portal" description="Masukkan email atau username dan password Anda." />
           <ContentDivider />
+          {error && <Alert status="error" size="sm" title={error} />}
+          {!error && notice && <Alert status="information" size="sm" title={notice} />}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-12)' }}>
-            <TextInput label="Email atau Nomor Telepon" required leftIcon="MailLine" placeholder="nama@amarbank.co.id atau 0812..."
+            <TextInput label="Email atau Username" required leftIcon="MailLine" placeholder="nama@amarbank.co.id atau username"
               value={loginId} onChange={(e) => setLoginId(e.target.value)} autoComplete="username" />
             <TextInput label="Password" required type="password" leftIcon="Lock2Line" placeholder="••••••••"
               value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
           </div>
           <Button type="submit" fullWidth disabled={!valid || busy}>{busy ? 'Memproses...' : 'Masuk'}</Button>
           {DEMO && !preset && (
-            <div style={{ padding: 'var(--space-10) var(--space-12)', borderRadius: 'var(--rounded-10)', background: 'var(--bg-weak-50)', font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>
-              Demo: email berisi "tl" menampilkan halaman Akses ditolak; lainnya masuk ke Manajemen Akun.
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)', padding: 'var(--space-12)', borderRadius: 'var(--rounded-10)', background: 'var(--bg-weak-50)' }}>
+              <span style={{ font: 'var(--label-xs)', color: 'var(--text-sub-600)' }}>Mode demo · password semua akun: {DEMO_PASSWORD}</span>
+              {DEMO_ACCOUNTS.map(([u, label]) => (
+                <button key={u} type="button" onClick={() => { setLoginId(u); setPassword(DEMO_PASSWORD); setError(null); }}
+                  style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-8)', border: 0, background: 'none', padding: 'var(--space-2) 0', cursor: 'pointer', font: 'var(--paragraph-xs)', color: 'var(--text-strong-950)', textAlign: 'left' }}>
+                  <span>{u}</span><span style={{ color: 'var(--text-sub-600)' }}>{label}</span>
+                </button>
+              ))}
+              <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-soft-400)' }}>Salah password 5 kali berturut-turut untuk melihat pesan akun terkunci.</span>
             </div>
           )}
         </AuthCard>

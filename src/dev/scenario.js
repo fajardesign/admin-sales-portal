@@ -1,16 +1,19 @@
 import { useSyncExternalStore } from 'react';
 
 /**
- * Skenario mock (hanya untuk development) — padanan "props" prototipe di claude.ai/design.
- * Dipakai mock API untuk mensimulasikan state tabel, hasil simpan, dan status tautan aktivasi.
+ * Skenario mock (hanya untuk development) — dipakai mock API untuk mensimulasikan state tabel, hasil simpan,
+ * pembuatan akun PIC saat aktivasi partner, dan status tautan aktivasi contoh.
  */
 export const SCENARIO_OPTIONS = {
   tableState: ['data', 'loading', 'empty', 'error'],
-  saveOutcome: ['success', 'emailFail', 'kcFail', 'dupEmail', 'dupPhone'],
+  saveOutcome: ['success', 'emailFail', 'kcFail'],
+  picAccount: ['ok', 'fail'],
   activationState: ['valid', 'expired', 'already'],
 };
+export const SCENARIO_LABELS = { tableState: 'Tabel', saveOutcome: 'Simpan pengguna', picAccount: 'Akun PIC', activationState: 'Tautan contoh' };
+export const DEFAULT_SCENARIO = { tableState: 'data', saveOutcome: 'success', picAccount: 'ok', activationState: 'valid' };
 
-let state = { tableState: 'data', saveOutcome: 'success', activationState: 'valid', lastNameOptional: false };
+let state = { ...DEFAULT_SCENARIO };
 const subs = new Set();
 
 export const getScenario = () => state;

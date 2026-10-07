@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { preset } from '../dev/presets.js';
 
-/** Hash router minimal: "#/users?x=1" → { path: '/users', query: URLSearchParams }. */
+/** Hash router minimal: "#/partner-pipeline?status=active" → { path: '/partner-pipeline', query: URLSearchParams }. */
 function parse() {
   // Hash non-rute (mis. #figmacapture=… saat capture ke Figma) → pakai rute preset.
   const hash = window.location.hash.slice(1);
@@ -20,3 +20,9 @@ export function useHashRoute() {
 }
 
 export const navigate = (path) => { window.location.hash = path; };
+
+/** Bangun query string dari objek; nilai kosong dibuang. */
+export function withQuery(path, params) {
+  const qs = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')).toString();
+  return qs ? `${path}?${qs}` : path;
+}

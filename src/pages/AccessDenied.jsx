@@ -1,7 +1,7 @@
 import { Button, Icon } from '@ds/index.js';
 import { AuthCard, AuthLayout, StatusMessage } from '../components/AuthLayout.jsx';
 
-/** W1 · Akses ditolak — akun tanpa akses web (mis. Team Leader). */
+/** W1-D · Akses ditolak — role tanpa akses portal web (TL, SR, SA, Partner). Backend menjawab 403. */
 export function AccessDenied({ loginId, onLogout }) {
   return (
     <AuthLayout footer={null}>

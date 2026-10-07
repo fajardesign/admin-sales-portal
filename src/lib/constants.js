@@ -1,0 +1,119 @@
+// Enum, label, dan master data prototipe S&P Portal (PRD "Final Prompt - Sales and partner Dashboard").
+
+/** Master area (hard-coded fase 1, PRD §3 F2). Wilayah dipakai untuk alamat partner contoh. */
+export const AREAS = [
+  { id: 1, code: 'MKS', name: 'Makassar', province: 'Sulawesi Selatan', city: 'Kota Makassar', district: 'Panakkukang', village: 'Pandang', lat: -5.1477, lng: 119.4327 },
+  { id: 2, code: 'BDG', name: 'Bandung', province: 'Jawa Barat', city: 'Kota Bandung', district: 'Coblong', village: 'Dago', lat: -6.8915, lng: 107.6107 },
+  { id: 3, code: 'MDN', name: 'Medan', province: 'Sumatera Utara', city: 'Kota Medan', district: 'Medan Petisah', village: 'Sei Sikambing D', lat: 3.5952, lng: 98.6722 },
+  { id: 4, code: 'SBY', name: 'Surabaya', province: 'Jawa Timur', city: 'Kota Surabaya', district: 'Tegalsari', village: 'Kedungdoro', lat: -7.2575, lng: 112.7521 },
+  { id: 5, code: 'JKT', name: 'Jakarta', province: 'DKI Jakarta', city: 'Kota Jakarta Barat', district: 'Grogol Petamburan', village: 'Tanjung Duren Selatan', lat: -6.1767, lng: 106.7905 },
+  { id: 6, code: 'DPS', name: 'Denpasar', province: 'Bali', city: 'Kota Denpasar', district: 'Denpasar Barat', village: 'Dauh Puri', lat: -8.6705, lng: 115.2126 },
+  { id: 7, code: 'PLG', name: 'Palembang', province: 'Sumatera Selatan', city: 'Kota Palembang', district: 'Ilir Timur I', village: 'Sungai Pangeran', lat: -2.9761, lng: 104.7754 },
+];
+export const areaName = (id) => AREAS.find((a) => a.id === id)?.name ?? '-';
+
+/** Status partner (PRD §2). */
+export const PARTNER_STATUS = {
+  UNDER_REVIEW: { label: 'Under Review', color: 'blue' },
+  REVISION_REQUIRED: { label: 'Revision Required', color: 'orange' },
+  VERIFIED: { label: 'Verified', color: 'teal' },
+  WAITING_PKS: { label: 'Waiting PKS', color: 'purple' },
+  ACTIVE: { label: 'Active', color: 'green' },
+  REJECTED: { label: 'Rejected', color: 'red' },
+  CANCELLED: { label: 'Cancelled', color: 'gray' },
+  INACTIVE: { label: 'Inactive', color: 'gray' },
+};
+export const REVIEW_FLOW = ['UNDER_REVIEW', 'REVISION_REQUIRED', 'VERIFIED', 'WAITING_PKS', 'ACTIVE'];
+export const FINAL_STATUSES = ['REJECTED', 'CANCELLED', 'INACTIVE'];
+/** Slug URL (?status=under_review) ↔ enum. */
+export const statusSlug = (s) => s.toLowerCase();
+export const statusFromSlug = (slug) => (slug && PARTNER_STATUS[slug.toUpperCase()] ? slug.toUpperCase() : null);
+
+/** Perpindahan status yang diizinkan (PRD §2D). Selain ini backend menjawab 409. */
+export const TRANSITIONS = {
+  UNDER_REVIEW: ['REVISION_REQUIRED', 'VERIFIED', 'REJECTED', 'CANCELLED'],
+  REVISION_REQUIRED: ['UNDER_REVIEW', 'REJECTED', 'CANCELLED'],
+  VERIFIED: ['WAITING_PKS', 'CANCELLED'],
+  WAITING_PKS: ['ACTIVE', 'CANCELLED'],
+  ACTIVE: ['INACTIVE'],
+  REJECTED: [], CANCELLED: [], INACTIVE: [],
+};
+
+export const ENTITY = { INDIVIDU: 'Individu', PT: 'PT', CV: 'CV' };
+export const CHANNEL = { STORE: 'Store', NON_STORE: 'Non-Store' };
+export const PIC_STATUS = { OWNER: 'Owner', KARYAWAN: 'Karyawan' };
+export const STORE_TYPE = { ONLINE: 'Online', OFFLINE: 'Offline' };
+export const CHANNEL_OFFLINE = { AGENCY: 'Agency', NON_AGENCY: 'Non-Agency' };
+export const SCALE = { MODERN: 'Modern', TRADITIONAL: 'Tradisional' };
+export const PRODUCT_SOLD = { BRAND_NEW: 'Baru', USED: 'Bekas', BLENDED: 'Campuran' };
+export const STORE_LOCATION = { SEPARATE: 'Terpisah', PINGGIR_JALAN: 'Pinggir Jalan', MALL: 'Mall' };
+export const PRODUCT_TYPE = { GADGET: 'Gadget', NON_GADGET: 'Non-Gadget' };
+export const STORE_STATUS = { PENDING: 'Menunggu partner Active', ACTIVE: 'Aktif', INACTIVE: 'Nonaktif' };
+
+export const BANKS = { BCA: 'BCA', BRI: 'BRI', MANDIRI: 'Mandiri', BNI: 'BNI', BTN: 'BTN', BSI: 'BSI', CIMB: 'CIMB Niaga', PERMATA: 'Permata' };
+
+/** Status verifikasi dokumen & rekening. */
+export const VERIFICATION = {
+  UNVERIFIED: { label: 'Belum Dicek', status: 'disabled' },
+  VALID: { label: 'Valid', status: 'completed' },
+  NEEDS_REVISION: { label: 'Perlu Revisi', status: 'failed' },
+};
+
+export const PKS_STATUS = { NOT_SENT: 'Belum dikirim', WAITING_SIGNATURE: 'Menunggu tanda tangan', SIGNED: 'Sudah ditandatangani' };
+export const PKS_VIA = { PRIVY_ID: 'Privy ID', EMAIL: 'Email undangan' };
+
+/** Bagian data yang bisa diminta revisi (PRD §2C). */
+export const REVISION_SECTIONS = [
+  { key: 'partner', label: 'Informasi Partner' },
+  { key: 'business', label: 'Data Bisnis' },
+  { key: 'pic', label: 'Informasi PIC' },
+  { key: 'bank', label: 'Data Rekening' },
+  { key: 'store', label: 'Toko Utama' },
+];
+
+/**
+ * Matriks dokumen (PRD §2B Tab Dokumen). req: M wajib, O opsional, K wajib bila Status PIC = Karyawan, null = tidak perlu.
+ * level PARTNER = Dokumen Partner, STORE = Foto Toko.
+ */
+export const DOC_TYPES = [
+  { key: 'KTP_PIC', label: 'KTP PIC', level: 'PARTNER', INDIVIDU: 'M', COMPANY: 'M' },
+  { key: 'KTP_OWNER', label: 'KTP Pemilik', level: 'PARTNER', INDIVIDU: 'K', COMPANY: null },
+  { key: 'NPWP', label: 'NPWP (pribadi)', level: 'PARTNER', INDIVIDU: 'M', COMPANY: null },
+  { key: 'NPWP_COMPANY', label: 'NPWP Perusahaan', level: 'PARTNER', INDIVIDU: null, COMPANY: 'M' },
+  { key: 'NIB', label: 'NIB / SIUP', level: 'PARTNER', INDIVIDU: 'O', COMPANY: 'O' },
+  { key: 'ANGGARAN_DASAR', label: 'Anggaran Dasar', level: 'PARTNER', INDIVIDU: null, COMPANY: 'M' },
+  { key: 'AKTA', label: 'Akta Pendirian', level: 'PARTNER', INDIVIDU: null, COMPANY: 'M' },
+  { key: 'SK_KEMENKUMHAM', label: 'SK Kemenkumham', level: 'PARTNER', INDIVIDU: null, COMPANY: 'M' },
+  { key: 'DOMISILI', label: 'Keterangan Domisili', level: 'PARTNER', INDIVIDU: null, COMPANY: 'M' },
+  { key: 'IJIN', label: 'Ijin Lokasi & Ijin Usaha', level: 'PARTNER', INDIVIDU: null, COMPANY: 'M' },
+  { key: 'BUKU_REKENING', label: 'Halaman Depan Buku Rekening / Rekening Koran', level: 'PARTNER', INDIVIDU: 'M', COMPANY: 'M' },
+  { key: 'FOTO_DEPAN', label: 'Foto Toko – Tampak Depan', level: 'STORE', INDIVIDU: 'M', COMPANY: 'M' },
+  { key: 'FOTO_SAMPING', label: 'Foto Toko – Tampak Samping', level: 'STORE', INDIVIDU: 'M', COMPANY: 'M' },
+];
+
+/** Role akun (PRD §3). */
+export const ROLES = {
+  REVIEWER: { label: 'Admin (Reviewer)', short: 'Admin', keycloak: ['ADMIN', 'ACCOUNT_CREATION'] },
+  APL: { label: 'APL', short: 'APL', keycloak: ['APL'] },
+  TL: { label: 'TL', short: 'TL', keycloak: ['TL', 'PARTNER_ACQUISITION'] },
+  SR: { label: 'SR', short: 'SR', keycloak: ['SR', 'PARTNER_ACQUISITION'] },
+  SA: { label: 'SA', short: 'SA', keycloak: ['SA'] },
+  PARTNER: { label: 'Partner (PIC)', short: 'Partner', keycloak: ['PARTNER'] },
+  SUPER_ADMIN: { label: 'Super Admin', short: 'Super Admin', keycloak: ['SUPER_ADMIN'] },
+};
+export const CREATABLE_ROLES = ['REVIEWER', 'APL', 'TL', 'SR', 'SA'];
+export const TL_LEVEL = { JUNIOR: 'Junior', SENIOR: 'Senior' };
+
+/** Status akun Keycloak (PRD §3). EXPIRED dihitung, tidak disimpan. */
+export const ACCOUNT_STATUS = {
+  PENDING: { label: 'Pending', status: 'pending' },
+  EXPIRED: { label: 'Expired', status: 'failed' },
+  ACTIVE: { label: 'Active', status: 'completed' },
+  DISABLED: { label: 'Disabled', status: 'disabled' },
+};
+
+/** Label Status Akun Login PIC di Partner Detail (PRD §2B). */
+export const PIC_ACCOUNT_LABEL = { NONE: 'Belum dibuat', PENDING: 'Undangan terkirim', EXPIRED: 'Undangan terkirim', ACTIVE: 'Aktif', DISABLED: 'Dinonaktifkan', FAILED: 'Akun PIC gagal dibuat' };
+
+export const PAGE_SIZE = 20;
+export const INVITE_TTL_MS = 24 * 3600e3;
