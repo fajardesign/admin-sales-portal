@@ -1,6 +1,6 @@
 import React from 'react';
 import { Icon } from '../icons/Icon.jsx';
-import { Field, fieldBoxStyle, inputTextStyle } from './Field.jsx';
+import { Field, fieldBoxStyle, inputTextStyle, INPUT_CLASS } from './Field.jsx';
 import { Tag } from '../display/Tag.jsx';
 
 /** Text Input [1.1] — single-line input with label, leading icon, prefix/suffix slots, hint & error. */
@@ -10,14 +10,14 @@ export function TextInput({ label, required, sublabel, info, hint, error, disabl
   const [show, setShow] = React.useState(false);
   const isPw = type === 'password';
   const box = fieldBoxStyle({ size, hover, focus, error: !!error, disabled });
-  const icColor = disabled ? 'var(--icon-disabled-300)' : focus || value ? 'var(--icon-sub-600)' : 'var(--icon-soft-400)';
+  const icColor = disabled ? 'var(--icon-disabled-300)' : hover || focus || value || error ? 'var(--icon-sub-600)' : 'var(--icon-soft-400)';
   return (
     <Field label={label} required={required} sublabel={sublabel} info={info} hint={hint} error={error} disabled={disabled} style={style}>
       <div onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} style={{ ...box, ...(prefix ? { padding: 0, overflow: 'hidden' } : null) }}>
         {prefix && <div style={{ display: 'flex', alignItems: 'center', alignSelf: 'stretch', boxShadow: 'inset -1px 0 0 var(--stroke-soft-200)' }}>{prefix}</div>}
         <div style={{ display: 'flex', alignItems: 'center', gap: box.gap, flex: 1, minWidth: 0, padding: prefix ? box.padding : 0 }}>
           {leftIcon && <span style={{ color: icColor }}>{typeof leftIcon === 'string' ? <Icon name={leftIcon} /> : leftIcon}</span>}
-          <input type={isPw && show ? 'text' : type} disabled={disabled} placeholder={placeholder} value={value} defaultValue={defaultValue} onChange={onChange}
+          <input className={INPUT_CLASS} data-hover={hover && !focus ? 'true' : undefined} type={isPw && show ? 'text' : type} disabled={disabled} placeholder={placeholder} value={value} defaultValue={defaultValue} onChange={onChange}
             onFocus={() => setFocus(true)} onBlur={() => setFocus(false)} style={{ ...inputTextStyle(disabled), ...inputStyle }} {...rest} />
           {isPw && <button type="button" onClick={() => setShow(!show)} style={{ border: 'none', background: 'none', padding: 0, cursor: 'pointer', color: icColor }}><Icon name={show ? 'EyeOffLine' : 'EyeLine'} /></button>}
           {rightIcon && <span style={{ color: icColor }}>{typeof rightIcon === 'string' ? <Icon name={rightIcon} /> : rightIcon}</span>}

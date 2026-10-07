@@ -824,10 +824,10 @@ export interface BadgeProps {
   color?: "gray" | "blue" | "red" | "green" | "yellow" | "orange" | "purple" | "pink" | "teal" | "sky";
   type?: "basic" | "dot" | "number";
   size?: "sm" | "md";
-  leftIcon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
+  leftIcon?: string | React.ReactNode;
+  rightIcon?: string | React.ReactNode;
   disabled?: boolean;
-  uppercase?: boolean;
+  /** @deprecated ignored — sm is always Subheading/2X Small uppercase, md Label/X Small. */ uppercase?: boolean;
   style?: React.CSSProperties;
   }
 export interface StatusBadgeProps {
@@ -1188,6 +1188,7 @@ export interface ModalHeaderProps {
   description?: React.ReactNode;
   icon?: string | React.ReactNode;
   status?: "error" | "warning" | "success" | "information";
+  size?: "md" | "sm";
   onClose?: () => void;
   style?: React.CSSProperties;
   }

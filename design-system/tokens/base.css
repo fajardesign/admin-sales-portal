@@ -6,3 +6,7 @@ a:hover { color: var(--primary-darker); text-decoration: underline; }
 @keyframes ab-fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes ab-slide-in-right { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes ab-pop-in { from { transform: translateY(8px) scale(0.98); opacity: 0; } to { transform: none; opacity: 1; } }
+/* Text Input [1.1] placeholder: soft-400, sub-600 on hover, disabled-300 when disabled (see INPUT_CLASS in forms/Field.jsx). */
+.ab-field-input::placeholder { color: var(--text-soft-400); opacity: 1; }
+.ab-field-input[data-hover="true"]::placeholder { color: var(--text-sub-600); }
+.ab-field-input:disabled::placeholder { color: var(--text-disabled-300); }

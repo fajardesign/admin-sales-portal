@@ -1,18 +1,23 @@
 import React from 'react';
 
-/** Checkbox [1.1] — 20px hit area, 16px box (radius 4). Supports indeterminate. */
+/** Checkbox [1.1] — 20px hit area, 16px box (radius 4). States: default, hover, focused (keyboard; off = primary-base, on = primary-dark), disabled (soft-200, no inner box). Supports indeterminate. */
 export function Checkbox({ checked = false, indeterminate = false, disabled = false, onChange, style }) {
   const [hover, setHover] = React.useState(false);
+  const [focus, setFocus] = React.useState(false);
+  const pointer = React.useRef(false);
   const on = checked || indeterminate;
-  const bg = disabled ? 'var(--bg-soft-200)' : on ? (hover ? 'var(--primary-darker)' : 'var(--primary-base)') : hover ? 'var(--bg-sub-300)' : 'var(--bg-soft-200)';
+  const bg = disabled ? 'var(--bg-soft-200)'
+    : focus ? (on ? 'var(--primary-dark)' : 'var(--primary-base)')
+    : on ? (hover ? 'var(--primary-darker)' : 'var(--primary-base)') : hover ? 'var(--bg-sub-300)' : 'var(--bg-soft-200)';
   return (
     <span role="checkbox" aria-checked={indeterminate ? 'mixed' : checked} aria-disabled={disabled} tabIndex={disabled ? -1 : 0}
       onClick={() => !disabled && onChange && onChange(!checked)} onKeyDown={(e) => { if (e.key === ' ') { e.preventDefault(); !disabled && onChange && onChange(!checked); } }}
+      onMouseDown={() => { pointer.current = true; }} onFocus={() => { if (!pointer.current) setFocus(true); pointer.current = false; }} onBlur={() => setFocus(false)}
       onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
       style={{ width: 20, height: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: disabled ? 'not-allowed' : 'pointer', outline: 'none', ...style }}>
       <span style={{ width: 16, height: 16, borderRadius: 4, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background var(--duration-fast)' }}>
-        {!on && <span style={{ width: 13, height: 13, borderRadius: 2.6, background: disabled ? 'var(--bg-weak-50)' : 'var(--bg-white-0)', boxShadow: disabled ? 'none' : '0px 2px 2px 0px rgba(27,28,29,0.12)' }} />}
-        {checked && !indeterminate && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.8 2.8L9 1.2" stroke={disabled ? 'var(--bg-white-0)' : 'var(--static-static-white)'} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+        {!on && !disabled && <span style={{ width: 13, height: 13, borderRadius: 2.6, background: 'var(--bg-white-0)', boxShadow: '0px 2px 2px 0px rgba(27,28,29,0.12)' }} />}
+        {checked && !indeterminate && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.8 2.8L9 1.2" stroke="var(--static-static-white)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>}
         {indeterminate && <span style={{ width: 8, height: 1.5, borderRadius: 1, background: 'var(--static-static-white)' }} />}
       </span>
     </span>

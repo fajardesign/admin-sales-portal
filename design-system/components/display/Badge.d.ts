@@ -3,9 +3,10 @@ export interface BadgeProps { children?: React.ReactNode;
   color?: "gray" | "blue" | "red" | "green" | "yellow" | "orange" | "purple" | "pink" | "teal" | "sky";
   type?: "basic" | "dot" | "number";
   size?: "sm" | "md";
-  leftIcon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
+  leftIcon?: string | React.ReactNode;
+  rightIcon?: string | React.ReactNode;
   disabled?: boolean;
+  /** @deprecated ignored — sm is always Subheading/2X Small uppercase, md Label/X Small. */
   uppercase?: boolean;
   style?: React.CSSProperties; }
 export declare function Badge(props: BadgeProps): React.ReactElement | null;
