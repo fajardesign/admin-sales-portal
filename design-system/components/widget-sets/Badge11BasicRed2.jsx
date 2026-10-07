@@ -21,7 +21,7 @@ export function _Badge11BasicRed2(_p = {}) {
       <span style={{
         position: "relative",
         width: 12,
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         textAlign: "center",

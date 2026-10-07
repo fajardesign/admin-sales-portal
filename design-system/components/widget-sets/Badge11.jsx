@@ -25,7 +25,7 @@ export function _Badge11(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -71,7 +71,7 @@ export function _Badge11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -108,7 +108,7 @@ export function _Badge11(_p = {}) {
         }}>{props.pickIcon ?? <FlashlightFill />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -138,7 +138,7 @@ export function _Badge11(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 11,
         whiteSpace: "nowrap",
@@ -179,7 +179,7 @@ export function _Badge11(_p = {}) {
       <span style={{
         position: "relative",
         width: 12,
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         textAlign: "center",
@@ -209,7 +209,7 @@ export function _Badge11(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -255,7 +255,7 @@ export function _Badge11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -292,7 +292,7 @@ export function _Badge11(_p = {}) {
         }}>{props.pickIcon ?? <FlashlightFill />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -322,7 +322,7 @@ export function _Badge11(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 11,
         whiteSpace: "nowrap",
@@ -363,7 +363,7 @@ export function _Badge11(_p = {}) {
       <span style={{
         position: "relative",
         width: 12,
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         textAlign: "center",
@@ -393,7 +393,7 @@ export function _Badge11(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -439,7 +439,7 @@ export function _Badge11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -476,7 +476,7 @@ export function _Badge11(_p = {}) {
         }}>{props.pickIcon ?? <FlashlightFill />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -506,7 +506,7 @@ export function _Badge11(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 11,
         whiteSpace: "nowrap",
@@ -547,7 +547,7 @@ export function _Badge11(_p = {}) {
       <span style={{
         position: "relative",
         width: 12,
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         textAlign: "center",
@@ -577,7 +577,7 @@ export function _Badge11(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -623,7 +623,7 @@ export function _Badge11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -660,7 +660,7 @@ export function _Badge11(_p = {}) {
         }}>{props.pickIcon ?? <FlashlightFill />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -690,7 +690,7 @@ export function _Badge11(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 11,
         whiteSpace: "nowrap",
@@ -731,7 +731,7 @@ export function _Badge11(_p = {}) {
       <span style={{
         position: "relative",
         width: 12,
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         textAlign: "center",
@@ -761,7 +761,7 @@ export function _Badge11(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -807,7 +807,7 @@ export function _Badge11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -844,7 +844,7 @@ export function _Badge11(_p = {}) {
         }}>{props.pickIcon ?? <FlashlightFill />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -874,7 +874,7 @@ export function _Badge11(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 11,
         whiteSpace: "nowrap",
@@ -915,7 +915,7 @@ export function _Badge11(_p = {}) {
       <span style={{
         position: "relative",
         width: 12,
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         textAlign: "center",
@@ -945,7 +945,7 @@ export function _Badge11(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 11,
         whiteSpace: "nowrap",
@@ -993,7 +993,7 @@ export function _Badge11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 11,
         whiteSpace: "nowrap",
@@ -1032,7 +1032,7 @@ export function _Badge11(_p = {}) {
         }}>{props.pickIcon ?? <FlashlightFill />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 11,
         whiteSpace: "nowrap",
@@ -1064,7 +1064,7 @@ export function _Badge11(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 11,
         whiteSpace: "nowrap",
@@ -1105,7 +1105,7 @@ export function _Badge11(_p = {}) {
       <span style={{
         position: "relative",
         width: 12,
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 11,
         textAlign: "center",
@@ -1153,7 +1153,7 @@ export function _Badge11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -1191,7 +1191,7 @@ export function _Badge11(_p = {}) {
         }}>{props.pickIcon ?? <FlashlightFill />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -1221,7 +1221,7 @@ export function _Badge11(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -1260,7 +1260,7 @@ export function _Badge11(_p = {}) {
       <span style={{
         position: "relative",
         width: 16,
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         textAlign: "center",
@@ -1306,7 +1306,7 @@ export function _Badge11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -1344,7 +1344,7 @@ export function _Badge11(_p = {}) {
         }}>{props.pickIcon ?? <FlashlightFill />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -1374,7 +1374,7 @@ export function _Badge11(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -1413,7 +1413,7 @@ export function _Badge11(_p = {}) {
       <span style={{
         position: "relative",
         width: 16,
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         textAlign: "center",
@@ -1459,7 +1459,7 @@ export function _Badge11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -1497,7 +1497,7 @@ export function _Badge11(_p = {}) {
         }}>{props.pickIcon ?? <FlashlightFill />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -1527,7 +1527,7 @@ export function _Badge11(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -1566,7 +1566,7 @@ export function _Badge11(_p = {}) {
       <span style={{
         position: "relative",
         width: 16,
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         textAlign: "center",
@@ -1612,7 +1612,7 @@ export function _Badge11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -1650,7 +1650,7 @@ export function _Badge11(_p = {}) {
         }}>{props.pickIcon ?? <FlashlightFill />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -1680,7 +1680,7 @@ export function _Badge11(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -1719,7 +1719,7 @@ export function _Badge11(_p = {}) {
       <span style={{
         position: "relative",
         width: 16,
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         textAlign: "center",
@@ -1765,7 +1765,7 @@ export function _Badge11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -1803,7 +1803,7 @@ export function _Badge11(_p = {}) {
         }}>{props.pickIcon ?? <FlashlightFill />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -1833,7 +1833,7 @@ export function _Badge11(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -1872,7 +1872,7 @@ export function _Badge11(_p = {}) {
       <span style={{
         position: "relative",
         width: 16,
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         textAlign: "center",
@@ -1902,7 +1902,7 @@ export function _Badge11(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -1948,7 +1948,7 @@ export function _Badge11(_p = {}) {
       </div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -1986,7 +1986,7 @@ export function _Badge11(_p = {}) {
         }}>{props.pickIcon ?? <FlashlightFill />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -2016,7 +2016,7 @@ export function _Badge11(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -2055,7 +2055,7 @@ export function _Badge11(_p = {}) {
       <span style={{
         position: "relative",
         width: 16,
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         textAlign: "center",

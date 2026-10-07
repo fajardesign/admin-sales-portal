@@ -142,9 +142,11 @@ Uses Mulish 500 (as in the Figma source).
 ```ts
 export interface LinkButtonProps {
   children?: React.ReactNode;
-  tone?: "primary" | "gray" | "black" | "error";
-  size?: "md" | "sm";
-  underline?: boolean;
+  /** Figma ships primary only;
+  gray / black / error are local-only tones. */ tone?: "primary" | "gray" | "black" | "error";
+  /** md = Label/Small 16/24, sm = Label/X Small 12/16. */ size?: "md" | "sm";
+  /** Force underline. Without it, sm underlines on hover/keyboard focus;
+  md never does. */ underline?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   disabled?: boolean;
@@ -329,10 +331,12 @@ export interface InlineInputProps {
   value?: string;
   defaultValue?: string;
   placeholder?: string;
-  icon?: string;
+  icon?: string | React.ReactNode;
   error?: boolean;
   disabled?: boolean;
   onChange?: (v: string) => void;
+  /** Called with the current value when the check button or Enter is pressed. */ onSave?: (v: string) => void;
+  /** Called with the restored value when the close button or Escape is pressed (value reverts to what it was on focus). */ onCancel?: (v: string) => void;
   style?: React.CSSProperties;
   }
 ```
@@ -1124,8 +1128,16 @@ export interface BottomSheetFooterProps {
   stretch?: boolean;
   style?: React.CSSProperties;
   }
+export interface StatusBottomSheetProps {
+  status?: "error" | "warning" | "success" | "information" | "feature";
+  title?: React.ReactNode;
+  children?: React.ReactNode;
+  footer?: React.ReactNode;
+  width?: number;
+  style?: React.CSSProperties;
+  }
 ```
-Exports: `BottomSheet`, `BottomSheetHeader`, `BottomSheetFooter`
+Exports: `BottomSheet`, `BottomSheetHeader`, `BottomSheetFooter`, `StatusBottomSheet`
 
 ### Drawer  ·  `components/feedback/Drawer.jsx`
 
@@ -1222,13 +1234,48 @@ export interface NotificationItemProps {
   name?: string };
   title?: React.ReactNode;
   time?: React.ReactNode;
+  description?: React.ReactNode;
   unread?: boolean;
   message?: React.ReactNode;
   file?: {
   name: string;
   size?: string;
-  format?: string };
+  /** @deprecated Figma uses the attachment-2 icon;
+  ignored. */ format?: string };
   actions?: React.ReactNode;
+  onMore?: () => void;
+  style?: React.CSSProperties;
+  }
+export interface NotificationsTabMenuItem {
+  label: React.ReactNode;
+  value?: string;
+  icon?: string;
+  badge?: React.ReactNode }
+export interface NotificationsTabMenuProps {
+  items?: NotificationsTabMenuItem[];
+  secondaryItems?: NotificationsTabMenuItem[];
+  value?: string;
+  onChange?: (v: string) => void;
+  actionIcon?: string;
+  onAction?: () => void;
+  actionLabel?: string;
+  style?: React.CSSProperties;
+  }
+export interface ActivityFeedFileItemProps {
+  name?: React.ReactNode;
+  size?: React.ReactNode;
+  onDownload?: () => void;
+  style?: React.CSSProperties;
+  }
+export interface ActivityFeedCommentItemProps {
+  children?: React.ReactNode;
+  actionLabel?: React.ReactNode;
+  onAction?: () => void;
+  style?: React.CSSProperties;
+  }
+export interface ActivityFeedTaskStatusItemProps {
+  status?: ActivityFeedTaskStatus;
+  children?: React.ReactNode;
   style?: React.CSSProperties;
   }
 export interface ActivityFeedItemProps {
@@ -1236,8 +1283,20 @@ export interface ActivityFeedItemProps {
   src?: string;
   name?: string };
   icon?: string;
+  actor?: React.ReactNode;
   title?: React.ReactNode;
+  target?: React.ReactNode;
   time?: React.ReactNode;
+  files?: ActivityFeedFileItemProps[];
+  comment?: React.ReactNode | ActivityFeedCommentItemProps;
+  avatars?: {
+  src?: string;
+  name?: string }[];
+  avatarCount?: number;
+  tasks?: {
+  status?: ActivityFeedTaskStatus;
+  label?: React.ReactNode }[];
+  onMore?: () => void;
   children?: React.ReactNode;
   last?: boolean;
   style?: React.CSSProperties;
@@ -1249,7 +1308,7 @@ export interface ActivityFeedFilterProps {
   onClick?: () => void;
   }
 ```
-Exports: `NotificationItem`, `ActivityFeedItem`, `ActivityFeedFilter`
+Exports: `NotificationItem`, `NotificationsTabMenu`, `ActivityFeedFileItem`, `ActivityFeedCommentItem`, `ActivityFeedTaskStatusItem`, `ActivityFeedItem`, `ActivityFeedFilter`
 
 ### Popover  ·  `components/feedback/Popover.jsx`
 
@@ -1367,8 +1426,12 @@ export interface PeriodRangeProps {
   active?: boolean;
   onClick?: () => void;
   }
+export interface DayLabelProps {
+  children?: React.ReactNode;
+  style?: React.CSSProperties;
+  }
 ```
-Exports: `Calendar`, `DateRangePicker`, `DayCell`, `DateSelector`, `PeriodRange`
+Exports: `Calendar`, `DateRangePicker`, `DayCell`, `DateSelector`, `PeriodRange`, `DayLabel`
 
 ### CommandMenu  ·  `components/navigation/CommandMenu.jsx`
 
@@ -1539,22 +1602,34 @@ Exports: `Pagination`, `PaginationCell`
 ```
 
 ```ts
+export interface RichEditorColorProps {
+  color?: RichEditorColorName | string;
+  style?: React.CSSProperties;
+  }
+export interface RichEditorItemProps {
+  icon?: string;
+  label?: React.ReactNode;
+  color?: RichEditorColorName | string;
+  dropdown?: boolean;
+  active?: boolean;
+  onClick?: () => void;
+  title?: string;
+  }
+export interface RichEditorToolbarProps {
+  variant?: '01' | '02' | '03' | '04';
+  active?: RichEditorToolKey[];
+  onAction?: (key: RichEditorToolKey) => void;
+  children?: React.ReactNode;
+  style?: React.CSSProperties;
+  }
 export interface RichEditorProps {
   defaultValue?: string;
   placeholder?: string;
   minHeight?: number;
   style?: React.CSSProperties;
   }
-export interface RichEditorItemProps {
-  icon?: string;
-  label?: React.ReactNode;
-  color?: string;
-  active?: boolean;
-  onClick?: () => void;
-  title?: string;
-  }
 ```
-Exports: `RichEditor`, `RichEditorItem`
+Exports: `RICH_EDITOR_COLORS`, `RichEditorColor`, `RichEditorItem`, `RichEditorDivider`, `RichEditorToolbar`, `RichEditor`
 
 ### Sidebar  ·  `components/navigation/Sidebar.jsx`
 
@@ -1669,23 +1744,58 @@ Exports: `TabMenuHorizontal`, `TabMenuVertical`, `SegmentedControl`
 ```
 
 ```ts
+export interface TimePickerSlot {
+  time: string;
+  period?: React.ReactNode;
+  rightTime?: React.ReactNode;
+  rightPeriod?: React.ReactNode;
+  rightText?: boolean;
+  }
 export interface TimePickerProps {
-  slots?: string[];
+  slots?: (string | TimePickerSlot)[];
   disabled?: string[];
   value?: string;
   onChange?: (s: string) => void;
-  columns?: number;
+  /** @deprecated Items are now full-width rows;
+  ignored. */ columns?: number;
   title?: React.ReactNode;
+  durations?: string[];
+  duration?: string;
+  onDurationChange?: (d: string) => void;
+  direction?: "right" | "center";
+  footer?: React.ReactNode;
   style?: React.CSSProperties;
   }
-export interface TimeSlotProps {
+export interface TimePickerItemProps {
+  children?: React.ReactNode;
+  time?: React.ReactNode;
+  period?: React.ReactNode;
+  rightTime?: React.ReactNode;
+  rightPeriod?: React.ReactNode;
+  rightText?: boolean;
+  direction?: "right" | "center";
+  selected?: boolean;
+  disabled?: boolean;
+  onClick?: () => void;
+  style?: React.CSSProperties;
+  }
+export interface TimePickerSelectStatusProps {
+  type?: "available" | "busy" | "meeting" | "offline";
   children?: React.ReactNode;
   selected?: boolean;
   disabled?: boolean;
   onClick?: () => void;
+  style?: React.CSSProperties;
+  }
+export interface TimePickerSelectDurationProps {
+  children?: React.ReactNode;
+  active?: boolean;
+  disabled?: boolean;
+  onClick?: () => void;
+  style?: React.CSSProperties;
   }
 ```
-Exports: `TimePicker`, `TimeSlot`
+Exports: `TimePicker`, `TimePickerItem`, `TimeSlot`, `TimePickerSelectStatus`, `TimePickerSelectDuration`
 
 ## brand/
 

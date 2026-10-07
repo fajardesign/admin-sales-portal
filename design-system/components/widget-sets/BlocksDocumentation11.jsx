@@ -79,7 +79,7 @@ export function BlocksDocumentation11(_p = {}) {
             }}>{props.icon1 ?? <GlobalLine style={{ transform: "scale(0.833, 0.833)", transformOrigin: "0 0" }} />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             textAlign: "right",
@@ -128,7 +128,7 @@ export function BlocksDocumentation11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "right",
@@ -142,7 +142,7 @@ export function BlocksDocumentation11(_p = {}) {
           </div>
           <span style={{
             position: "relative",
-            fontFamily: "\"Inter Display\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-display)",
             fontWeight: 500,
             fontSize: 56,
             textAlign: "right",
@@ -165,7 +165,7 @@ export function BlocksDocumentation11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 18,
             whiteSpace: "nowrap",
@@ -176,7 +176,7 @@ export function BlocksDocumentation11(_p = {}) {
           }}>{props.text4 ?? "Speed up your project with components designed for instant implementation"}</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 18,
             whiteSpace: "nowrap",
@@ -187,7 +187,7 @@ export function BlocksDocumentation11(_p = {}) {
           }}>→</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 18,
             whiteSpace: "nowrap",

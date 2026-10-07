@@ -102,7 +102,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>{props.icon1 ?? <TimeLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -152,7 +152,7 @@ export function WidgetsHRManagement11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -163,7 +163,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>{props.text2 ?? "Jan 15, 2024"}</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -214,7 +214,7 @@ export function WidgetsHRManagement11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -225,7 +225,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>{props.text4 ?? "Jan 15, 2024"}</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             whiteSpace: "nowrap",
@@ -283,7 +283,7 @@ export function WidgetsHRManagement11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -294,7 +294,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>Feb 12, 2024</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             whiteSpace: "nowrap",
@@ -363,7 +363,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>{props.icon1 ?? <TimeLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -403,7 +403,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>{props.icon2 ?? <EmptyStatesHRManagement1 type={"⏰ time off"} style={{ transform: "scale(0.486, 0.486)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           textAlign: "center",
@@ -464,7 +464,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>{props.icon1 ?? <FlashlightLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -507,7 +507,7 @@ export function WidgetsHRManagement11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             lineHeight: "20px",
@@ -535,7 +535,7 @@ export function WidgetsHRManagement11(_p = {}) {
               }}>{props.icon3 ?? <MondayCom style={{ transform: "scale(0.750, 0.750)", transformOrigin: "0 0" }} />}</div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -579,7 +579,7 @@ export function WidgetsHRManagement11(_p = {}) {
               </div>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 12,
                 whiteSpace: "nowrap",
@@ -611,7 +611,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 12,
               lineHeight: "16px",
@@ -638,7 +638,7 @@ export function WidgetsHRManagement11(_p = {}) {
                 }}>{props.icon4 ?? <Avatar11 persona={"laura perez"} size={"24"} image={"off"} solidBG={"off"} memoji={"off"} illustration={"on"} text={"off"} icon={"off"} />}</div>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 400,
                 fontSize: 14,
                 whiteSpace: "nowrap",
@@ -660,7 +660,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 12,
               lineHeight: "16px",
@@ -696,7 +696,7 @@ export function WidgetsHRManagement11(_p = {}) {
               />
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 400,
                 fontSize: 14,
                 whiteSpace: "nowrap",
@@ -720,7 +720,7 @@ export function WidgetsHRManagement11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             lineHeight: "16px",
@@ -745,7 +745,7 @@ export function WidgetsHRManagement11(_p = {}) {
             />
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 12,
               lineHeight: "16px",
@@ -766,7 +766,7 @@ export function WidgetsHRManagement11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             lineHeight: "16px",
@@ -795,7 +795,7 @@ export function WidgetsHRManagement11(_p = {}) {
             </div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -818,7 +818,7 @@ export function WidgetsHRManagement11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             lineHeight: "16px",
@@ -847,7 +847,7 @@ export function WidgetsHRManagement11(_p = {}) {
             </div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -911,7 +911,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>{props.icon1 ?? <FlashlightLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -955,7 +955,7 @@ export function WidgetsHRManagement11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           textAlign: "center",
@@ -1017,7 +1017,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>{props.icon1 ?? <MacbookLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -1050,7 +1050,7 @@ export function WidgetsHRManagement11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -1120,7 +1120,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 14,
                 whiteSpace: "nowrap",
@@ -1131,7 +1131,7 @@ export function WidgetsHRManagement11(_p = {}) {
               }}>James Brown</span>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 400,
                 fontSize: 12,
                 whiteSpace: "nowrap",
@@ -1142,7 +1142,7 @@ export function WidgetsHRManagement11(_p = {}) {
             </div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 12,
               lineHeight: "16px",
@@ -1186,7 +1186,7 @@ export function WidgetsHRManagement11(_p = {}) {
             </div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 12,
               whiteSpace: "nowrap",
@@ -1241,7 +1241,7 @@ export function WidgetsHRManagement11(_p = {}) {
       }}>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 12,
           lineHeight: "16px",
@@ -1321,7 +1321,7 @@ export function WidgetsHRManagement11(_p = {}) {
               }}>
                 <span style={{
                   position: "relative",
-                  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontWeight: 500,
                   fontSize: 14,
                   whiteSpace: "nowrap",
@@ -1332,7 +1332,7 @@ export function WidgetsHRManagement11(_p = {}) {
                 }}>Sophia Williams</span>
                 <span style={{
                   position: "relative",
-                  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontWeight: 400,
                   fontSize: 12,
                   whiteSpace: "nowrap",
@@ -1343,7 +1343,7 @@ export function WidgetsHRManagement11(_p = {}) {
               </div>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 12,
                 lineHeight: "16px",
@@ -1387,7 +1387,7 @@ export function WidgetsHRManagement11(_p = {}) {
               </div>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 12,
                 whiteSpace: "nowrap",
@@ -1484,7 +1484,7 @@ export function WidgetsHRManagement11(_p = {}) {
               }}>
                 <span style={{
                   position: "relative",
-                  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontWeight: 500,
                   fontSize: 14,
                   whiteSpace: "nowrap",
@@ -1495,7 +1495,7 @@ export function WidgetsHRManagement11(_p = {}) {
                 }}>Arthur Taylor</span>
                 <span style={{
                   position: "relative",
-                  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontWeight: 400,
                   fontSize: 12,
                   whiteSpace: "nowrap",
@@ -1506,7 +1506,7 @@ export function WidgetsHRManagement11(_p = {}) {
               </div>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 12,
                 lineHeight: "16px",
@@ -1550,7 +1550,7 @@ export function WidgetsHRManagement11(_p = {}) {
               </div>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 12,
                 whiteSpace: "nowrap",
@@ -1647,7 +1647,7 @@ export function WidgetsHRManagement11(_p = {}) {
               }}>
                 <span style={{
                   position: "relative",
-                  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontWeight: 500,
                   fontSize: 14,
                   whiteSpace: "nowrap",
@@ -1658,7 +1658,7 @@ export function WidgetsHRManagement11(_p = {}) {
                 }}>Emma Wright</span>
                 <span style={{
                   position: "relative",
-                  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontWeight: 400,
                   fontSize: 12,
                   whiteSpace: "nowrap",
@@ -1669,7 +1669,7 @@ export function WidgetsHRManagement11(_p = {}) {
               </div>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 12,
                 lineHeight: "16px",
@@ -1713,7 +1713,7 @@ export function WidgetsHRManagement11(_p = {}) {
               </div>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 12,
                 whiteSpace: "nowrap",
@@ -1801,7 +1801,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>{props.icon1 ?? <MacbookLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -1845,7 +1845,7 @@ export function WidgetsHRManagement11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           textAlign: "center",
@@ -1907,7 +1907,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>{props.icon1 ?? <StickyNoteLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -1965,7 +1965,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -2063,7 +2063,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 14,
                 lineHeight: "20px",
@@ -2074,7 +2074,7 @@ export function WidgetsHRManagement11(_p = {}) {
               }}>Text Inputs for Design System</span>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 400,
                 fontSize: 14,
                 whiteSpace: "nowrap",
@@ -2123,7 +2123,7 @@ export function WidgetsHRManagement11(_p = {}) {
               }}>
                 <span style={{
                   position: "relative",
-                  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontWeight: 500,
                   fontSize: 12,
                   whiteSpace: "nowrap",
@@ -2153,7 +2153,7 @@ export function WidgetsHRManagement11(_p = {}) {
                 </div>
                 <span style={{
                   position: "relative",
-                  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontWeight: 400,
                   fontSize: 12,
                   whiteSpace: "nowrap",
@@ -2220,7 +2220,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 14,
                 lineHeight: "20px",
@@ -2231,7 +2231,7 @@ export function WidgetsHRManagement11(_p = {}) {
               }}>Meeting with Arthur Taylor</span>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 400,
                 fontSize: 14,
                 whiteSpace: "nowrap",
@@ -2280,7 +2280,7 @@ export function WidgetsHRManagement11(_p = {}) {
               }}>
                 <span style={{
                   position: "relative",
-                  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontWeight: 500,
                   fontSize: 12,
                   whiteSpace: "nowrap",
@@ -2310,7 +2310,7 @@ export function WidgetsHRManagement11(_p = {}) {
                 </div>
                 <span style={{
                   position: "relative",
-                  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontWeight: 400,
                   fontSize: 12,
                   whiteSpace: "nowrap",
@@ -2377,7 +2377,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 14,
                 lineHeight: "20px",
@@ -2388,7 +2388,7 @@ export function WidgetsHRManagement11(_p = {}) {
               }}>Check neutral and state colors</span>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 400,
                 fontSize: 14,
                 whiteSpace: "nowrap",
@@ -2428,7 +2428,7 @@ export function WidgetsHRManagement11(_p = {}) {
               }}>
                 <span style={{
                   position: "relative",
-                  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontWeight: 500,
                   fontSize: 12,
                   whiteSpace: "nowrap",
@@ -2454,7 +2454,7 @@ export function WidgetsHRManagement11(_p = {}) {
               }}>
                 <span style={{
                   position: "relative",
-                  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontWeight: 500,
                   fontSize: 12,
                   whiteSpace: "nowrap",
@@ -2484,7 +2484,7 @@ export function WidgetsHRManagement11(_p = {}) {
                 </div>
                 <span style={{
                   position: "relative",
-                  fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                  fontFamily: "var(--font-sans)",
                   fontWeight: 400,
                   fontSize: 12,
                   whiteSpace: "nowrap",
@@ -2547,7 +2547,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>{props.icon1 ?? <StickyNoteLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -2591,7 +2591,7 @@ export function WidgetsHRManagement11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           textAlign: "center",
@@ -2650,7 +2650,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -2740,7 +2740,7 @@ export function WidgetsHRManagement11(_p = {}) {
               }}>{props.icon1 ?? <CalendarLine />}</div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 16,
               whiteSpace: "nowrap",
@@ -2791,7 +2791,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -2802,7 +2802,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>Search</span>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -2813,7 +2813,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>*</span>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -2870,7 +2870,7 @@ export function WidgetsHRManagement11(_p = {}) {
               </div>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 14,
                 whiteSpace: "nowrap",
@@ -2926,7 +2926,7 @@ export function WidgetsHRManagement11(_p = {}) {
             </div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 14,
               lineHeight: "20px",
@@ -2951,7 +2951,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 12,
                 whiteSpace: "nowrap",
@@ -3011,7 +3011,7 @@ export function WidgetsHRManagement11(_p = {}) {
             </div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 14,
               lineHeight: "20px",
@@ -3092,7 +3092,7 @@ export function WidgetsHRManagement11(_p = {}) {
               }}>{props.icon1 ?? <CalendarLine />}</div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 16,
               whiteSpace: "nowrap",
@@ -3143,7 +3143,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -3154,7 +3154,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>Search</span>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -3165,7 +3165,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>*</span>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -3222,7 +3222,7 @@ export function WidgetsHRManagement11(_p = {}) {
               </div>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 14,
                 whiteSpace: "nowrap",
@@ -3278,7 +3278,7 @@ export function WidgetsHRManagement11(_p = {}) {
             </div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 14,
               lineHeight: "20px",
@@ -3303,7 +3303,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 12,
                 whiteSpace: "nowrap",
@@ -3363,7 +3363,7 @@ export function WidgetsHRManagement11(_p = {}) {
             </div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 14,
               lineHeight: "20px",
@@ -3434,7 +3434,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>{props.icon1 ?? <TimerFlashLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -3492,7 +3492,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -3533,7 +3533,7 @@ export function WidgetsHRManagement11(_p = {}) {
       />
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 14,
         lineHeight: "20px",
@@ -3587,7 +3587,7 @@ export function WidgetsHRManagement11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 11,
             lineHeight: "12px",
@@ -3600,7 +3600,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>{props.text3 ?? "Loom Rebranding"}</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 11,
             lineHeight: "12px",
@@ -3690,7 +3690,7 @@ export function WidgetsHRManagement11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             lineHeight: "20px",
@@ -3701,7 +3701,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>Evernote App Redesign</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             lineHeight: "16px",
@@ -3804,7 +3804,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>{props.icon1 ?? <TimerFlashLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -3862,7 +3862,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -3920,7 +3920,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>{props.icon2 ?? <EmptyStatesHRManagement1 type={"🕐 time tracker"} style={{ transform: "scale(0.486, 0.486)", transformOrigin: "0 0" }} />}</div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           textAlign: "center",
@@ -3981,7 +3981,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>{props.icon1 ?? <StarSmileLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -4039,7 +4039,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -4128,7 +4128,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>{props.icon1 ?? <StarSmileLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -4162,7 +4162,7 @@ export function WidgetsHRManagement11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -4173,7 +4173,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>Label</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -4184,7 +4184,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>*</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 14,
             whiteSpace: "nowrap",
@@ -4241,7 +4241,7 @@ export function WidgetsHRManagement11(_p = {}) {
             </div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               whiteSpace: "nowrap",
@@ -4302,7 +4302,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -4328,7 +4328,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -4354,7 +4354,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 14,
               textAlign: "center",
@@ -4390,7 +4390,7 @@ export function WidgetsHRManagement11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           textAlign: "center",
@@ -4452,7 +4452,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>{props.icon1 ?? <DiscussLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -4464,7 +4464,7 @@ export function WidgetsHRManagement11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 16,
           whiteSpace: "nowrap",
@@ -4509,7 +4509,7 @@ export function WidgetsHRManagement11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 12,
             textAlign: "center",
@@ -4531,7 +4531,7 @@ export function WidgetsHRManagement11(_p = {}) {
         }}>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 14,
             textAlign: "center",
@@ -4543,7 +4543,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>{props.text4 ?? "How would you rate your mood today?"}</span>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 16,
             textAlign: "center",
@@ -4626,7 +4626,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>{props.icon1 ?? <DiscussLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -4670,7 +4670,7 @@ export function WidgetsHRManagement11(_p = {}) {
         </div>
         <span style={{
           position: "relative",
-          fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontWeight: 400,
           fontSize: 14,
           textAlign: "center",
@@ -4732,7 +4732,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>{props.icon1 ?? <FileChartLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -4808,7 +4808,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 12,
               lineHeight: "16px",
@@ -4819,7 +4819,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>{props.text2 ?? "Total Work"}</span>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 12,
               lineHeight: "16px",
@@ -4871,7 +4871,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 14,
                 whiteSpace: "nowrap",
@@ -4898,7 +4898,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 14,
                 whiteSpace: "nowrap",
@@ -4925,7 +4925,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 14,
                 whiteSpace: "nowrap",
@@ -4952,7 +4952,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 14,
                 whiteSpace: "nowrap",
@@ -4979,7 +4979,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 14,
                 whiteSpace: "nowrap",
@@ -5124,7 +5124,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>{props.icon4 ?? <InfoCustomFill style={{ transform: "scale(0.667, 0.667)", transformOrigin: "0 0" }} />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 400,
             fontSize: 12,
             lineHeight: "16px",
@@ -5183,7 +5183,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>{props.icon1 ?? <FileChartLine />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",
@@ -5271,7 +5271,7 @@ export function WidgetsHRManagement11(_p = {}) {
           }}>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 11,
               lineHeight: "12px",
@@ -5284,7 +5284,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>{props.text2 ?? "Total Work"}</span>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 500,
               fontSize: 18,
               lineHeight: "24px",
@@ -5337,7 +5337,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 14,
                 whiteSpace: "nowrap",
@@ -5364,7 +5364,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 14,
                 whiteSpace: "nowrap",
@@ -5391,7 +5391,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 14,
                 whiteSpace: "nowrap",
@@ -5418,7 +5418,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 14,
                 whiteSpace: "nowrap",
@@ -5445,7 +5445,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>
               <span style={{
                 position: "relative",
-                fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+                fontFamily: "var(--font-sans)",
                 fontWeight: 500,
                 fontSize: 14,
                 whiteSpace: "nowrap",
@@ -5480,7 +5480,7 @@ export function WidgetsHRManagement11(_p = {}) {
             </div>
             <span style={{
               position: "relative",
-              fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+              fontFamily: "var(--font-sans)",
               fontWeight: 400,
               fontSize: 14,
               textAlign: "center",
@@ -5544,7 +5544,7 @@ export function WidgetsHRManagement11(_p = {}) {
             }}>{props.icon1 ?? <Book3Line />}</div>
           <span style={{
             position: "relative",
-            fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+            fontFamily: "var(--font-sans)",
             fontWeight: 500,
             fontSize: 16,
             whiteSpace: "nowrap",

@@ -20,7 +20,7 @@ export function _Badge11BasicPurple13(_p = {}) {
     }}>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",

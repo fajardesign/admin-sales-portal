@@ -16,7 +16,7 @@ function TxnDrawer({ t, onClose }) {
         <ContentDivider type="solid-text" style={{ margin: '0 -20px' }}>Rincian</ContentDivider>
         <div>{row('Transaksi', t.name)}{row('Keterangan', t.desc)}{row('Tanggal', t.date + ', 2026')}{row('No. Referensi', 'TRX' + (880000 + t.id * 731))}</div>
         <ContentDivider type="solid-text" style={{ margin: '0 -20px' }}>Aktivitas</ContentDivider>
-        <div><ActivityFeedItem icon="AddLine" title="Dibuat oleh Arthur Taylor" time="09:12" /><ActivityFeedItem icon="CheckLine" title="Disetujui oleh Laura Perez" time="09:30" last={t.status !== 'completed'} />{t.status === 'completed' && <ActivityFeedItem icon="SendPlaneLine" title="Diproses bank" time="09:31" last />}</div>
+        <div><ActivityFeedItem icon="AddLine" title="Dibuat oleh" target="Arthur Taylor" time="09:12" /><ActivityFeedItem icon="CheckLine" title="Disetujui oleh" target="Laura Perez" time="09:30" last={t.status !== 'completed'} />{t.status === 'completed' && <ActivityFeedItem icon="SendPlaneLine" title="Diproses bank" time="09:31" last />}</div>
       </div>
     </Drawer>
   );

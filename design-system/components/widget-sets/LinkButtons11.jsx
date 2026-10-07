@@ -30,7 +30,7 @@ export function _LinkButtons11(_p = {}) {
       )}
       <span style={{
         position: "relative",
-        fontFamily: "Mulish, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 14,
         whiteSpace: "nowrap",
@@ -75,7 +75,7 @@ export function _LinkButtons11(_p = {}) {
       )}
       <span style={{
         position: "relative",
-        fontFamily: "Mulish, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -119,7 +119,7 @@ export function _LinkButtons11(_p = {}) {
       )}
       <span style={{
         position: "relative",
-        fontFamily: "Mulish, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 14,
         whiteSpace: "nowrap",
@@ -165,7 +165,7 @@ export function _LinkButtons11(_p = {}) {
       )}
       <span style={{
         position: "relative",
-        fontFamily: "Mulish, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -210,7 +210,7 @@ export function _LinkButtons11(_p = {}) {
       )}
       <span style={{
         position: "relative",
-        fontFamily: "Mulish, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 14,
         whiteSpace: "nowrap",
@@ -256,7 +256,7 @@ export function _LinkButtons11(_p = {}) {
       )}
       <span style={{
         position: "relative",
-        fontFamily: "Mulish, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",
@@ -301,7 +301,7 @@ export function _LinkButtons11(_p = {}) {
       )}
       <span style={{
         position: "relative",
-        fontFamily: "Mulish, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 14,
         whiteSpace: "nowrap",
@@ -346,7 +346,7 @@ export function _LinkButtons11(_p = {}) {
       )}
       <span style={{
         position: "relative",
-        fontFamily: "Mulish, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 12,
         whiteSpace: "nowrap",

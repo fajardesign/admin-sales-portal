@@ -32,7 +32,7 @@ export function MyContactsQuickTransfer1(_p = {}) {
         }}>{props.icon1 ?? <Avatar11 persona={"natalia nowak"} size={"20"} image={"off"} solidBG={"off"} memoji={"off"} illustration={"on"} text={"off"} icon={"off"} />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 14,
         whiteSpace: "nowrap",
@@ -68,7 +68,7 @@ export function MyContactsQuickTransfer1(_p = {}) {
         }}>{props.icon1 ?? <Avatar11 persona={"natalia nowak"} size={"20"} image={"off"} solidBG={"off"} memoji={"off"} illustration={"on"} text={"off"} icon={"off"} />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 400,
         fontSize: 14,
         whiteSpace: "nowrap",
@@ -105,7 +105,7 @@ export function MyContactsQuickTransfer1(_p = {}) {
         }}>{props.icon1 ?? <Avatar11 persona={"natalia nowak"} size={"20"} image={"off"} solidBG={"off"} memoji={"off"} illustration={"on"} text={"off"} icon={"off"} />}</div>
       <span style={{
         position: "relative",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 14,
         whiteSpace: "nowrap",
