@@ -1,4 +1,4 @@
-import { Sidebar, PageHeader, Button, Icon, AmarBankLogo } from '@ds/index.js';
+import { Sidebar, PageHeader, Avatar, Button, Icon, AmarBankLogo } from '@ds/index.js';
 
 const NAV = [{ title: 'Atur', items: [{ label: 'Manajemen Akun', value: 'users', icon: 'UserLine' }] }];
 
@@ -32,10 +32,9 @@ export function AdminShell({ active, icon, title, description, user, onLogout, c
 }
 
 function UserChip({ user }) {
-  const ini = user.name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase();
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-10)', paddingRight: 'var(--space-4)' }}>
-      <div style={{ width: 36, height: 36, borderRadius: 'var(--rounded-full)', background: 'var(--primary-alpha-10)', color: 'var(--primary-base)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: 'var(--label-sm)' }}>{ini}</div>
+      <Avatar size={40} color={2} name={user.name} />
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <span style={{ font: 'var(--label-sm)', color: 'var(--text-strong-950)' }}>{user.name}</span>
         <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>{user.roleLabel}</span>

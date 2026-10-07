@@ -1,41 +1,61 @@
 import React from 'react';
 import { Icon } from '../icons/Icon.jsx';
 
-const SOLID = [['var(--jewel-blue-200)', 'var(--jewel-blue-950)'], ['var(--yellow-200)', 'var(--yellow-950)'], ['var(--purple-200)', 'var(--purple-950)'], ['var(--green-200)', 'var(--green-950)'], ['var(--pink-200)', 'var(--pink-950)'], ['var(--orange-200)', 'var(--orange-950)']];
-const FS = { 20: 10, 24: 12, 32: 14, 40: 16, 48: 18, 56: 20, 64: 22, 72: 24, 80: 24 };
+/* Avatar [1.1] solid palette (bg -200 / text -950), in Figma persona order; index 0 is the default (gray-200 / black). */
+const SOLID = [['var(--neutral-gray-200)', 'var(--static-static-black)'], ['var(--yellow-200)', 'var(--yellow-950)'], ['var(--jewel-blue-200)', 'var(--jewel-blue-950)'], ['var(--gold-200)', 'var(--gold-950)'], ['var(--purple-200)', 'var(--purple-950)'], ['var(--red-200)', 'var(--sunset-950)']];
+/* Initials text style per size (Figma): 20/24 Label/X Small, 32 Label/Small, 40 Label/Medium, 48/56 Label/Large, 64–80 Title/H5. */
+const TEXT = { 20: 'label-xs', 24: 'label-xs', 32: 'label-sm', 40: 'label-md', 48: 'label-lg', 56: 'label-lg', 64: 'title-h5', 72: 'title-h5', 80: 'title-h5' };
+/* Bottom/Top Status box size per avatar size (Figma instances, flush in the corner). */
+const STATUS_BOX = { 20: 10, 24: 12, 32: 16, 40: 18, 48: 20, 56: 24, 64: 28, 72: 28, 80: 32 };
 const STATUS_COLOR = { online: 'var(--state-success-base)', offline: 'var(--state-faded-base)', busy: 'var(--state-error-base)', away: 'var(--state-away-base)' };
 
-/** Bottom Status [1.1] — presence dot (online / offline / busy / away). */
+/** Bottom Status [1.1] — presence dot in a `size` box (32 in Figma): 12/32 dot with a white ring to 20/32. status: online | offline | busy | away. */
 export function AvatarStatus({ status = 'online', size = 12 }) {
-  return <span style={{ width: size, height: size, borderRadius: '50%', background: STATUS_COLOR[status], boxShadow: '0 0 0 2px var(--bg-white-0)', display: 'block' }} />;
+  const dot = size * 0.375;
+  return <span style={{ width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ width: dot, height: dot, borderRadius: '50%', background: STATUS_COLOR[status], boxShadow: `0 0 0 ${size * 0.125}px var(--bg-white-0)` }} /></span>;
 }
 
-/** Top Status [1.1] — corner badge (verified / pin / favorite / add / remove / notification). */
+/** Top Status [1.1] — corner badge in a `size` box (32 in Figma): 24/32 disc with a white ring, icon about half the disc. type: verified | pin | favorite | add | remove | notification. */
 export function AvatarBadge({ type = 'verified', size = 20 }) {
   const map = { verified: ['var(--state-verified-base)', 'CheckFill'], pin: ['var(--state-feature-base)', 'PushpinFill'], favorite: ['var(--state-success-base)', 'StarFill'], add: ['var(--state-faded-base)', 'AddLine'], remove: ['var(--state-error-base)', 'CloseLine'], notification: ['var(--state-error-base)', null] };
   const [bg, ic] = map[type] || map.verified;
-  if (!ic) return <span style={{ width: size * 0.5, height: size * 0.5, borderRadius: '50%', background: bg, boxShadow: '0 0 0 2px var(--bg-white-0)', display: 'block' }} />;
-  return <span style={{ width: size, height: size, borderRadius: '50%', background: bg, boxShadow: '0 0 0 2px var(--bg-white-0), 0px 2px 4px 0px rgba(27,28,29,0.04)', color: 'var(--icon-white-0)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Icon name={ic} size={size * 0.6} /></span>;
+  const disc = ic ? size * 0.75 : size * 0.375;
+  return (
+    <span style={{ width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <span style={{ width: disc, height: disc, borderRadius: '50%', background: bg, boxShadow: `0 0 0 ${size * 0.0625}px var(--bg-white-0)`, color: 'var(--icon-white-0)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{ic && <Icon name={ic} size={Math.round(disc * 0.55)} />}</span>
+    </span>
+  );
 }
 
-/** Avatar [1.1] — image, initials (solid bg) or icon placeholder; sizes 20–80; optional status / badge. */
+/** Placeholder silhouette (Avatar [1.1] Icon=On): white head + shoulders on neutral-gray-200. */
+function Silhouette({ size }) {
+  return <svg width={size} height={size} viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="16" r="7" fill="var(--static-static-white)" /><path d="M6 37c1.8-7 7.4-11 14-11s12.2 4 14 11a20 20 0 0 1-28 0z" fill="var(--static-static-white)" /></svg>;
+}
+
+/** Avatar [1.1] — image, initials or silhouette placeholder; sizes 20–80 (initials use the Figma text style per size); optional status (bottom-right) / badge (top-right).
+ * color: palette index 0–5 (gray, yellow, jewel blue, gold, purple, red); default picks one from the name. */
 export function Avatar({ src, name, size = 40, color, status, badge, icon = false, style }) {
   const initials = name ? name.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase() : '';
   const idx = color ?? (name ? [...name].reduce((a, c) => a + c.charCodeAt(0), 0) % SOLID.length : 0);
   const [bg, fg] = SOLID[idx % SOLID.length];
-  const dot = Math.max(8, Math.round(size * 0.2));
+  const t = TEXT[size] || 'label-md';
+  const box = STATUS_BOX[size] || Math.round(size * 0.4);
+  const placeholder = !src && (icon || !name);
   return (
     <span style={{ position: 'relative', width: size, height: size, flexShrink: 0, display: 'inline-block', ...style }}>
       <span style={{ width: size, height: size, borderRadius: 999, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: src ? `url(${src}) center/cover no-repeat, var(--bg-weak-50)` : icon || !name ? 'var(--bg-weak-50)' : bg, color: icon || !name ? 'var(--icon-soft-400)' : fg,
-        fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: FS[size] || size * 0.35, lineHeight: 1 }}>
-        {!src && (icon || !name ? <Icon name="User6Line" size={size * 0.5} /> : initials)}
+        background: src ? `url(${src}) center/cover no-repeat, var(--neutral-gray-200)` : placeholder ? 'var(--neutral-gray-200)' : bg, color: fg,
+        font: `var(--${t})`, letterSpacing: `var(--${t}-ls)` }}>
+        {!src && (placeholder ? <Silhouette size={size} /> : initials)}
       </span>
-      {status && <span style={{ position: 'absolute', right: size >= 48 ? size * 0.04 : -1, bottom: size >= 48 ? size * 0.04 : -1 }}><AvatarStatus status={status} size={dot} /></span>}
-      {badge && <span style={{ position: 'absolute', right: -2, top: -2 }}><AvatarBadge type={badge} size={Math.max(12, Math.round(size * 0.3))} /></span>}
+      {status && <span style={{ position: 'absolute', right: 0, bottom: 0, display: 'flex' }}><AvatarStatus status={status} size={box} /></span>}
+      {badge && <span style={{ position: 'absolute', right: 0, top: 0, display: 'flex' }}><AvatarBadge type={badge} size={box} /></span>}
     </span>
   );
 }
+
+/* "+N" text style per size in Avatar Group [1.1]. */
+const GROUP_TEXT = { 80: 'title-h5', 72: 'title-h5', 64: 'title-h5', 56: 'title-h5', 48: 'title-h6', 40: 'label-md', 32: 'label-sm', 24: 'label-xs', 20: 'subheading-2xs' };
 
 /** Avatar Group [1.1] — overlapping stack with "+N" overflow. */
 export function AvatarGroup({ avatars = [], size = 40, max = 4, style }) {
@@ -45,7 +65,7 @@ export function AvatarGroup({ avatars = [], size = 40, max = 4, style }) {
   return (
     <div style={{ display: 'flex', ...style }}>
       {shown.map((a, i) => <span key={i} style={{ marginLeft: i ? -overlap : 0, borderRadius: 999, boxShadow: '0 0 0 2px var(--stroke-white-0)', display: 'flex' }}><Avatar size={size} {...a} /></span>)}
-      {rest > 0 && <span style={{ marginLeft: -overlap, width: size, height: size, borderRadius: 999, background: 'var(--bg-weak-50)', boxShadow: '0 0 0 2px var(--stroke-white-0)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: size >= 56 ? 'var(--title-h5)' : 'var(--label-sm)', color: 'var(--text-sub-600)' }}>+{rest}</span>}
+      {rest > 0 && <span style={{ marginLeft: -overlap, width: size, height: size, borderRadius: 999, background: 'var(--bg-weak-50)', boxShadow: '0 0 0 2px var(--stroke-white-0)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: `var(--${GROUP_TEXT[size] || 'label-sm'})`, color: 'var(--text-sub-600)' }}>+{rest}</span>}
     </div>
   );
 }
