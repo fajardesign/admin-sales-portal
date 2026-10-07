@@ -1,6 +1,8 @@
 // S&P Portal — login aplikasi mobile (Android) untuk akun yang dibuat di Account Management.
-// POST { identifier: email | username, password } → 200 { session, user } atau 4xx { error }.
-// error: INVALID | LOCKED | DISABLED | NOT_ACTIVATED | FORBIDDEN_PLATFORM (role bukan TL/SR/SA) | BAD_REQUEST.
+// POST { identifier: email | username, password, platform? } → 200 { session, user, access } atau 4xx { error }.
+// platform: 'sales-app-access' (default, aplikasi Android TL/SR/SA) | 'partner-web-access' (Partner Dashboard, Partner PIC).
+// Cek akses mengikuti roles_matrix (PRD v3): realm role → platform access → feature access roles.
+// error: INVALID | LOCKED | DISABLED | NOT_ACTIVATED | FORBIDDEN_PLATFORM (platform role ≠ platform aplikasi) | BAD_REQUEST.
 // Setelah login, aplikasi memakai session ini dengan supabase-js (`auth.setSession`) dan bisa membaca profilnya
 // sendiri dari tabel app_user (RLS: auth_user_id = auth.uid()).
 import { createClient } from 'npm:@supabase/supabase-js@2';
@@ -17,7 +19,18 @@ const URL_ = Deno.env.get('SUPABASE_URL')!;
 const opts = { auth: { autoRefreshToken: false, persistSession: false } };
 const admin = createClient(URL_, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, opts);
 
-const MOBILE_ROLES = ['TL', 'SR', 'SA']; // platform sales-app-access
+// Role mapping PRD v3 (okf_repository_design/products/sales_dashboard/roles_matrix.md). Kode role portal REVIEWER = realm ADMIN.
+const SALES_COMMON = ['ATTENDANCE', 'VISIT_EXECUTION', 'LOAN_TRACKING', 'SALES_PERFORMANCE', 'PRODUCTIVITY_PERFORMANCE_CHECK_IN',
+  'PRODUCTIVITY_PERFORMANCE_VISIT_PLAN', 'INCENTIVE_ESTIMATION', 'PARTNER_VIEW'];
+const ACCESS: Record<string, { realmRole: string; platform: string; features: string[] }> = {
+  REVIEWER: { realmRole: 'ADMIN', platform: 'web-access', features: ['DASHBOARD', 'PARTNER_PIPELINE', 'ACCOUNT_CREATION'] },
+  APL: { realmRole: 'APL', platform: 'web-access', features: ['SALES_PERFORMANCE', 'PRODUCTIVITY_PERFORMANCE_CHECK_IN', 'PRODUCTIVITY_PERFORMANCE_VISIT_PLAN', 'INCENTIVE_ESTIMATION', 'PARTNER_VIEW', 'TEAM_VIEW'] },
+  TL: { realmRole: 'TL', platform: 'sales-app-access', features: ['PARTNER_ACQUISITION', 'SALES_ASSIGNMENT', 'VISIT_PLAN_MANAGEMENT', ...SALES_COMMON, 'TEAM_VIEW'] },
+  SR: { realmRole: 'SR', platform: 'sales-app-access', features: ['PARTNER_ACQUISITION', ...SALES_COMMON] },
+  SA: { realmRole: 'SA', platform: 'sales-app-access', features: SALES_COMMON },
+  PARTNER: { realmRole: 'PARTNER', platform: 'partner-web-access', features: ['PARTNER_SALES_DASHBOARD', 'PARTNER_COMMISSION', 'PARTNER_PROFILE', 'TRANSACTION_INQUIRY', 'DOCUMENT_REPOSITORY'] },
+};
+const PLATFORMS = ['sales-app-access', 'partner-web-access'];
 const MAX_FAILS = 5;
 const LOCK_MS = 15 * 60_000;
 
@@ -27,12 +40,14 @@ Deno.serve(async (req) => {
 
   let identifier = '';
   let password = '';
+  let platform = 'sales-app-access';
   try {
     const b = await req.json();
     identifier = String(b.identifier ?? '').trim().toLowerCase();
     password = String(b.password ?? '');
+    if (b.platform) platform = String(b.platform);
   } catch { /* ditangani di bawah */ }
-  if (!identifier || !password) return json({ error: 'BAD_REQUEST' }, 400);
+  if (!identifier || !password || !PLATFORMS.includes(platform)) return json({ error: 'BAD_REQUEST' }, 400);
 
   const col = identifier.includes('@') ? 'email' : 'username';
   const { data: u } = await admin.from('app_user').select('*').eq(col, identifier).maybeSingle();
@@ -57,11 +72,12 @@ Deno.serve(async (req) => {
 
   if (u.failed_attempts || u.lock_until) await admin.from('app_user').update({ failed_attempts: 0, lock_until: null }).eq('id', u.id);
 
-  if (!MOBILE_ROLES.includes(u.role)) {
+  const access = ACCESS[u.role];
+  if (!access || access.platform !== platform) {
     await anon.auth.signOut();
     return json({ error: 'FORBIDDEN_PLATFORM', role: u.role }, 403);
   }
 
   const { failed_attempts: _f, lock_until: _l, log: _log, ...profile } = u;
-  return json({ session: data.session, user: profile });
+  return json({ session: data.session, user: profile, access });
 });
