@@ -1,84 +1,56 @@
 import { useEffect, useState } from 'react';
-import { Alert, Badge, TabMenuHorizontal } from '@ds/index.js';
+import { Badge, TabMenuHorizontal } from '@ds/index.js';
 import { AdminShell } from '../../components/AdminShell.jsx';
-import { DataTable } from '../../components/DataTable.jsx';
-import { nowrap } from '../../lib/cells.jsx';
+import { IncentiveTable } from '../../components/IncentiveTable.jsx';
 import { ListCard } from '../../components/ListCard.jsx';
 import { StatCard, StatGrid } from '../../components/StatCard.jsx';
-import { aplIncentives } from '../../api/mockApi.js';
+import { TbdCallout } from '../../components/TbdCallout.jsx';
+import { incentiveResults } from '../../api/mockApi.js';
 import { useScenario } from '../../dev/scenario.js';
-import { areaName } from '../../lib/constants.js';
-import { formatNumber, formatPct, formatRp } from '../../lib/format.js';
+import { formatNumber, formatRp } from '../../lib/format.js';
 import { navigate, withQuery } from '../../lib/router.js';
 import { PeriodFilter } from './aplCommon.jsx';
-import { achievementCell, useAplScope, usePeriod } from './aplData.jsx';
+import { useAplScope, usePeriod } from './aplPeriod.js';
 
-const TABS = [{ value: 'sales', label: 'SA/SR' }, { value: 'toko', label: 'Partner/Toko' }];
-const rate = (v) => formatPct(v, 2);
-const money = (v) => ({ priority: 'regular', title: nowrap(formatRp(v)) });
+const TABS = [{ value: 'TL', label: 'TL' }, { value: 'SALES', label: 'SA/SR' }, { value: 'PARTNER', label: 'Partner' }];
 
-/** A5 · Estimasi insentif SA/SR dan Partner/Toko per bulan, dihitung dari skema insentif yang berlaku (Super Admin). */
+/** B6 · Insentif (PRD v3): estimasi insentif TL, SA/SR, dan partner per bulan dari skema Super Admin; read-only. */
 export function AplIncentive(props) {
   const { tableState } = useScenario();
   return <AplIncentiveView key={tableState} {...props} />;
 }
 
 function AplIncentiveView({ user, onLogout, query }) {
+  const q = Object.fromEntries(query.entries());
   const period = usePeriod(query);
-  const { areaIds } = useAplScope(user, query);
-  const tab = TABS.some((t) => t.value === query.get('tab')) ? query.get('tab') : 'sales';
-  const [data, setData] = useState(null);
+  const month = period.month ?? period.from.slice(0, 7);
+  const areaIds = useAplScope(user, query);
+  const tab = TABS.some((t) => t.value === q.tab) ? q.tab : 'TL';
+  const [rows, setRows] = useState([]);
   const [view, setView] = useState('loading');
-  const key = `${period.m}|${areaIds.join()}`;
-  const load = (retry) => { setView('loading'); aplIncentives(areaIds, period.m, { retry }).then((d) => { setData(d); setView('data'); }, () => setView('error')); };
+  const set = (patch) => navigate(withQuery('/apl/insentif', { ...q, ...patch }));
+  const key = `${month}|${areaIds.join()}|${tab}`;
+  const load = (retry) => { setView('loading'); incentiveResults(areaIds, month, { kind: tab }, { retry }).then((r) => { setRows(r); setView(r.length ? 'data' : 'empty'); }, () => setView('error')); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(false); }, [key]);
-  const set = (patch) => navigate(withQuery('/apl/insentif', { ...Object.fromEntries(query.entries()), ...patch }));
-
-  const rows = data ? (tab === 'sales' ? data.sales : data.stores) : [];
-  const sum = (k) => rows.reduce((a, r) => a + r[k], 0);
-  const salesCols = [
-    { key: 'name', header: 'Nama', render: (r) => ({ priority: 'leading', title: nowrap(r.name), description: `${r.role} · ${areaName(r.areaId)} · ${r.stores} toko` }) },
-    { key: 'target', header: 'Target Nominal', align: 'right', render: (r) => money(r.target) },
-    { key: 'paid', header: 'Nominal Cair', align: 'right', render: (r) => money(r.paidOutAmount) },
-    { key: 'ach', header: 'Pencapaian', render: (r) => achievementCell(r.paidOutAmount, r.target) },
-    { key: 'po', header: 'Paid Out Incentive', align: 'right', render: (r) => ({ priority: 'regular', title: nowrap(formatRp(r.paidOutIncentive)), description: `Tarif ${rate(r.rate)}` }) },
-    { key: 'days', header: 'Daily Fee', align: 'right', render: (r) => ({ priority: 'regular', title: nowrap(formatRp(r.dailyFee)), description: `${r.days} hari × ${formatRp(r.feePerDay)}` }) },
-    { key: 'total', header: 'Total Estimasi', align: 'right', render: (r) => ({ priority: 'leading', title: nowrap(formatRp(r.total)) }) },
-  ];
-  const storeCols = [
-    { key: 'name', header: 'Toko', render: (r) => ({ priority: 'leading', title: r.name, description: `${r.partnerName} · ${areaName(r.areaId)}` }) },
-    { key: 'target', header: 'Target Nominal', align: 'right', render: (r) => money(r.target) },
-    { key: 'paid', header: 'Nominal Cair', align: 'right', render: (r) => money(r.paidOutAmount) },
-    { key: 'ach', header: 'Pencapaian', render: (r) => achievementCell(r.paidOutAmount, r.target) },
-    { key: 'vol', header: 'Volume Incentive', align: 'right', render: (r) => ({ priority: 'regular', title: nowrap(formatRp(r.volumeIncentive)), description: `Tarif ${rate(r.volRate)}` }) },
-    { key: 'col', header: 'Collection (MFP)', align: 'right', render: (r) => ({ priority: 'regular', title: nowrap(formatRp(r.collectionIncentive)), description: `MFP ${formatPct(r.mfp, 1)} · tarif ${rate(r.colRate)}` }) },
-    { key: 'total', header: 'Total Estimasi', align: 'right', render: (r) => ({ priority: 'leading', title: nowrap(formatRp(r.total)) }) },
-  ];
+  const total = rows.reduce((a, r) => a + r.total, 0);
 
   return (
-    <AdminShell active="/apl/insentif" icon="HandCoinLine" title="Insentif" description="Estimasi insentif SA/SR dan Partner/Toko di area Anda per bulan." user={user} onLogout={onLogout}
-      headerExtra={null}>
-      <PeriodFilter path="/apl/insentif" query={query} user={user} period={period} monthOnly />
-      <Alert status="information" size="sm" title="Nilai di halaman ini adalah estimasi dari skema insentif yang berlaku. Nilai final dihitung sistem setiap awal bulan." />
+    <AdminShell active="/apl/insentif" icon="HandCoinLine" title="Insentif" description="Estimasi insentif TL, SA/SR, dan partner di area Anda. Skema berasal dari Super Admin." user={user} onLogout={onLogout}>
+      <PeriodFilter path="/apl/insentif" query={query} user={user} period={{ ...period, month }} monthOnly />
+      <TbdCallout>Sumber target paid out dan collection untuk pencapaian dan tier. Prototipe memakai target contoh.</TbdCallout>
       <TabMenuHorizontal value={tab} onChange={(v) => set({ tab: v })} items={TABS} />
-      {view === 'data' && rows.length > 0 && (
-        <StatGrid min={220}>
-          <StatCard icon="Wallet3Line" color="green" label="Total estimasi insentif" value={formatRp(sum('total'))} hint={`${period.label} · dibayar tgl ${tab === 'sales' ? data.payday.sales : data.payday.partner} bulan berikutnya`} />
-          <StatCard icon="MoneyDollarCircleLine" color="purple" label="Total nominal cair" value={formatRp(sum('paidOutAmount'))} />
-          <StatCard icon={tab === 'sales' ? 'TeamLine' : 'Building2Line'} color="blue" label={tab === 'sales' ? 'SA/SR' : 'Toko'} value={formatNumber(rows.length)}
-            hint={<Badge color="gray" size="sm">Estimasi</Badge>} />
+      {view === 'data' && (
+        <StatGrid min={240}>
+          <StatCard icon="Wallet3Line" color="green" label="Total estimasi" value={formatRp(total)} hint={<Badge color="orange" size="sm">Estimasi</Badge>} />
+          <StatCard icon={tab === 'PARTNER' ? 'Building2Line' : 'TeamLine'} color="blue" label={TABS.find((t) => t.value === tab).label} value={formatNumber(rows.length)} />
         </StatGrid>
       )}
-      <ListCard view={view === 'data' && rows.length === 0 ? 'empty' : view} onRetry={() => load(true)} emptyMessage="Belum ada data insentif pada bulan ini.">
-        {(view === 'loading' || (view === 'data' && rows.length > 0)) && (
-          <DataTable loading={view === 'loading'} rows={rows} columns={tab === 'sales' ? salesCols : storeCols} minWidth={1300} />
-        )}
+      <ListCard view={view} onRetry={() => load(true)} emptyMessage="Belum ada estimasi insentif pada bulan ini.">
+        {(view === 'data' || view === 'loading') && <IncentiveTable rows={rows} loading={view === 'loading'} />}
       </ListCard>
       <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>
-        {tab === 'sales'
-          ? 'SA/SR: Daily Fee × hari hadir + tarif Paid Out Incentive (sesuai tier pencapaian target) × nominal cair.'
-          : 'Partner/Toko (Offline Retailer): tarif Volume Incentive (tier pencapaian target) + tarif Collection Incentive (tier MFP) × nominal cair toko.'}
+        {{ TL: 'TL: Daily Fee × hari hadir + tarif Leader Incentive (tier pencapaian target tim) × nominal cair tim.', SALES: 'SA/SR: Daily Fee × hari hadir + tarif Paid Out Incentive (tier pencapaian target) × nominal cair.', PARTNER: 'Partner (Offline Retailer): tarif Volume Incentive (tier pencapaian target) + tarif Collection Incentive (tier MFP) × nominal cair.' }[tab]}
       </span>
     </AdminShell>
   );

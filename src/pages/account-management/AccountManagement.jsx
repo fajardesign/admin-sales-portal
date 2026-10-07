@@ -16,7 +16,7 @@ import { formatDateWIB, formatDuration, formatPhone } from '../../lib/format.js'
 import { navigate, withQuery } from '../../lib/router.js';
 import { AddUserDrawer } from './AddUserDrawer.jsx';
 import { UserDetailDrawer } from './UserDetailDrawer.jsx';
-import { DisableModal, ResendModal } from './UserActionModals.jsx';
+import { ChangeEmailModal, DisableModal, ResendModal, ResetPasswordModal } from './UserActionModals.jsx';
 
 const ROLE_FILTER = ['REVIEWER', 'APL', 'TL', 'SR', 'SA', 'PARTNER'];
 
@@ -37,6 +37,8 @@ function AccountManagementView({ user, onLogout, query }) {
   const [version, setVersion] = useState(0);
   const [resend, setResend] = useState(null);
   const [disable, setDisable] = useState(null);
+  const [resetPw, setResetPw] = useState(null);
+  const [emailEdit, setEmailEdit] = useState(null);
   const [highlightId, setHighlightId] = useState(null);
   const qs = query.toString();
 
@@ -88,7 +90,7 @@ function AccountManagementView({ user, onLogout, query }) {
     { key: 'actions', header: 'Aksi', render: actionsCell },
   ];
   const counts = data?.counts ?? {};
-  const after = (u) => { setResend(null); setDisable(null); refresh(); if (detailId === u.id) setVersion((v) => v + 1); };
+  const after = () => { setResend(null); setDisable(null); setResetPw(null); setEmailEdit(null); refresh(); };
 
   return (
     <AdminShell active="/account-management" icon="TeamLine" title="Account Management" description="Buat akun login, pantau status aktivasi Keycloak, kirim ulang tautan, dan nonaktifkan akun." user={user} onLogout={onLogout}>
@@ -126,9 +128,11 @@ function AccountManagementView({ user, onLogout, query }) {
       </div>
 
       {adding && <AddUserDrawer user={user} onClose={() => setAdding(false)} onCreated={(u) => { setAdding(false); setHighlightId(u.id); set({ status: '', q: '', role: '', area: '' }); refresh(); }} />}
-      {detailId && <UserDetailDrawer userId={detailId} user={user} version={version} onClose={resend || disable ? undefined : () => setDetailId(null)} onResend={setResend} onDisable={setDisable} />}
+      {detailId && <UserDetailDrawer userId={detailId} user={user} version={version} onClose={resend || disable || resetPw || emailEdit ? undefined : () => setDetailId(null)} onResend={setResend} onDisable={setDisable} onReset={setResetPw} onChangeEmail={setEmailEdit} />}
       {resend && <ResendModal target={resend} user={user} onClose={() => setResend(null)} onDone={after} />}
       {disable && <DisableModal target={disable} user={user} onClose={() => setDisable(null)} onDone={after} />}
+      {resetPw && <ResetPasswordModal target={resetPw} user={user} onClose={() => setResetPw(null)} onDone={after} />}
+      {emailEdit && <ChangeEmailModal target={emailEdit} user={user} onClose={() => setEmailEdit(null)} onDone={after} />}
     </AdminShell>
   );
 }

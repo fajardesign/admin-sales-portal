@@ -17,6 +17,7 @@ import { ACTIONS } from './actions.js';
 import { RevisionDrawer } from './RevisionDrawer.jsx';
 import { ReasonModal } from './ReasonModal.jsx';
 import { PksDeliveryModal, PksUploadModal } from './PksModals.jsx';
+import { EditPartnerDrawer } from './EditPartnerDrawer.jsx';
 import { DataPartnerTab } from './tabs/DataPartnerTab.jsx';
 import { StoresTab } from './tabs/StoresTab.jsx';
 import { DocumentsTab } from './tabs/DocumentsTab.jsx';
@@ -31,7 +32,7 @@ const BUTTONS = {
   REVISION_REQUIRED: ['REJECTED', 'CANCELLED'],
   VERIFIED: ['CANCELLED', 'WAITING_PKS'],
   WAITING_PKS: ['CANCELLED', 'ACTIVE'],
-  ACTIVE: ['INACTIVE'],
+  ACTIVE: ['EDIT', 'INACTIVE'],
 };
 const PRIMARY = ['VERIFIED', 'WAITING_PKS', 'ACTIVE'];
 
@@ -47,12 +48,13 @@ export function PartnerDetail({ id, user, onLogout }) {
   const [viewer, setViewer] = useState(null); // { doc, file }
   const [pksModal, setPksModal] = useState(null); // 'delivery' | 'upload'
   const [retrying, setRetrying] = useState(false);
+  const [editing, setEditing] = useState(preset?.detail?.editing ?? false);
 
   const load = useCallback(() => { getPartner(id).then((np) => { setP(np); setError(false); }, () => setError(true)); }, [id]);
   useEffect(() => { load(); return onDataChange(load); }, [load]);
 
   const back = () => navigate(`/partner-pipeline${lastPipelineQuery ? `?${lastPipelineQuery}` : ''}`);
-  const done = (np) => { setP(np); setAction(null); setRevision(false); setReason(null); setPksModal(null); };
+  const done = (np) => { setP(np); setAction(null); setRevision(false); setReason(null); setPksModal(null); setEditing(false); };
 
   const shell = (children) => (
     <AdminShell active="/partner-pipeline" icon="Building2Line" title="Partner Pipeline" description="Tinjau pengajuan partner, verifikasi dokumen, catat PKS, dan ubah status partner." user={user} onLogout={onLogout}>
@@ -99,6 +101,7 @@ export function PartnerDetail({ id, user, onLogout }) {
           <Button variant="ghost" tone="neutral" size="sm" leftIcon={<Icon name="ArrowLeftLine" />} onClick={back}>Kembali</Button>
           {buttons.map((to) => {
             const isPrimary = PRIMARY.includes(to);
+            if (to === 'EDIT') return <Button key={to} size="sm" variant="stroke" tone="neutral" leftIcon={<Icon name="EditLine" />} onClick={() => setEditing(true)}>Ubah Data Partner</Button>;
             const label = to === 'REVISION_REQUIRED' ? 'Minta Revisi' : ACTIONS[to].label;
             return (
               <Button key={to} size="sm" variant={isPrimary ? 'filled' : 'stroke'} tone={['REJECTED', 'INACTIVE'].includes(to) ? 'error' : isPrimary ? 'primary' : 'neutral'}
@@ -142,6 +145,7 @@ export function PartnerDetail({ id, user, onLogout }) {
       )}
       {viewer && <DocumentViewer doc={viewer.doc} file={viewer.file} onClose={() => setViewer(null)} />}
       {pksModal === 'delivery' && <PksDeliveryModal partner={p} user={user} onClose={() => setPksModal(null)} onDone={done} />}
+      {editing && <EditPartnerDrawer partner={p} user={user} onClose={() => setEditing(false)} onDone={done} />}
       {pksModal === 'upload' && <PksUploadModal partner={p} user={user} onClose={() => setPksModal(null)} onDone={done} />}
     </>,
   );

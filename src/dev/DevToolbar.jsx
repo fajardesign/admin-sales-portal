@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { navigate } from '../lib/router.js';
-import { HOME_BY_ROLE } from '../lib/nav.js';
+import { homeFor } from '../lib/nav.js';
 import { demoSession, getPartner, onDataChange, simulateResubmit } from '../api/mockApi.js';
 import { useToast } from '../components/Toaster.jsx';
 import { SCENARIO_LABELS, SCENARIO_OPTIONS, setScenario, useScenario } from './scenario.js';
@@ -34,7 +34,7 @@ export function DevToolbar({ path, session, setSession }) {
     if (!username) { setSession(null); navigate('/login'); return; }
     const s = demoSession(username);
     setSession(s);
-    navigate(s.webAccess ? HOME_BY_ROLE[s.role] : '/denied');
+    navigate(s.webAccess ? homeFor(s) : '/denied');
   }
   async function resubmit() {
     await simulateResubmit(revision.id);

@@ -6,12 +6,13 @@ import { useSyncExternalStore } from 'react';
  */
 export const SCENARIO_OPTIONS = {
   tableState: ['data', 'loading', 'empty', 'error'],
+  service: ['ok', 'outage'],
   saveOutcome: ['success', 'emailFail', 'kcFail'],
   picAccount: ['ok', 'fail'],
   activationState: ['valid', 'expired', 'already'],
 };
-export const SCENARIO_LABELS = { tableState: 'Tabel', saveOutcome: 'Simpan pengguna', picAccount: 'Akun PIC', activationState: 'Tautan contoh' };
-export const DEFAULT_SCENARIO = { tableState: 'data', saveOutcome: 'success', picAccount: 'ok', activationState: 'valid' };
+export const SCENARIO_LABELS = { tableState: 'Tabel', service: 'Layanan login', saveOutcome: 'Simpan pengguna', picAccount: 'Akun PIC', activationState: 'Tautan contoh' };
+export const DEFAULT_SCENARIO = { tableState: 'data', service: 'ok', saveOutcome: 'success', picAccount: 'ok', activationState: 'valid' };
 
 let state = { ...DEFAULT_SCENARIO };
 const subs = new Set();

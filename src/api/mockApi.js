@@ -6,7 +6,7 @@ import {
   ACCOUNT_STATUS, AREAS, CREATABLE_ROLES, FINAL_STATUSES, INVITE_TTL_MS, PAGE_SIZE, PARTNER_STATUS, ROLES, TRANSITIONS,
 } from '../lib/constants.js';
 import {
-  attendance, CURRENT_MONTH, loanStats, mfp, MONTHS, now, partners, schemes, superAdmins, targets, users,
+  attendance, CURRENT_MONTH, loans, mfp, MONTHS, now, owningTl, partners, schemes, superAdmins, targets, users, visits, wibDate,
 } from './db.js';
 
 const TEST = import.meta.env.MODE === 'test';
@@ -47,16 +47,16 @@ const actorOf = (session) => `${session.name} (${ROLES[session.role].short})`;
 const inArea = (ids, areaId) => !ids || ids.length === 0 || ids.includes(areaId);
 
 // ------------------------------------------------------------------ auth (W1)
-const WEB_ROLES = ['REVIEWER', 'APL', 'SUPER_ADMIN'];
 const MAX_FAILS = 5;
 const LOCK_MS = 15 * 60000;
 
 /**
  * Login Keycloak: email atau username + password.
- * Error: LOCKED | INVALID | DISABLED | NOT_ACTIVATED. Role tanpa akses web tetap mendapat sesi (web menampilkan Akses ditolak).
+ * Error: OUTAGE | LOCKED | INVALID | DISABLED | NOT_ACTIVATED. Role tanpa platform web-access tetap mendapat sesi (web menampilkan Akses ditolak).
  */
 export async function login(identifier, password) {
   await wait(600);
+  if (getScenario().service === 'outage') throw new ApiError('OUTAGE');
   const id = identifier.trim().toLowerCase();
   const u = [...users, ...superAdmins].find((x) => x.email === id || x.username === id);
   if (u?.lockUntil && now() < u.lockUntil) throw new ApiError('LOCKED');
@@ -77,7 +77,7 @@ export async function login(identifier, password) {
 export function sessionFor(u, loginId = u.email) {
   return {
     userId: u.id, loginId, role: u.role, name: u.fullName, roleLabel: ROLES[u.role].label,
-    areaIds: u.areaIds ?? [], webAccess: WEB_ROLES.includes(u.role), accessRoles: ROLES[u.role].keycloak,
+    areaIds: u.areaIds ?? [], platform: ROLES[u.role].platform, webAccess: ROLES[u.role].platform === 'web-access', features: ROLES[u.role].features,
   };
 }
 /** Sesi contoh untuk DevToolbar / preset. */
@@ -410,19 +410,31 @@ export async function disableUser(id, reason, session) {
 }
 
 // ------------------------------------------------------------------ Aktivasi (KC1)
-/** status: valid | expired | already. Tanpa userId → skenario DevToolbar dengan pengguna contoh. */
-export async function checkActivation(userId) {
+/**
+ * status: valid | expired | already. mode 'reset' = tautan reset password (24 jam, sekali pakai).
+ * Tanpa userId → skenario DevToolbar dengan pengguna contoh.
+ */
+export async function checkActivation(userId, mode = 'activate') {
   await wait(200);
   const u = userId ? userById(userId) : users.find((x) => x.id === 10);
   if (!userId) return { status: getScenario().activationState, user: { id: u.id, fullName: u.fullName, username: u.username, email: u.email, role: u.role } };
+  if (mode === 'reset') {
+    const ok = u.status === 'ACTIVE' && u.resetSentAt && now() - u.resetSentAt <= INVITE_TTL_MS;
+    return { status: ok ? 'valid' : 'expired', user: { id: u.id, fullName: u.fullName, username: u.username, email: u.email, role: u.role } };
+  }
   const st = accountStatus(u);
   const status = st === 'ACTIVE' ? 'already' : st === 'PENDING' ? 'valid' : 'expired';
   return { status, user: { id: u.id, fullName: u.fullName, username: u.username, email: u.email, role: u.role } };
 }
 
-export async function activateAccount(userId, password) {
+export async function activateAccount(userId, password, mode = 'activate') {
   await wait(500);
   const u = userId ? userById(userId) : null;
+  if (u && mode === 'reset' && u.resetSentAt) {
+    Object.assign(u, { password, resetSentAt: null });
+    u.log.push({ at: now(), text: 'Password diatur ulang melalui tautan reset' });
+    return { ok: true };
+  }
   if (u && accountStatus(u) === 'PENDING') {
     Object.assign(u, { status: 'ACTIVE', activatedAt: u.activatedAt ?? now(), password });
     u.log.push({ at: now(), text: 'Password dibuat, akun aktif' });
@@ -430,157 +442,447 @@ export async function activateAccount(userId, password) {
   return { ok: true };
 }
 
-// ------------------------------------------------------------------ APL (A1–A5)
-const sumStats = (rows) => rows.reduce((a, r) => ({
-  submitted: a.submitted + r.submitted, accepted: a.accepted + r.accepted, paidOutApps: a.paidOutApps + r.paidOutApps,
-  paidOutUnits: a.paidOutUnits + r.paidOutUnits, paidOutAmount: a.paidOutAmount + r.paidOutAmount,
-}), { submitted: 0, accepted: 0, paidOutApps: 0, paidOutUnits: 0, paidOutAmount: 0 });
+// ------------------------------------------------------------------ Reset password & ubah email (PRD v3 US-A03, US-A04)
+/** Kirim tautan reset password (akun Active): tautan 24 jam sekali pakai, sesi berakhir, status tetap Active. */
+export async function sendResetPassword(id, session) {
+  await wait(500);
+  const u = userById(id);
+  if (accountStatus(u) !== 'ACTIVE') throw new ApiError('CONFLICT');
+  u.resetSentAt = now();
+  u.log.push({ at: now(), text: `Tautan reset password dikirim ke ${u.email} oleh ${actorOf(session)}; sesi aktif diakhiri` });
+  return enrichUser(u);
+}
 
+/**
+ * Ubah email (Pending, Expired, Active): valid & unik, alasan wajib, berlaku langsung. Untuk Partner (PIC) username ikut berubah
+ * dan email PIC di data partner diperbarui. Pemberitahuan dikirim ke email lama. Opsional kirim tautan reset ke email baru (akun Active).
+ */
+export async function changeEmail(id, newEmail, reason, sendReset, session) {
+  await wait(600);
+  const u = userById(id);
+  const email = newEmail.trim().toLowerCase();
+  if (accountStatus(u) === 'DISABLED') throw new ApiError('CONFLICT');
+  if ([...users, ...superAdmins].some((x) => x.email === email && x.id !== id)) throw new ApiError('DUPLICATE', 'email');
+  const old = u.email;
+  u.email = email;
+  if (u.role === 'PARTNER') {
+    u.username = email;
+    const p = findP(u.partnerId);
+    if (p) { p.changeLog.push({ at: now(), by: actorOf(session), section: 'pic', field: 'Email PIC', old, new: email, reason }); p.pic.email = email; }
+  }
+  u.log.push({ at: now(), text: `Email diubah dari ${old} ke ${email} oleh ${actorOf(session)}: ${reason}. Pemberitahuan dikirim ke email lama` });
+  if (sendReset && accountStatus(u) === 'ACTIVE') { u.resetSentAt = now(); u.log.push({ at: now(), text: `Tautan reset password dikirim ke ${email}` }); }
+  return enrichUser(u);
+}
+
+// ------------------------------------------------------------------ Ubah Data Partner (PRD v3 US-P09)
+/**
+ * Hanya partner Active. changes: [{ section, field, label, storeId?, value, display? }]. Rekening tidak bisa diubah.
+ * Setiap perubahan dicatat (field, lama, baru, alasan, Admin, waktu) di changeLog dan Riwayat.
+ */
+const EDITABLE = {
+  partnerName: (p) => [p, 'partnerName'], address: (p) => [p, 'address'], businessEmail: (p) => [p, 'businessEmail'], channel: (p) => [p, 'channel'],
+  businessLocationCount: (p) => [p, 'businessLocationCount'], picName: (p) => [p.pic, 'name'], picPhone: (p) => [p.pic, 'phone'], picStatus: (p) => [p.pic, 'status'],
+};
+export async function updatePartnerData(pid, changes, reason, session) {
+  await wait(600);
+  const p = findP(pid);
+  if (p.status !== 'ACTIVE') throw new ApiError('CONFLICT');
+  changes.forEach((c) => {
+    let obj; let key;
+    if (c.storeId) { obj = p.stores.find((s) => s.id === c.storeId); key = c.field; } else [obj, key] = EDITABLE[c.field](p);
+    if (String(obj[key]) === String(c.value)) return;
+    p.changeLog.push({ at: now(), by: actorOf(session), section: c.section, field: c.label, storeId: c.storeId ?? null, old: c.display?.old ?? obj[key], new: c.display?.new ?? c.value, reason });
+    obj[key] = c.value;
+  });
+  const u = users.find((x) => x.partnerId === p.id);
+  if (u) u.fullName = p.pic.name;
+  log(p, { from: null, to: null, by: actorOf(session), reason: `Data partner diubah (${changes.map((c) => c.label).join(', ')}): ${reason}` });
+  return enrich(p);
+}
+
+// ------------------------------------------------------------------ Beranda Admin (PRD v3 §A1)
+/** Usia sejak tanggal: "< 1 jam", "N jam", "N hari" (informatif, tanpa SLA). */
+export function ageLabel(d) {
+  const h = (now() - new Date(d)) / 3600e3;
+  return h < 1 ? '< 1 jam' : h < 24 ? `${Math.floor(h)} jam` : `${Math.floor(h / 24)} hari`;
+}
+export async function adminHome(areaId, { retry = false } = {}) {
+  await listGate(retry);
+  const a = areaId ? Number(areaId) : null;
+  const ps = partners.filter((p) => !a || p.areaId === a);
+  const us = users.filter((u) => !a || u.areaIds.includes(a));
+  const by = (st) => ps.filter((p) => p.status === st);
+  const oldest = (list, key) => (list.length ? list.reduce((m, p) => (p[key] < m[key] ? p : m))[key] : null);
+  const uReview = by('UNDER_REVIEW'); const verified = by('VERIFIED'); const waiting = by('WAITING_PKS');
+  const counts = Object.fromEntries(Object.keys(PARTNER_STATUS).map((s) => [s, by(s).length]));
+  const accountTable = (keyFn, keys) => keys.map((k) => {
+    const rows = us.filter((u) => keyFn(u).includes(k));
+    return { key: k, PENDING: rows.filter((u) => accountStatus(u) === 'PENDING').length, EXPIRED: rows.filter((u) => accountStatus(u) === 'EXPIRED').length, ACTIVE: rows.filter((u) => accountStatus(u) === 'ACTIVE').length, DISABLED: rows.filter((u) => accountStatus(u) === 'DISABLED').length, total: rows.length };
+  });
+  const events = [
+    ...ps.flatMap((p) => p.history.map((h) => ({ at: h.at, text: h.to && h.from ? `${p.partnerName}: ${PARTNER_STATUS[h.from].label} → ${PARTNER_STATUS[h.to].label}` : h.to ? `${p.partnerName}: pengajuan baru` : `${p.partnerName}: ${h.reason}`, by: actorLabel(h.by) }))),
+    ...us.flatMap((u) => u.log.map((l) => ({ at: l.at, text: `${u.fullName} (${ROLES[u.role].short}): ${l.text}`, by: null }))),
+  ].sort((x, y) => y.at - x.at).slice(0, 8);
+  return {
+    counts,
+    underReview: { count: uReview.length, oldest: oldest(uReview, 'statusUpdatedAt') },
+    verified: { count: verified.length },
+    waitingPks: { count: waiting.length, oldestSent: waiting.length ? waiting.reduce((m, p) => (p.pks.sentAt < m ? p.pks.sentAt : m), waiting[0].pks.sentAt) : null },
+    expiredUsers: us.filter((u) => accountStatus(u) === 'EXPIRED').map(enrichUser),
+    revision: counts.REVISION_REQUIRED, pendingUsers: us.filter((u) => accountStatus(u) === 'PENDING').length,
+    active: { count: counts.ACTIVE, stores: by('ACTIVE').reduce((s, p) => s + p.stores.filter((x) => x.status === 'ACTIVE').length, 0) },
+    reviewQueue: [...uReview].sort((x, y) => x.statusUpdatedAt - y.statusUpdatedAt).slice(0, 5).map(enrich),
+    pksFollowUp: [...verified, ...waiting].sort((x, y) => x.statusUpdatedAt - y.statusUpdatedAt).map(enrich),
+    accountsByRole: accountTable((u) => [u.role], ['REVIEWER', 'APL', 'TL', 'SR', 'SA', 'PARTNER']),
+    accountsByArea: accountTable((u) => u.areaIds, (a ? AREAS.filter((x) => x.id === a) : AREAS).map((x) => x.id)),
+    events,
+  };
+}
+
+// ------------------------------------------------------------------ periode & util APL (PRD v3 §B)
 export const perfMonths = () => MONTHS;
 export const currentMonth = () => CURRENT_MONTH;
+export const todayDate = () => wibDate(now());
+const DAY = 864e5;
+const addDays = (ymd, n) => new Date(Date.parse(`${ymd}T12:00:00Z`) + n * DAY).toISOString().slice(0, 10);
+const daysBetween = (a, b) => Math.round((Date.parse(`${b}T12:00:00Z`) - Date.parse(`${a}T12:00:00Z`)) / DAY) + 1;
+/** Rentang tanggal bulan ym, dipotong sampai hari ini untuk bulan berjalan. */
+export const monthRange = (ym) => {
+  const [y, m] = ym.split('-').map(Number);
+  const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const to = `${ym}-${String(last).padStart(2, '0')}`;
+  return { from: `${ym}-01`, to: to > todayDate() ? todayDate() : to };
+};
+/** Periode sebelumnya: bulan sebelumnya (jumlah hari sama bila bulan berjalan) atau rentang sama panjang tepat sebelumnya. */
+export function previousPeriod(period) {
+  const len = daysBetween(period.from, period.to);
+  if (period.month) {
+    const [y, m] = period.month.split('-').map(Number);
+    const d = new Date(Date.UTC(y, m - 2, 1));
+    const ym = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+    const r = monthRange(ym);
+    return { month: ym, from: r.from, to: addDays(r.from, Math.min(len, daysBetween(r.from, r.to)) - 1) };
+  }
+  return { from: addDays(period.from, -len), to: addDays(period.from, -1) };
+}
+const inP = (ymd, p) => ymd >= p.from && ymd <= p.to;
+const isWorkday = (ymd) => new Date(`${ymd}T12:00:00Z`).getUTCDay() !== 0;
+const workdays = (p) => { let n = 0; for (let d = p.from; d <= p.to; d = addDays(d, 1)) if (isWorkday(d)) n += 1; return n; };
+const pct = (a, b) => (b ? (a / b) * 100 : 0);
 
-/** A2 — toko aktif milik partner Active di area APL. */
-export async function aplStores(areaIds, q = {}, { retry = false } = {}) {
-  const empty = await listGate(retry);
-  if (empty) return [];
-  const term = (q.q ?? '').trim().toLowerCase();
-  return partners.filter((p) => p.status === 'ACTIVE' && inArea(areaIds, p.areaId) && (!q.area || p.areaId === Number(q.area)))
-    .flatMap((p) => p.stores.filter((s) => s.status === 'ACTIVE').map((s) => {
-      const sales = s.assigned.map(userById).filter(Boolean);
-      const tl = sales[0] ? userById(sales[0].supervisorId) : users.find((u) => u.role === 'TL' && u.areaIds.includes(p.areaId) && u.status === 'ACTIVE');
-      return {
-        id: s.id, storeName: s.name, storeCode: s.code, partnerId: p.id, partnerName: p.partnerName, areaId: p.areaId,
-        picName: p.pic.name, picEmail: p.pic.email, picPhone: p.pic.phone, address: s.address, lat: s.lat, lng: s.lng,
-        activeSince: new Date(Math.max(p.activatedAt, s.addedAt)),
-        sales: sales.map((u) => ({ id: u.id, name: u.fullName, role: u.role })), tl: tl ? { id: tl.id, name: tl.fullName } : null,
-      };
-    }))
-    .filter((r) => !term || [r.storeName, r.partnerName, r.picName].some((v) => v.toLowerCase().includes(term)))
-    .sort((a, b) => b.activeSince - a.activeSince);
+/** Samaran PRD v3 §B2: ID "APP-••••1234", nama "Bu•• Sa•••••". */
+export const maskId = (id) => `APP-••••${id.slice(-4)}`;
+export const maskName = (n) => n.split(' ').map((w) => w.slice(0, 2) + '•'.repeat(Math.max(1, w.length - 2))).join(' ');
+export const CRM_STATUS = { SUBMITTED: 'Pengajuan', IN_PROCESS: 'Diproses', APPROVED: 'Disetujui', REJECTED: 'Ditolak', PAID_OUT: 'Dicairkan' };
+
+/** Agregat metrik penjualan dari daftar pinjaman (berdasarkan tanggal pengajuan). */
+function salesStats(rows) {
+  const submitted = rows.length;
+  const accepted = rows.filter((l) => l.status === 'APPROVED' || l.status === 'PAID_OUT').length;
+  const paid = rows.filter((l) => l.status === 'PAID_OUT');
+  return { submitted, accepted, paidOut: paid.length, paidOutUnits: paid.reduce((a, l) => a + l.units, 0), paidOutAmount: paid.reduce((a, l) => a + l.amount, 0), acceptanceRate: pct(accepted, submitted) };
+}
+const scopeLoans = (areaIds, period, f = {}) => loans.filter((l) => inArea(areaIds, l.areaId) && inP(wibDate(l.submittedAt), period) && (!f.channel || l.channel === f.channel));
+
+const fieldUsers = (areaIds) => users.filter((u) => ['TL', 'SR', 'SA'].includes(u.role) && u.status === 'ACTIVE' && inArea(areaIds, u.areaIds[0]));
+function productivity(userIds, period) {
+  const att = attendance.filter((a) => userIds.includes(a.userId) && inP(a.date, period));
+  const present = att.filter((a) => a.status !== 'ABSENT').length;
+  const vs = visits.filter((v) => userIds.includes(v.userId) && inP(v.date, period) && v.status !== 'CANCELLED' && v.status !== 'SCHEDULED');
+  const done = vs.filter((v) => v.status === 'DONE').length;
+  const scheduled = userIds.reduce((a, id) => {
+    const start = wibDate(userById(id).activatedAt);
+    const from = start > period.from ? start : period.from;
+    return a + (from <= period.to ? workdays({ from, to: period.to }) : 0);
+  }, 0);
+  return { attendanceRate: pct(present, scheduled), visitRate: pct(done, vs.length), onTimeRate: pct(att.filter((a) => a.status === 'ON_TIME').length, present) };
 }
 
-/** A3 — TL & SA/SR aktif di bawah APL (hierarki APL → TL → SA/SR). */
-export async function aplTeam(aplId, q = {}, { retry = false } = {}) {
+// ------------------------------------------------------------------ APL B1 Dashboard
+export async function aplDashboard(areaIds, period, { retry = false } = {}) {
+  const empty = await listGate(retry);
+  const prev = previousPeriod(period);
+  const ids = empty ? [] : fieldUsers(areaIds).map((u) => u.id);
+  const cur = empty ? [] : scopeLoans(areaIds, period);
+  // Tren per minggu (Senin–Minggu): 8 minggu terakhir sampai akhir periode; minggu di dalam periode disorot.
+  const weeks = [];
+  const endDow = (new Date(`${period.to}T12:00:00Z`).getUTCDay() + 6) % 7;
+  const lastMonday = addDays(period.to, -endDow);
+  const scoped = empty ? [] : loans.filter((l) => inArea(areaIds, l.areaId) && l.status === 'PAID_OUT');
+  for (let i = 7; i >= 0; i -= 1) {
+    const from = addDays(lastMonday, -7 * i); const to = addDays(from, 6) > period.to ? period.to : addDays(from, 6);
+    weeks.push({ from, to, inPeriod: to >= period.from, amount: scoped.filter((l) => inP(wibDate(l.submittedAt), { from, to })).reduce((a, l) => a + l.amount, 0) });
+  }
+  const tls = (empty ? [] : fieldUsers(areaIds)).filter((u) => u.role === 'TL')
+    .map((u) => ({ id: u.id, name: u.fullName, tlLevel: u.tlLevel, areaId: u.areaIds[0], paidOutAmount: cur.filter((l) => l.tlId === u.id && l.status === 'PAID_OUT').reduce((a, l) => a + l.amount, 0) }))
+    .sort((a, b) => b.paidOutAmount - a.paidOutAmount);
+  const ps = empty ? [] : partners.filter((p) => p.status === 'ACTIVE' && inArea(areaIds, p.areaId));
+  const team = empty ? [] : fieldUsers(areaIds);
+  return {
+    sales: { cur: salesStats(cur), prev: salesStats(empty ? [] : scopeLoans(areaIds, prev)) },
+    productivity: { cur: productivity(ids, period), prev: productivity(ids, prev) },
+    weeks, top: tls.slice(0, 5), bottom: [...tls].reverse().slice(0, 5),
+    partnerCount: ps.length, storeCount: ps.reduce((a, p) => a + p.stores.filter((s) => s.status === 'ACTIVE').length, 0),
+    team: { TL: team.filter((u) => u.role === 'TL').length, SR: team.filter((u) => u.role === 'SR').length, SA: team.filter((u) => u.role === 'SA').length },
+  };
+}
+
+// ------------------------------------------------------------------ APL B2 Kinerja Penjualan
+const filterPath = (rows, path) => rows.filter((l) => (!path.area || l.areaId === Number(path.area))
+  && (!path.tl || String(l.tlId ?? 'none') === String(path.tl))
+  && (!path.sales || String(l.salesId ?? 'none') === String(path.sales))
+  && (!path.partner || l.partnerId === path.partner)
+  && (!path.store || l.storeId === path.store));
+/**
+ * Baris drill-down Area → TL → SA/SR → Partner → Toko. path: { area, tl, sales, partner } (yang sudah dipilih).
+ * f: { channel, q } — q mencari nama baris pada level ini.
+ */
+export async function aplSalesRows(areaIds, period, path = {}, f = {}, { retry = false } = {}) {
+  const empty = await listGate(retry);
+  const rows = empty ? [] : filterPath(scopeLoans(areaIds, period, { channel: f.channel }), path);
+  const level = !path.area ? 'area' : !path.tl ? 'tl' : !path.sales ? 'sales' : !path.partner ? 'partner' : 'store';
+  const keyOf = { area: (l) => l.areaId, tl: (l) => l.tlId ?? 'none', sales: (l) => l.salesId ?? 'none', partner: (l) => l.partnerId, store: (l) => l.storeId }[level];
+  const label = (k) => {
+    if (level === 'area') return { name: AREAS.find((a) => a.id === k).name };
+    if (k === 'none') return { name: level === 'sales' ? 'Belum ditugaskan' : 'Tanpa TL' };
+    if (level === 'tl' || level === 'sales') { const u = userById(k); return { name: u.fullName, sub: level === 'tl' ? `TL ${u.tlLevel === 'SENIOR' ? 'Senior' : 'Junior'}` : u.role }; }
+    if (level === 'partner') { const p = findP(k); return { name: p.partnerName, sub: p.registrationNumber }; }
+    const p = partners.find((x) => x.stores.some((st) => st.id === k)); const st = p.stores.find((x) => x.id === k); return { name: st.name, sub: st.code };
+  };
+  const m = new Map();
+  rows.forEach((l) => { const k = keyOf(l); m.set(k, [...(m.get(k) ?? []), l]); });
+  const term = (f.q ?? '').trim().toLowerCase();
+  const out = [...m.entries()].map(([k, ls]) => ({ key: String(k), level, ...label(k), ...salesStats(ls) }))
+    .filter((r) => !term || r.name.toLowerCase().includes(term))
+    .sort((a, b) => b.paidOutAmount - a.paidOutAmount);
+  const crumbs = [];
+  if (path.area) crumbs.push({ level: 'area', name: AREAS.find((a) => a.id === Number(path.area))?.name });
+  if (path.tl) crumbs.push({ level: 'tl', name: path.tl === 'none' ? 'Tanpa TL' : userById(Number(path.tl))?.fullName });
+  if (path.sales) crumbs.push({ level: 'sales', name: path.sales === 'none' ? 'Belum ditugaskan' : userById(Number(path.sales))?.fullName });
+  if (path.partner) crumbs.push({ level: 'partner', name: findP(path.partner)?.partnerName });
+  return { level, rows: out, total: salesStats(rows), crumbs };
+}
+
+/** Daftar pinjaman untuk satu baris drill-down (read-only, disamarkan). scope: { area, tl, sales, partner, store }. */
+export async function aplLoans(areaIds, period, scope, f = {}, page = 1) {
+  await wait(250);
+  const rows = filterPath(scopeLoans(areaIds, period, { channel: f.channel }), scope).sort((a, b) => b.updatedAt - a.updatedAt);
+  return {
+    total: rows.length,
+    rows: rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((l) => {
+      const p = findP(l.partnerId);
+      return { id: l.id, maskedId: maskId(l.id), customer: maskName(l.customer), store: p.stores.find((x) => x.id === l.storeId).name, sales: l.salesId ? userById(l.salesId).fullName : null, amount: l.amount, status: l.status, rejectionReason: l.rejectionReason, updatedAt: l.updatedAt };
+    }),
+  };
+}
+
+/** Pemilih bawahan (TL & SA/SR) di area APL untuk filter. */
+export const subordinateOptions = (areaIds, roles = ['TL', 'SR', 'SA']) => fieldUsers(areaIds).filter((u) => roles.includes(u.role))
+  .map((u) => ({ value: String(u.id), label: `${u.fullName} (${u.role})`, role: u.role, areaId: u.areaIds[0], tlId: u.role === 'TL' ? u.id : u.supervisorId }));
+
+// ------------------------------------------------------------------ APL B3 Produktivitas
+/** Per orang: absensi & kunjungan pada periode. f: { tl, role }. */
+export async function aplProductivity(areaIds, period, f = {}, { retry = false } = {}) {
+  const empty = await listGate(retry);
+  const people = empty ? [] : fieldUsers(areaIds).filter((u) => (!f.role || u.role === f.role) && (!f.tl || u.id === Number(f.tl) || u.supervisorId === Number(f.tl)));
+  return people.map((u) => {
+    const att = attendance.filter((a) => a.userId === u.id && inP(a.date, period));
+    const present = att.filter((a) => a.status !== 'ABSENT');
+    const mins = present.map((a) => { const t = new Date(new Date(a.clockInAt).getTime() + 7 * 3600e3); return t.getUTCHours() * 60 + t.getUTCMinutes(); });
+    const avg = mins.length ? Math.round(mins.reduce((a, b) => a + b, 0) / mins.length) : null;
+    const vs = visits.filter((v) => v.userId === u.id && inP(v.date, period) && v.status !== 'CANCELLED');
+    const counted = vs.filter((v) => v.status !== 'SCHEDULED');
+    const done = counted.filter((v) => v.status === 'DONE');
+    return {
+      id: u.id, name: u.fullName, role: u.role, tlLevel: u.tlLevel, areaId: u.areaIds[0], leader: u.supervisorId ? userById(u.supervisorId).fullName : null,
+      attendance: {
+        days: att.length, present: present.length, onTime: att.filter((a) => a.status === 'ON_TIME').length, late: att.filter((a) => a.status === 'LATE').length, absent: att.filter((a) => a.status === 'ABSENT').length,
+        avgCheckIn: avg == null ? null : `${String(Math.floor(avg / 60)).padStart(2, '0')}:${String(avg % 60).padStart(2, '0')}`,
+      },
+      visits: { planned: vs.length, visited: done.length, onTime: done.filter((v) => v.outcome === 'ON_TIME').length, late: done.filter((v) => v.outcome === 'LATE').length, missed: counted.filter((v) => v.status === 'MISSED').length, achievement: pct(done.length, counted.length) },
+    };
+  }).sort((a, b) => ['TL', 'SR', 'SA'].indexOf(a.role) - ['TL', 'SR', 'SA'].indexOf(b.role) || a.name.localeCompare(b.name));
+}
+/** Detail harian absensi satu orang (terbaru di atas). */
+export async function attendanceDetail(userId, period) {
+  await wait(200);
+  return attendance.filter((a) => a.userId === userId && inP(a.date, period)).sort((a, b) => (a.date < b.date ? 1 : -1)).map(clone);
+}
+/** Detail kunjungan satu orang (terbaru di atas). */
+export async function visitDetail(userId, period) {
+  await wait(200);
+  return visits.filter((v) => v.userId === userId && inP(v.date, period)).sort((a, b) => b.plannedAt - a.plannedAt).map((v) => {
+    const p = findP(v.partnerId);
+    return { ...clone(v), storeName: p.stores.find((x) => x.id === v.storeId).name, partnerName: p.partnerName };
+  });
+}
+
+// ------------------------------------------------------------------ APL B4 Partner
+export async function aplPartners(areaIds, period, f = {}, { retry = false } = {}) {
   const empty = await listGate(retry);
   if (empty) return [];
-  const tls = users.filter((u) => u.role === 'TL' && u.supervisorId === aplId && u.status === 'ACTIVE');
-  const tlIds = tls.map((t) => t.id);
-  const sales = users.filter((u) => ['SA', 'SR'].includes(u.role) && tlIds.includes(u.supervisorId) && u.status === 'ACTIVE');
-  const term = (q.q ?? '').trim().toLowerCase();
-  return [...tls, ...sales]
-    .filter((u) => (!q.role || u.role === q.role) && (!term || [u.fullName, u.email].some((v) => v.toLowerCase().includes(term))))
-    .map((u) => ({
-      id: u.id, name: u.fullName, role: u.role, tlLevel: u.tlLevel, areaId: u.areaIds[0], email: u.email, phone: u.phone,
-      registeredAt: u.activatedAt, leader: u.supervisorId ? userById(u.supervisorId).fullName : null,
-      stores: partners.flatMap((p) => p.stores.filter((s) => s.assigned.includes(u.id) && s.status === 'ACTIVE')).length,
-    }))
+  const term = (f.q ?? '').trim().toLowerCase();
+  return partners.filter((p) => p.status === 'ACTIVE' && inArea(areaIds, p.areaId) && (!f.channel || p.channel === f.channel) && (!f.tl || owningTl(p) === Number(f.tl)))
+    .map((p) => {
+      const tl = userById(owningTl(p));
+      const paid = (storeId) => loans.filter((l) => l.partnerId === p.id && (!storeId || l.storeId === storeId) && l.status === 'PAID_OUT' && inP(wibDate(l.submittedAt), period)).reduce((a, l) => a + l.amount, 0);
+      return {
+        id: p.id, name: p.partnerName, areaId: p.areaId, channel: p.channel, entity: p.businessEntityType, tl: tl ? tl.fullName : null, activatedAt: p.activatedAt, paidOutAmount: paid(),
+        picName: p.pic.name, picEmail: p.pic.email, picPhone: p.pic.phone, address: `${p.address}, ${p.village}, ${p.district}, ${p.city}`,
+        stores: p.stores.filter((s) => s.status === 'ACTIVE').map((s) => ({
+          id: s.id, name: s.name, code: s.code, primary: s.primary, address: s.address, lat: s.lat, lng: s.lng, activeSince: new Date(Math.max(p.activatedAt, s.addedAt)),
+          sales: s.assigned.map((id) => userById(id)).filter(Boolean).map((u) => `${u.fullName} (${u.role})`), paidOutAmount: paid(s.id),
+        })),
+      };
+    })
+    .filter((p) => !term || p.name.toLowerCase().includes(term) || p.stores.some((s) => s.name.toLowerCase().includes(term)))
+    .sort((a, b) => b.paidOutAmount - a.paidOutAmount);
+}
+
+// ------------------------------------------------------------------ APL B5 Tim
+export const ATTENDANCE_TODAY = { ON_TIME: 'Tepat waktu', LATE: 'Terlambat', ABSENT: 'Absen', NONE: 'Belum check-in', OFF: 'Libur' };
+export async function aplTeam(areaIds, f = {}, { retry = false } = {}) {
+  const empty = await listGate(retry);
+  if (empty) return [];
+  const today = todayDate();
+  const term = (f.q ?? '').trim().toLowerCase();
+  return fieldUsers(areaIds)
+    .filter((u) => (!f.role || u.role === f.role) && (!term || [u.fullName, u.email].some((v) => v.toLowerCase().includes(term))))
+    .map((u) => {
+      const a = attendance.find((x) => x.userId === u.id && x.date === today);
+      const ps = u.role === 'TL' ? partners.filter((p) => p.status === 'ACTIVE' && owningTl(p) === u.id) : partners.filter((p) => p.stores.some((s) => s.assigned.includes(u.id) && s.status === 'ACTIVE'));
+      return {
+        id: u.id, name: u.fullName, role: u.role, tlLevel: u.tlLevel, areaId: u.areaIds[0], email: u.email, phone: u.phone, registeredAt: u.activatedAt,
+        leader: u.supervisorId ? userById(u.supervisorId).fullName : null, partners: ps.map((p) => p.partnerName),
+        today: !isWorkday(today) ? 'OFF' : a ? a.status : 'NONE',
+      };
+    })
     .sort((a, b) => ['TL', 'SR', 'SA'].indexOf(a.role) - ['TL', 'SR', 'SA'].indexOf(b.role) || a.name.localeCompare(b.name));
 }
-
-/**
- * A1/A4 — performa pipeline pinjaman (submitted, accepted, paid out apps, paid out unit, paid out amount).
- * months: daftar 'YYYY-MM'. Return total, tren bulanan, breakdown per area/TL/SA-SR/toko.
- */
-export async function aplPerformance(areaIds, months, { retry = false } = {}) {
-  const empty = await listGate(retry);
-  const scope = empty ? [] : loanStats.filter((l) => inArea(areaIds, l.areaId));
-  const inRange = scope.filter((l) => months.includes(l.month));
-  const group = (keyFn, labelFn, kind) => {
-    const m = new Map();
-    inRange.forEach((l) => { const k = keyFn(l); if (k == null) return; if (!m.has(k)) m.set(k, []); m.get(k).push(l); });
-    return [...m.entries()].map(([k, rows]) => ({ id: k, ...labelFn(k, rows), ...sumStats(rows), target: kind ? months.reduce((t, ym) => t + (targets[`${kind}:${k}:${ym}`] ?? 0), 0) : null }))
-      .sort((a, b) => b.paidOutAmount - a.paidOutAmount);
-  };
-  const storeInfo = (id) => { const p = partners.find((x) => x.stores.some((s) => s.id === id)); return { p, s: p.stores.find((s) => s.id === id) }; };
-  return {
-    total: sumStats(inRange),
-    trend: MONTHS.map((ym) => ({ month: ym, ...sumStats(scope.filter((l) => l.month === ym)) })),
-    byArea: group((l) => l.areaId, (k) => ({ name: AREAS.find((a) => a.id === k).name })),
-    byTl: group((l) => l.tlId, (k) => { const u = userById(k); return { name: u.fullName, role: 'TL', tlLevel: u.tlLevel, areaId: u.areaIds[0] }; }, 'tl'),
-    bySales: group((l) => l.salesId, (k) => { const u = userById(k); return { name: u.fullName, role: u.role, areaId: u.areaIds[0], leader: userById(u.supervisorId)?.fullName }; }, 'sales'),
-    byStore: group((l) => l.storeId, (k) => { const { p, s } = storeInfo(k); return { name: s.name, partnerName: p.partnerName, areaId: p.areaId, sales: s.assigned.map((id) => userById(id)?.fullName).join(', ') || null }; }, 'store'),
-  };
+/** Ringkasan orang pada periode: penjualan & produktivitas. */
+export async function personSummary(userId, period) {
+  await wait(200);
+  const u = userById(userId);
+  const ls = loans.filter((l) => (u.role === 'TL' ? l.tlId === u.id : l.salesId === u.id) && inP(wibDate(l.submittedAt), period));
+  return { sales: salesStats(ls), productivity: productivity([u.id], period) };
 }
 
-/** Tarif tier: "above" → pencapaian > batas; "below" → nilai < batas. Tanpa tier yang cocok → 0. */
-export function tierRate(component, value) {
-  if (component.type === 'tierAbove') return [...component.tiers].sort((a, b) => b.above - a.above).find((t) => value > t.above)?.rate ?? 0;
-  if (component.type === 'tierBelow') return [...component.tiers].sort((a, b) => a.below - b.below).find((t) => value < t.below)?.rate ?? 0;
-  return 0;
-}
-/** Skema yang berlaku pada bulan tertentu (berlaku mulai ≤ bulan). */
-function schemeFor(recipient, ym) {
+// ------------------------------------------------------------------ Insentif (APL B6, Super Admin E3)
+/** Versi skema yang berlaku pada bulan ym: effectiveFrom terbesar yang ≤ ym. */
+export function versionFor(recipient, ym) {
   const s = schemes.find((x) => x.recipient === recipient);
-  const version = [s, ...(s.previous ?? [])].find((v) => v.effectiveFrom <= ym) ?? s;
-  return version;
+  return [...s.versions].sort((a, b) => (a.effectiveFrom < b.effectiveFrom ? 1 : -1)).find((v) => v.effectiveFrom <= ym) ?? s.versions[0];
 }
+/** Status versi dihitung dari bulan berjalan: ACTIVE | SCHEDULED | ARCHIVED. */
+export function versionStatus(s, v) {
+  const active = versionFor(s.recipient, CURRENT_MONTH);
+  if (v.version === active.version) return 'ACTIVE';
+  return v.effectiveFrom > CURRENT_MONTH ? 'SCHEDULED' : 'ARCHIVED';
+}
+/** Tier yang cocok: nilai > from (tier pertama ≥ 0) dan ≤ to (to null = tak terbatas). */
+export function tierFor(component, value) {
+  const tiers = [...component.tiers].sort((a, b) => a.from - b.from);
+  return tiers.find((t, i) => (i === 0 ? value >= t.from : value > t.from) && (t.to == null || value <= t.to)) ?? tiers[tiers.length - 1];
+}
+export const tierLabel = (t) => (t.to == null ? `> ${t.from}%` : t.from === 0 ? `0% s/d ${t.to}%` : `> ${t.from}% s/d ${t.to}%`);
+const fmtRp = (n) => `Rp\u00A0${Math.round(n).toLocaleString("id-ID")}`;
+const rate = (r) => `${String(r).replace('.', ',')}%`;
 
 /**
- * A5 — estimasi insentif bulan ym.
- * SA/SR: daily fee × hari hadir + tier paid out × total paid out. Partner/Toko (offline retailer): volume tier + collection (MFP) tier × paid out toko.
+ * Hasil (estimasi) insentif bulan ym untuk TL, SA/SR, dan partner di area (null = semua). Target read-only (sumber TBD).
+ * Baris: { kind, id, name, role, areaId, target, paidOutAmount, achievement, tier, components:[{label, amount, detail}], total, version, status }.
  */
-export async function aplIncentives(areaIds, ym, { retry = false } = {}) {
+export function computeIncentives(areaIds, ym) {
+  const range = monthRange(ym);
+  const paidIn = loans.filter((l) => l.status === 'PAID_OUT' && inArea(areaIds, l.areaId) && inP(wibDate(l.paidOutAt), range));
+  const tgt = (storeIds) => [...new Set(storeIds)].reduce((a, id) => a + (targets[`${id}:${ym}`] ?? 0), 0);
+  const days = (uid) => attendance.filter((a) => a.userId === uid && inP(a.date, range) && a.status !== 'ABSENT').length;
+  const status = ym === CURRENT_MONTH ? 'ESTIMATE' : 'PAID';
+  const rows = [];
+  const group = (key) => { const m = new Map(); paidIn.forEach((l) => { const k = l[key]; if (k == null) return; m.set(k, [...(m.get(k) ?? []), l]); }); return m; };
+  const person = (kind, id, ls, recipient, compKey, compLabel, extra) => {
+    const u = userById(id); const v = versionFor(recipient, ym);
+    const fee = v.components.find((c) => c.key === 'dailyFee'); const comp = v.components.find((c) => c.key === compKey);
+    const paid = ls.reduce((a, l) => a + l.amount, 0); const target = tgt(ls.map((l) => l.storeId)); const ach = pct(paid, target); const t = tierFor(comp, ach); const d = days(id);
+    const components = [{ label: 'Daily Fee', amount: d * fee.amount, detail: `${d} hari × ${fmtRp(fee.amount)}` }, { label: compLabel, amount: (paid * t.rate) / 100, detail: `Tarif ${rate(t.rate)}${extra}` }];
+    rows.push({ kind, id, name: u.fullName, role: kind === 'TL' ? 'TL' : u.role, tlLevel: u.tlLevel, areaId: u.areaIds[0], target, paidOutAmount: paid, achievement: ach, tier: tierLabel(t), components, total: components.reduce((a, c) => a + c.amount, 0), version: v.version, status });
+  };
+  group('salesId').forEach((ls, id) => person('SALES', id, ls, userById(id).role, 'paidOut', 'Paid Out Incentive', ''));
+  group('tlId').forEach((ls, id) => person('TL', id, ls, userById(id).tlLevel === 'SENIOR' ? 'TL_SENIOR' : 'TL_JUNIOR', 'leader', 'Leader Incentive', ' × paid out tim'));
+  group('partnerId').forEach((ls, id) => {
+    const p = findP(id); const paid = ls.reduce((a, l) => a + l.amount, 0); const target = tgt(ls.map((l) => l.storeId)); const ach = pct(paid, target);
+    if (p.channel === 'NON_STORE') {
+      const v = versionFor('PARTNER_AFFILIATE', ym); const c = v.components[0];
+      const components = [{ label: c.label, amount: (paid * c.rate) / 100, detail: `${rate(c.rate)} dari disbursement` }];
+      rows.push({ kind: 'PARTNER', id, name: p.partnerName, role: 'Partner', areaId: p.areaId, target, paidOutAmount: paid, achievement: ach, tier: '-', components, total: components[0].amount, version: v.version, status });
+      return;
+    }
+    const v = versionFor('PARTNER_RETAIL', ym); const vol = v.components.find((c) => c.key === 'volume'); const col = v.components.find((c) => c.key === 'collection');
+    const storeIds = [...new Set(ls.map((l) => l.storeId))];
+    const m = storeIds.reduce((a, sid) => a + (mfp[`${sid}:${ym}`] ?? 0), 0) / storeIds.length;
+    const tv = tierFor(vol, ach); const tc = tierFor(col, m);
+    const components = [
+      { label: 'Volume Incentive', amount: (paid * tv.rate) / 100, detail: `Tarif ${rate(tv.rate)}` },
+      { label: 'Collection Incentive (MFP)', amount: (paid * tc.rate) / 100, detail: `MFP ${m.toFixed(1).replace('.', ',')}% · tier ${tierLabel(tc)} · tarif ${rate(tc.rate)}` },
+    ];
+    rows.push({ kind: 'PARTNER', id, name: p.partnerName, role: 'Partner', areaId: p.areaId, target, paidOutAmount: paid, achievement: ach, tier: tierLabel(tv), components, total: components.reduce((a, c) => a + c.amount, 0), version: v.version, status });
+  });
+  return rows.sort((a, b) => b.total - a.total);
+}
+/** Hasil insentif dengan filter { kind, role, area }. */
+export async function incentiveResults(areaIds, ym, f = {}, { retry = false } = {}) {
   const empty = await listGate(retry);
-  const rows = empty ? [] : loanStats.filter((l) => inArea(areaIds, l.areaId) && l.month === ym);
-  const sales = new Map();
-  rows.filter((l) => l.salesId).forEach((l) => { sales.set(l.salesId, [...(sales.get(l.salesId) ?? []), l]); });
-  const salesRows = [...sales.entries()].map(([id, ls]) => {
-    const u = userById(id);
-    const sc = schemeFor(u.role, ym);
-    const fee = sc.components.find((c) => c.key === 'dailyFee');
-    const po = sc.components.find((c) => c.key === 'paidOut');
-    const paid = ls.reduce((a, l) => a + l.paidOutAmount, 0);
-    const target = targets[`sales:${id}:${ym}`] ?? 0;
-    const achievement = target ? (paid / target) * 100 : 0;
-    const rate = tierRate(po, achievement);
-    const days = attendance[`${id}:${ym}`] ?? 0;
-    const dailyFee = days * fee.amount;
-    const paidOutIncentive = (paid * rate) / 100;
-    return { id, name: u.fullName, role: u.role, areaId: u.areaIds[0], stores: ls.length, target, paidOutAmount: paid, achievement, rate, days, feePerDay: fee.amount, dailyFee, paidOutIncentive, total: dailyFee + paidOutIncentive };
-  }).sort((a, b) => b.total - a.total);
-  const storeRows = rows.map((l) => {
-    const p = partners.find((x) => x.id === l.partnerId);
-    const s = p.stores.find((x) => x.id === l.storeId);
-    const sc = schemeFor('PARTNER_RETAIL', ym);
-    const vol = sc.components.find((c) => c.key === 'volume');
-    const col = sc.components.find((c) => c.key === 'collection');
-    const target = targets[`store:${l.storeId}:${ym}`] ?? 0;
-    const achievement = target ? (l.paidOutAmount / target) * 100 : 0;
-    const mfpPct = mfp[`${l.storeId}:${ym}`];
-    const volRate = tierRate(vol, achievement);
-    const colRate = tierRate(col, mfpPct);
-    const volumeIncentive = (l.paidOutAmount * volRate) / 100;
-    const collectionIncentive = (l.paidOutAmount * colRate) / 100;
-    return { id: l.storeId, name: s.name, partnerName: p.partnerName, areaId: p.areaId, target, paidOutAmount: l.paidOutAmount, achievement, volRate, mfp: mfpPct, colRate, volumeIncentive, collectionIncentive, total: volumeIncentive + collectionIncentive };
-  }).sort((a, b) => b.total - a.total);
-  return { sales: salesRows, stores: storeRows, payday: { sales: schemeFor('SA', ym).payday, partner: schemeFor('PARTNER_RETAIL', ym).payday } };
+  if (empty) return [];
+  return computeIncentives(areaIds, ym).filter((r) => (!f.kind || r.kind === f.kind) && (!f.role || r.role === f.role) && (!f.area || r.areaId === Number(f.area)));
 }
 
-// ------------------------------------------------------------------ Skema insentif (S1–S2)
+// ------------------------------------------------------------------ Skema insentif (Super Admin E1–E2)
+const schemeView = (s) => ({
+  ...clone(s), active: clone(versionFor(s.recipient, CURRENT_MONTH)),
+  versions: s.versions.map((v) => ({ ...clone(v), status: versionStatus(s, v) })).sort((a, b) => b.version - a.version),
+});
 export async function listSchemes({ retry = false } = {}) {
   const empty = await listGate(retry);
-  return empty ? [] : clone(schemes.map((s) => ({ ...s, previous: undefined })));
+  return empty ? [] : schemes.map(schemeView);
 }
-
-/**
- * Ubah skema: patch { payday, effectiveFrom, components }. Versi lama disimpan agar bulan sebelum "berlaku mulai" tetap memakai tarif lama.
- */
-export async function updateScheme(id, patch, session) {
-  await wait(600);
+export async function getScheme(id) {
+  await wait(150);
+  return schemeView(schemes.find((x) => x.id === id));
+}
+/** "Buat Versi Baru": salin versi terbaru menjadi draf (atau kembalikan draf yang ada). */
+export async function createDraft(id, session) {
+  await wait(250);
   const s = schemes.find((x) => x.id === id);
-  const prevVersion = clone({ ...s, previous: undefined, history: undefined });
-  const changes = [];
-  if (patch.payday !== s.payday) changes.push(`tanggal bayar ${s.payday} → ${patch.payday}`);
-  patch.components.forEach((c, i) => {
-    const o = s.components[i];
-    if (c.type === 'fixed' && c.amount !== o.amount) changes.push(`${c.label} Rp ${o.amount.toLocaleString('id-ID')} → Rp ${c.amount.toLocaleString('id-ID')}`);
-    if (c.type === 'percent' && c.rate !== o.rate) changes.push(`${c.label} ${o.rate}% → ${c.rate}%`);
-    if (c.tiers && JSON.stringify(c.tiers) !== JSON.stringify(o.tiers)) changes.push(`tier ${c.label}`);
-  });
-  s.previous = [prevVersion, ...(s.previous ?? [])];
-  Object.assign(s, { payday: patch.payday, effectiveFrom: patch.effectiveFrom, components: clone(patch.components), updatedAt: now(), updatedBy: actorOf(session) });
-  s.history.unshift({ at: now(), by: actorOf(session), text: `Diubah, berlaku mulai ${patch.effectiveFrom}: ${changes.join('; ') || 'tanpa perubahan nilai'}` });
-  return clone({ ...s, previous: undefined });
+  if (!s.draft) {
+    const latest = [...s.versions].sort((a, b) => b.version - a.version)[0];
+    s.draft = { payday: latest.payday, components: clone(latest.components), createdBy: actorOf(session), createdAt: now(), updatedAt: now() };
+  }
+  return schemeView(s);
+}
+export async function saveDraft(id, draft) {
+  await wait(300);
+  const s = schemes.find((x) => x.id === id);
+  s.draft = { ...s.draft, payday: draft.payday, components: clone(draft.components), updatedAt: now() };
+  return schemeView(s);
+}
+export async function discardDraft(id) {
+  await wait(200);
+  const s = schemes.find((x) => x.id === id);
+  s.draft = null;
+  return schemeView(s);
+}
+/** "Terbitkan": draf menjadi versi baru, berlaku mulai bulan depan atau setelahnya (tidak pernah mundur). */
+export async function publishDraft(id, effectiveFrom, session) {
+  await wait(500);
+  const s = schemes.find((x) => x.id === id);
+  if (!s.draft || effectiveFrom <= CURRENT_MONTH) throw new ApiError('CONFLICT');
+  // Versi terjadwal di bulan yang sama atau setelahnya digantikan versi baru.
+  s.versions = s.versions.filter((v) => !(v.effectiveFrom >= effectiveFrom && v.effectiveFrom > CURRENT_MONTH));
+  const version = Math.max(0, ...s.versions.map((v) => v.version)) + 1;
+  s.versions.push({ version, effectiveFrom, payday: s.draft.payday, components: s.draft.components, createdBy: s.draft.createdBy, createdAt: s.draft.createdAt, publishedBy: actorOf(session), publishedAt: now() });
+  s.draft = null;
+  return schemeView(s);
 }
 
 export const isFinal = (status) => FINAL_STATUSES.includes(status);

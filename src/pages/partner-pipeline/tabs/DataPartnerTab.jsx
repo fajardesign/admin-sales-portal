@@ -62,7 +62,7 @@ export function DataPartnerTab({ partner: p, onGoStores, onBank, onRetryPic, ret
           fv('Diverifikasi oleh / pada', p.bank.verifiedBy ? `${p.bank.verifiedBy} · ${formatDateTime(p.bank.verifiedAt)}` : null),
         ]} />
         <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>
-          {editable ? 'Fase 1 tanpa inquiry otomatis: cocokkan bank, nomor, dan nama rekening dengan dokumen buku rekening yang diunggah.' : 'Verifikasi hanya dapat diubah saat status Under Review.'}
+          {editable ? 'Fase 1 tanpa inquiry otomatis: cocokkan bank, nomor, dan nama rekening dengan dokumen buku rekening yang diunggah.' : p.status === 'ACTIVE' ? 'Data rekening tidak dapat diubah setelah partner aktif.' : 'Verifikasi hanya dapat diubah saat status Under Review.'}
         </span>
       </SectionCard>
 
