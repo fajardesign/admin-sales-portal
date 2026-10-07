@@ -3,22 +3,33 @@ import { Icon } from '../icons/Icon.jsx';
 import { CompactButton } from '../actions/CompactButton.jsx';
 import { STATUS_META } from './Alert.jsx';
 
-function HeaderMedia({ status, icon }) {
-  if (status) { const m = STATUS_META[status]; return <span style={{ padding: 10, borderRadius: 999, background: `var(--state-${m.k}-lighter)`, color: `var(--state-${m.k}-base)`, display: 'flex' }}><Icon name={m.icon} /></span>; }
-  if (icon) return <span style={{ padding: 10, borderRadius: 999, background: 'var(--bg-white-0)', boxShadow: 'var(--shadow-stroke)', color: 'var(--icon-sub-600)', display: 'flex' }}>{typeof icon === 'string' ? <Icon name={icon} /> : icon}</span>;
+function HeaderMedia({ status, icon, small }) {
+  if (status) {
+    const m = STATUS_META[status];
+    if (small) return <span style={{ display: 'flex', color: `var(--state-${m.k}-base)` }}><Icon name={m.icon} size={24} /></span>;
+    return <span style={{ padding: 10, borderRadius: 999, background: `var(--state-${m.k}-lighter)`, color: `var(--state-${m.k}-base)`, display: 'flex' }}><Icon name={m.icon} /></span>;
+  }
+  if (icon) {
+    const glyph = typeof icon === 'string' ? <Icon name={icon} size={small ? 24 : 20} /> : icon;
+    if (small) return <span style={{ display: 'flex', color: 'var(--icon-sub-600)' }}>{glyph}</span>;
+    return <span style={{ padding: 10, borderRadius: 999, background: 'var(--bg-white-0)', boxShadow: 'var(--shadow-stroke)', color: 'var(--icon-sub-600)', display: 'flex' }}>{glyph}</span>;
+  }
   return null;
 }
 
-/** Modal Header [1.1] — title + description, optional left icon or status medallion, close button. */
-export function ModalHeader({ title, description, icon, status, onClose, style }) {
+/** Modal Header [1.1] — size md (Label/Small title + Paragraph/X Small description; gap 16 basic, 14 with icon/status medallion) | sm (56px, title only, bare 24px icon, gap 12).
+ * Vertically centred, padding 16/16/16/20, bottom divider, close button. */
+export function ModalHeader({ title, description, icon, status, size = 'md', onClose, style }) {
+  const small = size === 'sm';
+  const media = icon || status;
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '16px 16px 16px 20px', background: 'var(--bg-white-0)', boxShadow: 'inset 0 -1px 0 var(--stroke-soft-200)', ...style }}>
-      <HeaderMedia status={status} icon={icon} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: small ? 12 : media ? 14 : 16, padding: '16px 16px 16px 20px', background: 'var(--bg-white-0)', boxShadow: 'inset 0 -1px 0 var(--stroke-soft-200)', ...style }}>
+      <HeaderMedia status={status} icon={icon} small={small} />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
         <span style={{ font: 'var(--label-sm)', letterSpacing: 'var(--label-sm-ls)', color: 'var(--text-strong-950)' }}>{title}</span>
-        {description && <span style={{ font: (icon || status) ? 'var(--paragraph-xs)' : 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>{description}</span>}
+        {description && !small && <span style={{ font: 'var(--paragraph-xs)', letterSpacing: 'var(--paragraph-xs-ls)', color: 'var(--text-sub-600)' }}>{description}</span>}
       </div>
-      {onClose && <CompactButton variant="ghost" icon={<Icon name="CloseLine" />} onClick={onClose} aria-label="Close" />}
+      {onClose && <CompactButton variant="ghost" icon={<Icon name="CloseLine" />} onClick={onClose} aria-label="Tutup" />}
     </div>
   );
 }

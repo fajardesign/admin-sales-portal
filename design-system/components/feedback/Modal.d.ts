@@ -9,6 +9,7 @@ export interface ModalHeaderProps { title?: React.ReactNode;
   description?: React.ReactNode;
   icon?: string | React.ReactNode;
   status?: "error" | "warning" | "success" | "information";
+  size?: "md" | "sm";
   onClose?: () => void;
   style?: React.CSSProperties; }
 export declare function ModalHeader(props: ModalHeaderProps): React.ReactElement | null;

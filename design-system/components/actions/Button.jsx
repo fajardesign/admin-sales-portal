@@ -22,7 +22,8 @@ function look(variant, tone, hover) {
   }
 }
 
-/** Buttons [1.1] — primary action button. variant: filled | stroke | lighter | ghost; tone: primary | neutral | error. */
+/** Buttons [1.1] — action button, heights 44/40/36/32 (md/sm/xs/2xs). variant: filled | stroke | ghost (+ lighter, local only); tone: primary (+ neutral | error, local only).
+ * Disabled: bg-weak-50 for every variant. Ghost focus: white bg + 1px tone stroke + focus ring. */
 export function Button({ children, variant = 'filled', tone = 'primary', size = 'md', leftIcon, rightIcon, iconOnly = false, disabled = false, fullWidth = false, onClick, type = 'button', style, ...rest }) {
   const [hover, setHover] = React.useState(false);
   const [focus, setFocus] = React.useState(false);
@@ -30,6 +31,7 @@ export function Button({ children, variant = 'filled', tone = 'primary', size = 
   const l = look(variant, tone, hover && !disabled);
   const t = TONES[tone] || TONES.primary;
   const pad = iconOnly ? (s.pIcon ?? s.p) : s.p;
+  const ghostFocus = variant === 'ghost' && focus && !disabled;
   return (
     <button type={type} disabled={disabled} onClick={onClick}
       onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
@@ -37,9 +39,9 @@ export function Button({ children, variant = 'filled', tone = 'primary', size = 
       style={{
         display: fullWidth ? 'flex' : 'inline-flex', width: fullWidth ? '100%' : undefined, alignItems: 'center', justifyContent: 'center', gap: s.gap,
         padding: typeof pad === 'number' ? pad : pad, borderRadius: s.r, border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
-        background: disabled ? (variant === 'ghost' ? 'transparent' : 'var(--bg-weak-50)') : l.bg,
+        background: disabled ? 'var(--bg-weak-50)' : ghostFocus ? 'var(--bg-white-0)' : l.bg,
         color: disabled ? 'var(--text-disabled-300)' : l.fg,
-        boxShadow: [disabled ? 'none' : l.sh, focus && !disabled ? t.focus : null].filter((x) => x && x !== 'none').join(', ') || 'none',
+        boxShadow: [disabled ? 'none' : l.sh, ghostFocus ? `inset 0 0 0 1px ${t.base}` : null, focus && !disabled ? t.focus : null].filter((x) => x && x !== 'none').join(', ') || 'none',
         font: 'var(--label-sm)', letterSpacing: 'var(--label-sm-ls)', whiteSpace: 'nowrap', boxSizing: 'border-box',
         transition: 'background var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast)', ...style,
       }} {...rest}>
