@@ -23,3 +23,10 @@ Ikuti aturan di `/Users/amarbank/Documents/okf_repository_design/CLAUDE.md`. Set
 - Daftarkan file flow baru di `index.md` folder-nya, dan catat setiap perubahan di `products/sales_dashboard/log.md`.
 - Path kode dari repo ini ditulis dengan prefix `admin-sales-portal/` (contoh `admin-sales-portal/src/pages/Login.jsx`).
 - Sumber desain mentah disimpan di `design-sources/<nama>/` (di repo ini).
+
+## Sinkronisasi ke Figma (wajib approval)
+Setiap perubahan atau penambahan (kode, desain, layar, komponen) **tidak boleh langsung di-generate atau ditulis ke Figma**.
+- Selesaikan dan verifikasi perubahan di repo dulu, lalu **tanya dan tunggu approval eksplisit dari user** sebelum menulis ke Figma
+  (capture `generate_figma_design`, `use_figma` yang mengubah canvas, membuat frame/section/komponen/variable).
+- Approval berlaku untuk satu permintaan itu saja; perubahan berikutnya perlu approval baru.
+- Membaca Figma (metadata, screenshot, variable, design context) untuk audit atau referensi boleh tanpa approval.
