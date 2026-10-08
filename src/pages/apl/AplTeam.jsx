@@ -14,7 +14,7 @@ import { navigate, withQuery } from '../../lib/router.js';
 import { PeriodFilter } from './aplCommon.jsx';
 import { useAplScope, usePeriod } from './aplPeriod.js';
 
-const TODAY_BADGE = { ON_TIME: 'completed', LATE: 'pending', ABSENT: 'failed', NONE: 'disabled', OFF: 'disabled' };
+const TODAY_BADGE = { ON_TIME: 'completed', LATE: 'pending', CHECKED_OUT: 'information', NONE: 'disabled', OFF: 'disabled' };
 
 /** B5 · Tim (PRD v3): TL dan SA/SR aktif di area APL dengan atasan, partner, dan absensi hari ini; klik untuk detail orang. */
 export function AplTeam(props) {

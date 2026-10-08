@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { passwordPolicy, validatePksFile, validateReason, validateReferralCode, validateUserForm } from '../lib/validation.js';
 import { formatDateTime, formatDateWIB, formatDuration, formatPhone, formatRp, normalizePhone } from '../lib/format.js';
-import { findByIdentifier, tierFor, tierLabel, verificationGap } from '../api/mockApi.js';
+import { findByIdentifier, tierFor, tierLabel, verificationGap, visitWeeks } from '../api/mockApi.js';
+import { attendance, distanceKm, users, visits } from '../api/db.js';
+import { AREAS, OFFICES } from '../lib/constants.js';
 
 const ok = { email: 'budi@amarbank.co.id', phone: '081234567890', fullName: 'Budi Santoso', role: 'REVIEWER', tlLevel: '', areaIds: [], leaderId: '' };
 const leaders = [{ value: '3', label: 'Hasan Basri' }];
@@ -63,6 +65,38 @@ describe('identitas login email atau nomor telepon', () => {
     expect(rina.fullName).toBe('Rina Saraswati');
     ['0' + rina.phone, '62' + rina.phone, '+62 ' + rina.phone, rina.phone].forEach((id) => expect(findByIdentifier(id)?.id).toBe(rina.id));
     expect(findByIdentifier('rina.saraswati')).toBeUndefined();
+  });
+});
+
+describe('absensi & kunjungan (revisi stakeholder 2026-10-08)', () => {
+  const area = (uid) => AREAS.find((a) => a.id === users.find((u) => u.id === uid).areaIds[0]);
+  const localMin = (d, a) => { const t = new Date(new Date(d).getTime() + a.utcOffset * 3600e3); return t.getUTCHours() * 60 + t.getUTCMinutes(); };
+  it('Tepat Waktu = check in ≤ 10:00 waktu lokal, Terlambat > 10:00', () => {
+    attendance.filter((a) => a.clockInAt).forEach((a) => {
+      const m = localMin(a.clockInAt, area(a.userId));
+      expect(a.status === 'ON_TIME' ? m <= 600 : m > 600).toBe(true);
+    });
+  });
+  it('lokasi check in dalam radius 3 km dari kantor terdaftar atau toko', () => {
+    attendance.filter((a) => a.place).forEach((a) => {
+      expect(a.distanceKm).toBeLessThanOrEqual(3);
+      if (a.place.kind === 'OFFICE') expect(distanceKm(OFFICES.find((o) => o.name === a.place.name), a)).toBeLessThanOrEqual(3);
+    });
+  });
+  it('kunjungan mulai 12:00 lokal, radius 3 km, maks. 1 per hari', () => {
+    const seen = new Set();
+    visits.forEach((v) => {
+      expect(localMin(v.checkInAt, area(v.userId))).toBeGreaterThanOrEqual(720);
+      expect(v.distanceKm).toBeLessThanOrEqual(3);
+      const k = `${v.userId}|${v.date}`;
+      expect(seen.has(k)).toBe(false);
+      seen.add(k);
+    });
+  });
+  it('target mingguan = hari kerja Senin–Sabtu', () => {
+    const w = visitWeeks(15, { from: '2026-09-07', to: '2026-09-12' })[0];
+    expect(w.target).toBe(6);
+    expect(w.complete).toBe(w.visited >= 6);
   });
 });
 

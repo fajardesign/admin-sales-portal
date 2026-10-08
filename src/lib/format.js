@@ -15,6 +15,15 @@ export function formatDateWIB(dt) {
   };
 }
 
+/** Jam lokal area: Date + offset UTC (7 WIB, 8 WITA) → "09:45 WITA". */
+export function formatTimeLocal(dt, area) {
+  if (!dt) return '-';
+  const t = new Date(new Date(dt).getTime() + (area?.utcOffset ?? 7) * 3600e3);
+  return `${pad(t.getUTCHours())}:${pad(t.getUTCMinutes())} ${area?.tz ?? 'WIB'}`;
+}
+/** Jarak km → "0,4 km". */
+export const formatKm = (km) => `${(km ?? 0).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km`;
+
 /** Format tampilan PRD: "DD MMM YYYY, HH:mm WIB"; kosong → "-". */
 export function formatDateTime(dt) {
   if (!dt) return '-';

@@ -2,15 +2,26 @@
 
 /** Master area (hard-coded fase 1, PRD §3 F2). Wilayah dipakai untuk alamat partner contoh. */
 export const AREAS = [
-  { id: 1, code: 'MKS', name: 'Makassar', province: 'Sulawesi Selatan', city: 'Kota Makassar', district: 'Panakkukang', village: 'Pandang', lat: -5.1477, lng: 119.4327 },
-  { id: 2, code: 'BDG', name: 'Bandung', province: 'Jawa Barat', city: 'Kota Bandung', district: 'Coblong', village: 'Dago', lat: -6.8915, lng: 107.6107 },
-  { id: 3, code: 'MDN', name: 'Medan', province: 'Sumatera Utara', city: 'Kota Medan', district: 'Medan Petisah', village: 'Sei Sikambing D', lat: 3.5952, lng: 98.6722 },
-  { id: 4, code: 'SBY', name: 'Surabaya', province: 'Jawa Timur', city: 'Kota Surabaya', district: 'Tegalsari', village: 'Kedungdoro', lat: -7.2575, lng: 112.7521 },
-  { id: 5, code: 'JKT', name: 'Jakarta', province: 'DKI Jakarta', city: 'Kota Jakarta Barat', district: 'Grogol Petamburan', village: 'Tanjung Duren Selatan', lat: -6.1767, lng: 106.7905 },
-  { id: 6, code: 'DPS', name: 'Denpasar', province: 'Bali', city: 'Kota Denpasar', district: 'Denpasar Barat', village: 'Dauh Puri', lat: -8.6705, lng: 115.2126 },
-  { id: 7, code: 'PLG', name: 'Palembang', province: 'Sumatera Selatan', city: 'Kota Palembang', district: 'Ilir Timur I', village: 'Sungai Pangeran', lat: -2.9761, lng: 104.7754 },
+  { id: 1, code: 'MKS', tz: 'WITA', utcOffset: 8, name: 'Makassar', province: 'Sulawesi Selatan', city: 'Kota Makassar', district: 'Panakkukang', village: 'Pandang', lat: -5.1477, lng: 119.4327 },
+  { id: 2, code: 'BDG', tz: 'WIB', utcOffset: 7, name: 'Bandung', province: 'Jawa Barat', city: 'Kota Bandung', district: 'Coblong', village: 'Dago', lat: -6.8915, lng: 107.6107 },
+  { id: 3, code: 'MDN', tz: 'WIB', utcOffset: 7, name: 'Medan', province: 'Sumatera Utara', city: 'Kota Medan', district: 'Medan Petisah', village: 'Sei Sikambing D', lat: 3.5952, lng: 98.6722 },
+  { id: 4, code: 'SBY', tz: 'WIB', utcOffset: 7, name: 'Surabaya', province: 'Jawa Timur', city: 'Kota Surabaya', district: 'Tegalsari', village: 'Kedungdoro', lat: -7.2575, lng: 112.7521 },
+  { id: 5, code: 'JKT', tz: 'WIB', utcOffset: 7, name: 'Jakarta', province: 'DKI Jakarta', city: 'Kota Jakarta Barat', district: 'Grogol Petamburan', village: 'Tanjung Duren Selatan', lat: -6.1767, lng: 106.7905 },
+  { id: 6, code: 'DPS', tz: 'WITA', utcOffset: 8, name: 'Denpasar', province: 'Bali', city: 'Kota Denpasar', district: 'Denpasar Barat', village: 'Dauh Puri', lat: -8.6705, lng: 115.2126 },
+  { id: 7, code: 'PLG', tz: 'WIB', utcOffset: 7, name: 'Palembang', province: 'Sumatera Selatan', city: 'Kota Palembang', district: 'Ilir Timur I', village: 'Sungai Pangeran', lat: -2.9761, lng: 104.7754 },
 ];
 export const areaName = (id) => AREAS.find((a) => a.id === id)?.name ?? '-';
+
+// Absensi & kunjungan (revisi stakeholder 2026-10-08). Jam memakai waktu lokal area (WIB/WITA).
+/** Kantor terdaftar untuk check in absensi: data contoh 1 kantor per area. */
+export const OFFICES = AREAS.map((a) => ({ areaId: a.id, name: `Kantor Amar Bank ${a.name}`, lat: +(a.lat + 0.004).toFixed(6), lng: +(a.lng - 0.003).toFixed(6) }));
+/** Radius check in absensi (kantor atau toko partner) dan kunjungan (toko), km. */
+export const CHECK_IN_RADIUS_KM = 3;
+/** Check in absensi ≤ 10:00 waktu lokal = Tepat Waktu; kunjungan bisa check in mulai 12:00 waktu lokal. */
+export const ON_TIME_LIMIT = '10:00';
+export const VISIT_START = '12:00';
+/** Label laporan absensi (Bahasa Indonesia, pemetaan dari Check in / On time / Late / Check out / Absen). */
+export const ATTENDANCE_LABEL = { CHECKED_IN: 'Sudah Check In', ON_TIME: 'Tepat Waktu', LATE: 'Terlambat', CHECKED_OUT: 'Sudah Check Out', ABSENT: 'Absen' };
 
 /** Status partner (PRD §2). */
 export const PARTNER_STATUS = {

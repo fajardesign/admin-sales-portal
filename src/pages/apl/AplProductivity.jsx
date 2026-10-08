@@ -6,7 +6,7 @@ import { ListCard } from '../../components/ListCard.jsx';
 import { aplProductivity, subordinateOptions } from '../../api/mockApi.js';
 import { useScenario } from '../../dev/scenario.js';
 import { nowrap } from '../../lib/cells.jsx';
-import { TL_LEVEL, areaName } from '../../lib/constants.js';
+import { ATTENDANCE_LABEL, TL_LEVEL, areaName } from '../../lib/constants.js';
 import { formatPct } from '../../lib/format.js';
 import { navigate, withQuery } from '../../lib/router.js';
 import { PeriodFilter } from './aplCommon.jsx';
@@ -38,19 +38,17 @@ function AplProductivityView({ user, onLogout, query }) {
   const lead = { key: 'name', header: 'Nama', render: (r) => ({ priority: 'leading', title: nowrap(r.name), description: `${r.role === 'TL' ? `TL ${TL_LEVEL[r.tlLevel]}` : r.role} · ${areaName(r.areaId)}${r.leader ? ` · Atasan ${r.leader}` : ''}` }) };
   const columns = tab === 'absensi' ? [
     lead,
-    { key: 'days', header: 'Hari tercatat', align: 'right', render: (r) => n(r.attendance.days) },
-    { key: 'present', header: 'Hadir', align: 'right', render: (r) => n(r.attendance.present) },
-    { key: 'on', header: 'Tepat waktu', align: 'right', render: (r) => n(r.attendance.onTime) },
-    { key: 'late', header: 'Terlambat', align: 'right', render: (r) => n(r.attendance.late) },
-    { key: 'abs', header: 'Absen', align: 'right', render: (r) => n(r.attendance.absent) },
-    { key: 'avg', header: 'Rata-rata check-in', align: 'right', render: (r) => r.attendance.avgCheckIn ?? '-' },
+    { key: 'present', header: ATTENDANCE_LABEL.CHECKED_IN, align: 'right', render: (r) => n(r.attendance.present) },
+    { key: 'on', header: ATTENDANCE_LABEL.ON_TIME, align: 'right', render: (r) => n(r.attendance.onTime) },
+    { key: 'late', header: ATTENDANCE_LABEL.LATE, align: 'right', render: (r) => n(r.attendance.late) },
+    { key: 'out', header: ATTENDANCE_LABEL.CHECKED_OUT, align: 'right', render: (r) => n(r.attendance.checkedOut) },
+    { key: 'abs', header: ATTENDANCE_LABEL.ABSENT, align: 'right', render: (r) => n(r.attendance.absent) },
+    { key: 'avg', header: 'Rata-rata check in', align: 'right', render: (r) => r.attendance.avgCheckIn ?? '-' },
   ] : [
     lead,
-    { key: 'plan', header: 'Direncanakan', align: 'right', render: (r) => n(r.visits.planned) },
-    { key: 'done', header: 'Dikunjungi', align: 'right', render: (r) => n(r.visits.visited) },
-    { key: 'on', header: 'Tepat waktu', align: 'right', render: (r) => n(r.visits.onTime) },
-    { key: 'late', header: 'Terlambat', align: 'right', render: (r) => n(r.visits.late) },
-    { key: 'miss', header: 'Terlewat', align: 'right', render: (r) => n(r.visits.missed) },
+    { key: 'done', header: 'Hari dikunjungi', align: 'right', render: (r) => n(r.visits.visited) },
+    { key: 'target', header: 'Target', align: 'right', render: (r) => n(r.visits.target) },
+    { key: 'weeks', header: 'Minggu lengkap', align: 'right', render: (r) => (r.visits.weeks ? `${r.visits.weeksComplete}/${r.visits.weeks}` : '-') },
     { key: 'ach', header: 'Pencapaian', align: 'right', render: (r) => ({ priority: 'leading', title: formatPct(r.visits.achievement) }) },
   ];
   return (
@@ -68,7 +66,9 @@ function AplProductivityView({ user, onLogout, query }) {
         {(view === 'data' || view === 'loading') && <DataTable loading={view === 'loading'} rows={rows} columns={columns} minWidth={1000} onRowClick={setPerson} />}
       </ListCard>
       <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>
-        {tab === 'absensi' ? 'Hari kerja Senin–Sabtu. Check-in setelah 08:00 WIB dihitung terlambat (contoh; aturan jam kerja TBD).' : 'Pencapaian = dikunjungi / direncanakan (tanpa kunjungan dibatalkan dan yang belum jatuh tempo).'}
+        {tab === 'absensi'
+          ? 'Hari kerja Senin–Sabtu. Check in dengan selfie dan lokasi dalam radius 3 km dari kantor terdaftar atau toko partner. Check in setelah 10:00 waktu lokal (WIB/WITA) dihitung Terlambat; tidak check in sampai akhir hari dihitung Absen.'
+          : 'Target = 1 kunjungan per hari kerja Senin–Sabtu sampai kemarin (maks. 1 kunjungan dihitung per hari). Check in kunjungan mulai 12:00 waktu lokal di toko yang ditugaskan, radius 3 km. Minggu lengkap = target minggu itu tercapai.'}
       </span>
       {person && <ProductivityDrawer person={person} tab={tab} period={period} onClose={() => setPerson(null)} />}
     </AdminShell>

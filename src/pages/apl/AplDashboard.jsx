@@ -20,9 +20,9 @@ const SALES = [
   { key: 'paidOutAmount', label: 'Nominal cair', icon: 'MoneyDollarCircleLine', color: 'green', fmt: formatRp },
 ];
 const PROD = [
-  { key: 'attendanceRate', label: 'Tingkat kehadiran', hint: 'Check-in / hari kerja terjadwal', icon: 'CalendarLine', color: 'blue' },
-  { key: 'visitRate', label: 'Pencapaian kunjungan', hint: 'Dikunjungi / direncanakan', icon: 'MapPinLine', color: 'orange' },
-  { key: 'onTimeRate', label: 'Tepat waktu', hint: 'Check-in tepat waktu / hadir', icon: 'TimeLine', color: 'teal' },
+  { key: 'attendanceRate', label: 'Tingkat kehadiran', hint: 'Hari check in / hari kerja Senin–Sabtu', icon: 'CalendarLine', color: 'blue' },
+  { key: 'visitRate', label: 'Pencapaian kunjungan', hint: 'Hari dikunjungi / target (1 per hari kerja)', icon: 'MapPinLine', color: 'orange' },
+  { key: 'onTimeRate', label: 'Tepat waktu', hint: 'Check in ≤ 10:00 waktu lokal / hadir', icon: 'TimeLine', color: 'teal' },
 ];
 
 /** B1 · APL Dashboard (PRD v3): penjualan & produktivitas area dengan perbandingan periode sebelumnya; tiap kartu membuka detail. */

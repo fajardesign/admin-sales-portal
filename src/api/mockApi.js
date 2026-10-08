@@ -629,17 +629,43 @@ function salesStats(rows) {
 const scopeLoans = (areaIds, period, f = {}) => loans.filter((l) => inArea(areaIds, l.areaId) && inP(wibDate(l.submittedAt), period) && (!f.channel || l.channel === f.channel));
 
 const fieldUsers = (areaIds) => users.filter((u) => ['TL', 'SR', 'SA'].includes(u.role) && u.status === 'ACTIVE' && inArea(areaIds, u.areaIds[0]));
+/**
+ * Target kunjungan (revisi stakeholder 2026-10-08): 1 kunjungan per hari kerja Senin–Sabtu, sejak akun aktif, sampai kemarin
+ * (hari ini belum dihitung karena check-in kunjungan baru dibuka 12:00 lokal). Maks. 1 kunjungan dihitung per hari.
+ */
+function visitTarget(u, period) {
+  const start = wibDate(u.activatedAt);
+  const from = start > period.from ? start : period.from;
+  const yesterday = addDays(todayDate(), -1);
+  const to = period.to < yesterday ? period.to : yesterday;
+  return from <= to ? workdays({ from, to }) : 0;
+}
+const visitDays = (uid, period) => new Set(visits.filter((v) => v.userId === uid && inP(v.date, period)).map((v) => v.date)).size;
+/** Minggu (Senin–Sabtu) yang beririsan dengan periode: dikunjungi / target, lengkap bila target tercapai. closed = minggu sudah lewat. */
+export function visitWeeks(uid, period) {
+  const u = userById(uid);
+  const out = [];
+  const monday = (ymd) => { const d = new Date(`${ymd}T12:00:00Z`); return addDays(ymd, -((d.getUTCDay() + 6) % 7)); };
+  for (let w = monday(period.from); w <= period.to; w = addDays(w, 7)) {
+    const wp = { from: w > period.from ? w : period.from, to: addDays(w, 5) < period.to ? addDays(w, 5) : period.to };
+    const target = visitTarget(u, wp);
+    const visited = visitDays(uid, wp);
+    out.push({ start: w, visited, target, closed: addDays(w, 5) < todayDate(), complete: target > 0 && visited >= target });
+  }
+  return out;
+}
+
 function productivity(userIds, period) {
   const att = attendance.filter((a) => userIds.includes(a.userId) && inP(a.date, period));
   const present = att.filter((a) => a.status !== 'ABSENT').length;
-  const vs = visits.filter((v) => userIds.includes(v.userId) && inP(v.date, period) && v.status !== 'CANCELLED' && v.status !== 'SCHEDULED');
-  const done = vs.filter((v) => v.status === 'DONE').length;
+  const target = userIds.reduce((a, id) => a + visitTarget(userById(id), period), 0);
+  const done = userIds.reduce((a, id) => a + visitDays(id, period), 0);
   const scheduled = userIds.reduce((a, id) => {
     const start = wibDate(userById(id).activatedAt);
     const from = start > period.from ? start : period.from;
     return a + (from <= period.to ? workdays({ from, to: period.to }) : 0);
   }, 0);
-  return { attendanceRate: pct(present, scheduled), visitRate: pct(done, vs.length), onTimeRate: pct(att.filter((a) => a.status === 'ON_TIME').length, present) };
+  return { attendanceRate: pct(present, scheduled), visitRate: pct(done, target), onTimeRate: pct(att.filter((a) => a.status === 'ON_TIME').length, present) };
 }
 
 // ------------------------------------------------------------------ APL B1 Dashboard
@@ -730,20 +756,22 @@ export async function aplProductivity(areaIds, period, f = {}, { retry = false }
   const empty = await listGate(retry);
   const people = empty ? [] : fieldUsers(areaIds).filter((u) => (!f.role || u.role === f.role) && (!f.tl || u.id === Number(f.tl) || u.supervisorId === Number(f.tl)));
   return people.map((u) => {
+    const area = AREAS.find((a) => a.id === u.areaIds[0]);
     const att = attendance.filter((a) => a.userId === u.id && inP(a.date, period));
     const present = att.filter((a) => a.status !== 'ABSENT');
-    const mins = present.map((a) => { const t = new Date(new Date(a.clockInAt).getTime() + 7 * 3600e3); return t.getUTCHours() * 60 + t.getUTCMinutes(); });
+    const mins = present.map((a) => { const t = new Date(new Date(a.clockInAt).getTime() + area.utcOffset * 3600e3); return t.getUTCHours() * 60 + t.getUTCMinutes(); });
     const avg = mins.length ? Math.round(mins.reduce((a, b) => a + b, 0) / mins.length) : null;
-    const vs = visits.filter((v) => v.userId === u.id && inP(v.date, period) && v.status !== 'CANCELLED');
-    const counted = vs.filter((v) => v.status !== 'SCHEDULED');
-    const done = counted.filter((v) => v.status === 'DONE');
+    const target = visitTarget(u, period);
+    const visited = visitDays(u.id, period);
+    const weeks = visitWeeks(u.id, period).filter((w) => w.closed && w.target > 0);
     return {
       id: u.id, name: u.fullName, role: u.role, tlLevel: u.tlLevel, areaId: u.areaIds[0], leader: u.supervisorId ? userById(u.supervisorId).fullName : null,
       attendance: {
-        days: att.length, present: present.length, onTime: att.filter((a) => a.status === 'ON_TIME').length, late: att.filter((a) => a.status === 'LATE').length, absent: att.filter((a) => a.status === 'ABSENT').length,
-        avgCheckIn: avg == null ? null : `${String(Math.floor(avg / 60)).padStart(2, '0')}:${String(avg % 60).padStart(2, '0')}`,
+        days: att.length, present: present.length, onTime: att.filter((a) => a.status === 'ON_TIME').length, late: att.filter((a) => a.status === 'LATE').length,
+        checkedOut: att.filter((a) => a.clockOutAt).length, absent: att.filter((a) => a.status === 'ABSENT').length,
+        avgCheckIn: avg == null ? null : `${String(Math.floor(avg / 60)).padStart(2, '0')}:${String(avg % 60).padStart(2, '0')} ${area.tz}`,
       },
-      visits: { planned: vs.length, visited: done.length, onTime: done.filter((v) => v.outcome === 'ON_TIME').length, late: done.filter((v) => v.outcome === 'LATE').length, missed: counted.filter((v) => v.status === 'MISSED').length, achievement: pct(done.length, counted.length) },
+      visits: { visited, target, weeksComplete: weeks.filter((w) => w.complete).length, weeks: weeks.length, achievement: pct(visited, target) },
     };
   }).sort((a, b) => ['TL', 'SR', 'SA'].indexOf(a.role) - ['TL', 'SR', 'SA'].indexOf(b.role) || a.name.localeCompare(b.name));
 }
@@ -752,13 +780,14 @@ export async function attendanceDetail(userId, period) {
   await wait(200);
   return attendance.filter((a) => a.userId === userId && inP(a.date, period)).sort((a, b) => (a.date < b.date ? 1 : -1)).map(clone);
 }
-/** Detail kunjungan satu orang (terbaru di atas). */
+/** Detail kunjungan satu orang (terbaru di atas) + rekap mingguan (dikunjungi / target, Lengkap / Belum lengkap). */
 export async function visitDetail(userId, period) {
   await wait(200);
-  return visits.filter((v) => v.userId === userId && inP(v.date, period)).sort((a, b) => b.plannedAt - a.plannedAt).map((v) => {
+  const rows = visits.filter((v) => v.userId === userId && inP(v.date, period)).sort((a, b) => b.checkInAt - a.checkInAt).map((v) => {
     const p = findP(v.partnerId);
     return { ...clone(v), storeName: p.stores.find((x) => x.id === v.storeId).name, partnerName: p.partnerName };
   });
+  return { rows, weeks: visitWeeks(userId, period).filter((w) => w.target > 0 || w.visited > 0) };
 }
 
 // ------------------------------------------------------------------ APL B4 Partner
@@ -784,7 +813,8 @@ export async function aplPartners(areaIds, period, f = {}, { retry = false } = {
 }
 
 // ------------------------------------------------------------------ APL B5 Tim
-export const ATTENDANCE_TODAY = { ON_TIME: 'Tepat waktu', LATE: 'Terlambat', ABSENT: 'Absen', NONE: 'Belum check-in', OFF: 'Libur' };
+/** Absensi hari ini (revisi stakeholder 2026-10-08): label Bahasa Indonesia. */
+export const ATTENDANCE_TODAY = { ON_TIME: 'Sudah Check In · Tepat Waktu', LATE: 'Sudah Check In · Terlambat', CHECKED_OUT: 'Sudah Check Out', NONE: 'Belum Check In', OFF: 'Libur' };
 export async function aplTeam(areaIds, f = {}, { retry = false } = {}) {
   const empty = await listGate(retry);
   if (empty) return [];
@@ -798,7 +828,7 @@ export async function aplTeam(areaIds, f = {}, { retry = false } = {}) {
       return {
         id: u.id, name: u.fullName, role: u.role, tlLevel: u.tlLevel, areaId: u.areaIds[0], email: u.email, phone: u.phone, registeredAt: u.activatedAt,
         leader: u.supervisorId ? userById(u.supervisorId).fullName : null, partners: ps.map((p) => p.partnerName),
-        today: !isWorkday(today) ? 'OFF' : a ? a.status : 'NONE',
+        today: !isWorkday(today) ? 'OFF' : !a ? 'NONE' : a.clockOutAt ? 'CHECKED_OUT' : a.status,
       };
     })
     .sort((a, b) => ['TL', 'SR', 'SA'].indexOf(a.role) - ['TL', 'SR', 'SA'].indexOf(b.role) || a.name.localeCompare(b.name));
