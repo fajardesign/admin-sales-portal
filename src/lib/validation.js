@@ -11,7 +11,6 @@ export const MSG = {
 
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const PHONE_RE = /^8\d{7,11}$/; // setelah normalisasi: diawali 8, total 8–12 digit
-const USERNAME_RE = /^[a-z0-9._-]{4,30}$/;
 const NAME_RE = /^[A-Za-zÀ-ÿ .'-]+$/;
 
 /**
@@ -27,10 +26,6 @@ export function validateUserForm(form, { leaders = [] } = {}) {
   const phone = normalizePhone(form.phone);
   if (!phone) e.phone = MSG.required;
   else if (!PHONE_RE.test(phone)) e.phone = MSG.invalid;
-
-  const username = form.username.trim();
-  if (!username) e.username = MSG.required;
-  else if (!USERNAME_RE.test(username)) e.username = MSG.invalid;
 
   const name = form.fullName.trim();
   if (!name) e.fullName = MSG.required;
@@ -55,6 +50,15 @@ export function validateReason(v) {
   return undefined;
 }
 
+/** Kode Referral partner: wajib, huruf dan angka saja, maks. 20 karakter (revisi stakeholder 2026-10-08). */
+export function validateReferralCode(v) {
+  const t = (v || '').trim();
+  if (!t) return MSG.required;
+  if (t.length > 20) return 'Maksimal 20 karakter';
+  if (!/^[A-Za-z0-9]+$/.test(t)) return MSG.invalid;
+  return undefined;
+}
+
 /** File PKS: PDF, maks. 5 MB (opsional). */
 export function validatePksFile(file) {
   if (!file) return undefined;
@@ -63,13 +67,25 @@ export function validatePksFile(file) {
   return undefined;
 }
 
-/** Kebijakan password aktivasi (PRD §3C): min 8, 1 huruf besar, 1 huruf kecil, 1 angka, tidak sama dengan username. */
-export function passwordPolicy(pw, username) {
+/** Nomor telepon untuk login: wajib, setelah normalisasi diawali 8 dan 8–12 digit. */
+export function validatePhone(v) {
+  const phone = normalizePhone(v);
+  if (!phone) return MSG.required;
+  return PHONE_RE.test(phone) ? undefined : MSG.invalid;
+}
+
+/**
+ * Kebijakan password aktivasi (PRD §3C, revisi 2026-10-08): min 8, 1 huruf besar, 1 huruf kecil, 1 angka,
+ * tidak sama dengan email atau nomor telepon (format 08/62/+62/8 dianggap sama).
+ */
+export function passwordPolicy(pw, { email, phone } = {}) {
+  const lower = pw.toLowerCase();
+  const samePhone = !!phone && /^\+?\d+$/.test(pw.replace(/[\s-]/g, '')) && normalizePhone(pw) === phone;
   return [
     { label: 'Minimal 8 karakter', ok: pw.length >= 8 },
     { label: '1 huruf besar', ok: /[A-Z]/.test(pw) },
     { label: '1 huruf kecil', ok: /[a-z]/.test(pw) },
     { label: '1 angka', ok: /\d/.test(pw) },
-    { label: 'Tidak sama dengan username', ok: pw.length > 0 && pw.toLowerCase() !== (username || '').toLowerCase() },
+    { label: 'Tidak sama dengan email atau nomor telepon', ok: pw.length > 0 && lower !== (email || '').toLowerCase() && !samePhone },
   ];
 }

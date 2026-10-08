@@ -6,9 +6,9 @@ import { AREAS, CREATABLE_ROLES, ROLES, TL_LEVEL } from '../../lib/constants.js'
 import { validateUserForm } from '../../lib/validation.js';
 import { preset } from '../../dev/presets.js';
 
-const EMPTY = { email: '', phone: '', username: '', fullName: '', role: '', tlLevel: '', areaIds: [], leaderId: '' };
+const EMPTY = { email: '', phone: '', fullName: '', role: '', tlLevel: '', areaIds: [], leaderId: '' };
 const FIELDS = Object.keys(EMPTY);
-const DUPLICATE_MSG = { email: 'Email sudah terdaftar', username: 'Username sudah dipakai' };
+const DUPLICATE_MSG = { email: 'Email sudah terdaftar', phone: 'Nomor telepon sudah terdaftar' };
 
 /**
  * W2b · Tambah Pengguna (PRD §3B). Urutan field tetap; Area & Leader nonaktif sampai role dipilih, Leader sampai area dipilih.
@@ -105,7 +105,7 @@ export function AddUserDrawer({ user, onClose, onCreated }) {
   return (
     <>
       <Drawer open width={480} onClose={confirmOpen ? undefined : requestCancel}
-        header={<DrawerHeader size="lg" title="Tambah Pengguna" description="Akun dibuat di Keycloak dan tautan aktivasi (berlaku 24 jam, sekali pakai) dikirim ke email pengguna." icon="UserAddLine" onClose={requestCancel} />}
+        header={<DrawerHeader size="lg" title="Tambah Pengguna" description="Akun dibuat di Keycloak dan tautan aktivasi (berlaku 3x24 jam, sekali pakai) dikirim ke email pengguna." icon="UserAddLine" onClose={requestCancel} />}
         footer={(
           <DrawerFooter>
             <Button variant="stroke" tone="neutral" size="sm" disabled={saving} onClick={requestCancel}>Batal</Button>
@@ -115,11 +115,10 @@ export function AddUserDrawer({ user, onClose, onCreated }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-16)', padding: 'var(--space-16) var(--space-24) var(--space-24)' }}>
           {text('email', { label: 'Email', leftIcon: 'MailLine', placeholder: 'nama@amarbank.co.id', hint: 'Dipakai untuk login dan email aktivasi.', onChange: (e) => setField('email', e.target.value) })}
           {text('phone', {
-            label: 'Nomor Telepon', placeholder: '812 3456 7890', inputMode: 'numeric', hint: errs.phone ? undefined : 'Hanya untuk kontak, tidak dipakai untuk login.',
+            label: 'Nomor Telepon', placeholder: '812 3456 7890', inputMode: 'numeric', hint: errs.phone ? undefined : 'Dipakai untuk login bersama email. Harus unik.',
             prefix: <span style={{ padding: '0 var(--space-12)', font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>+62</span>,
             onChange: (e) => setField('phone', e.target.value.replace(/\D/g, '').slice(0, 14)),
           })}
-          {text('username', { label: 'Username', leftIcon: 'User6Line', placeholder: 'budi.santoso', hint: errs.username ? undefined : '4–30 karakter: huruf kecil, angka, titik, garis bawah, atau tanda hubung.', onChange: (e) => setField('username', e.target.value.toLowerCase()) })}
           {text('fullName', { label: 'Nama Lengkap', placeholder: 'Budi Santoso', onChange: (e) => setField('fullName', e.target.value) })}
           <Select label="Role Type" required placeholder="Pilih role" value={form.role || undefined} error={errs.role} disabled={saving}
             options={CREATABLE_ROLES.map((r) => ({ value: r, label: ROLES[r].label }))} onChange={setRole}

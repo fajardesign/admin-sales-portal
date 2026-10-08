@@ -16,7 +16,6 @@ export function RevisionDrawer({ partner, user, onClose, onDone }) {
   const docs = partner.documents.filter((d) => d.file);
   const initial = {};
   docs.filter((d) => d.verification === 'NEEDS_REVISION').forEach((d) => { initial[`DOC:${d.key}`] = d.note ?? ''; });
-  if (partner.bank.verification === 'NEEDS_REVISION') initial['SEC:bank'] = partner.bank.note ?? '';
   const [picked, setPicked] = useState(initial); // { "DOC:KTP_PIC": note }
   const [general, setGeneral] = useState('');
   const [touched, setTouched] = useState(false);

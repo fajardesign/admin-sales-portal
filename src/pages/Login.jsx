@@ -6,9 +6,9 @@ import { DEMO_PASSWORD, users } from '../api/db.js';
 import { DEMO } from '../lib/env.js';
 import { preset } from '../dev/presets.js';
 
-/** Pesan error login (PRD §1 tabel cek; identitas = email atau username sesuai keputusan Q1). */
+/** Pesan error login (PRD §1 tabel cek; identitas = email atau nomor telepon, revisi stakeholder 2026-10-08). */
 const LOGIN_ERRORS = {
-  INVALID: 'Email/username atau password salah. Silakan coba lagi.',
+  INVALID: 'Email/nomor telepon atau password salah. Silakan coba lagi.',
   DISABLED: 'Akun Anda tidak aktif. Hubungi Admin.',
   NOT_ACTIVATED: 'Akun belum diaktivasi. Cek email undangan Anda.',
   LOCKED: 'Akun terkunci sementara. Coba lagi dalam 15 menit.',
@@ -16,15 +16,17 @@ const LOGIN_ERRORS = {
 
 /** Akun contoh mode demo (password sama untuk semua). */
 const DEMO_ACCOUNTS = [
-  ['rina.saraswati', 'Admin (Reviewer)'],
-  ['hasan.basri', 'APL · Makassar'],
-  ['lestari.wulandari', 'APL · Bandung, Jakarta'],
-  ['hendra.wijaya', 'Super Admin'],
-  ['andi.pratama', 'TL → Akses ditolak'],
-  [users.find((u) => u.role === 'PARTNER' && u.status === 'ACTIVE')?.username, 'Partner (PIC) → Akses ditolak'],
-  ['fajar.nugroho', 'Pending → belum diaktivasi'],
-  ['rizky.ramadhan', 'Disabled → akun tidak aktif'],
+  ['rina.saraswati@amarbank.co.id', 'Admin (Reviewer)'],
+  ['hasan.basri@amarbank.co.id', 'APL · Makassar'],
+  ['lestari.wulandari@amarbank.co.id', 'APL · Bandung, Jakarta'],
+  ['hendra.wijaya@amarbank.co.id', 'Super Admin'],
+  ['andi.pratama@amarbank.co.id', 'TL → Akses ditolak'],
+  [users.find((u) => u.role === 'PARTNER' && u.status === 'ACTIVE')?.email, 'Partner (PIC) → Akses ditolak'],
+  ['fajar.nugroho@amarbank.co.id', 'Pending → belum diaktivasi'],
+  ['rizky.ramadhan@amarbank.co.id', 'Disabled → akun tidak aktif'],
 ];
+/** Contoh login dengan nomor telepon (Admin Rina), ditulis dengan awalan 0. */
+const DEMO_PHONE = `0${users.find((u) => u.id === 1)?.phone ?? ''}`;
 
 /** W1 · Login (Keycloak themed, realm sales-portal). */
 export function Login({ onLoggedIn, notice }) {
@@ -71,12 +73,12 @@ export function Login({ onLoggedIn, notice }) {
       footer={<><span>© 2026 Amar Bank</span><span>Didukung Keycloak · realm sales-portal</span></>}>
       <form onSubmit={submit} style={{ display: 'contents' }}>
         <AuthCard>
-          <AuthHero icon="User6Line" title="Masuk ke S&P Portal" description="Masukkan email atau username dan password Anda." />
+          <AuthHero icon="User6Line" title="Masuk ke S&P Portal" description="Masukkan email atau nomor telepon dan password Anda." />
           <ContentDivider />
           {error && <Alert status="error" size="sm" title={error} />}
           {!error && notice && <Alert status="information" size="sm" title={notice} />}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-12)' }}>
-            <TextInput label="Email atau Username" required leftIcon="MailLine" placeholder="nama@amarbank.co.id atau username"
+            <TextInput label="Email atau Nomor Telepon" required leftIcon="User6Line" placeholder="nama@amarbank.co.id atau 08123456789"
               value={loginId} onChange={(e) => setLoginId(e.target.value)} autoComplete="username" />
             <TextInput label="Password" required type="password" leftIcon="Lock2Line" placeholder="••••••••"
               value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
@@ -95,6 +97,10 @@ export function Login({ onLoggedIn, notice }) {
                   <span>{u}</span><span style={{ color: 'var(--text-sub-600)' }}>{label}</span>
                 </button>
               ))}
+              <button type="button" onClick={() => { setLoginId(DEMO_PHONE); setPassword(DEMO_PASSWORD); setError(null); }}
+                style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-8)', border: 0, background: 'none', padding: 'var(--space-2) 0', cursor: 'pointer', font: 'var(--paragraph-xs)', color: 'var(--text-strong-950)', textAlign: 'left' }}>
+                <span>{DEMO_PHONE}</span><span style={{ color: 'var(--text-sub-600)' }}>Admin (Reviewer) lewat nomor telepon</span>
+              </button>
               <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-soft-400)' }}>Salah password 5 kali berturut-turut untuk melihat pesan akun terkunci.</span>
             </div>
           )}

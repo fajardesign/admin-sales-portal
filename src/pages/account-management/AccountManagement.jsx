@@ -11,12 +11,12 @@ import { listUsers } from '../../api/mockApi.js';
 import { now } from '../../api/db.js';
 import { useScenario } from '../../dev/scenario.js';
 import { preset } from '../../dev/presets.js';
-import { ACCOUNT_STATUS, AREAS, INVITE_TTL_MS, ROLES, TL_LEVEL, areaName } from '../../lib/constants.js';
+import { ACCOUNT_STATUS, AREAS, ACTIVATION_TTL_MS, ROLES, TL_LEVEL, areaName } from '../../lib/constants.js';
 import { formatDateWIB, formatDuration, formatPhone } from '../../lib/format.js';
 import { navigate, withQuery } from '../../lib/router.js';
 import { AddUserDrawer } from './AddUserDrawer.jsx';
 import { UserDetailDrawer } from './UserDetailDrawer.jsx';
-import { ChangeEmailModal, DisableModal, ResendModal, ResetPasswordModal } from './UserActionModals.jsx';
+import { ChangeEmailModal, ChangePhoneModal, DisableModal, ResendModal, ResetPasswordModal } from './UserActionModals.jsx';
 
 const ROLE_FILTER = ['REVIEWER', 'APL', 'TL', 'SR', 'SA', 'PARTNER'];
 
@@ -39,6 +39,7 @@ function AccountManagementView({ user, onLogout, query }) {
   const [disable, setDisable] = useState(null);
   const [resetPw, setResetPw] = useState(null);
   const [emailEdit, setEmailEdit] = useState(null);
+  const [phoneEdit, setPhoneEdit] = useState(null);
   const [highlightId, setHighlightId] = useState(null);
   const qs = query.toString();
 
@@ -58,7 +59,7 @@ function AccountManagementView({ user, onLogout, query }) {
     return { priority: 'regular', title: nowrap(ROLES[u.role].label), description: extra };
   };
   const statusCell = (u) => {
-    const left = new Date(u.inviteSentAt).getTime() + INVITE_TTL_MS - now();
+    const left = new Date(u.inviteSentAt).getTime() + ACTIVATION_TTL_MS - now();
     return { misc: true, children: (
       <span style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
         <AccountStatusBadge status={u.accountStatus} />
@@ -79,7 +80,6 @@ function AccountManagementView({ user, onLogout, query }) {
   };
   const columns = [
     { key: 'name', header: 'Nama Lengkap', render: (u) => ({ priority: 'leading', media: <Avatar size={40} color={0} name={u.fullName} />, title: nowrap(u.fullName) }) },
-    { key: 'username', header: 'Username', render: (u) => nowrap(u.username) },
     { key: 'email', header: 'Email', render: (u) => nowrap(u.email) },
     { key: 'phone', header: 'Telepon', render: (u) => nowrap(formatPhone(u.phone)) },
     { key: 'role', header: 'Role', render: roleCell },
@@ -90,7 +90,7 @@ function AccountManagementView({ user, onLogout, query }) {
     { key: 'actions', header: 'Aksi', render: actionsCell },
   ];
   const counts = data?.counts ?? {};
-  const after = () => { setResend(null); setDisable(null); setResetPw(null); setEmailEdit(null); refresh(); };
+  const after = () => { setResend(null); setDisable(null); setResetPw(null); setEmailEdit(null); setPhoneEdit(null); refresh(); };
 
   return (
     <AdminShell active="/account-management" icon="TeamLine" title="Account Management" description="Buat akun login, pantau status aktivasi Keycloak, kirim ulang tautan, dan nonaktifkan akun." user={user} onLogout={onLogout}>
@@ -103,7 +103,7 @@ function AccountManagementView({ user, onLogout, query }) {
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-12)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: 220 }}>
-              <SearchField placeholder="Cari nama, username, email, atau telepon" value={q.q ?? ''} onChange={(v) => set({ q: v })} width="100%" />
+              <SearchField placeholder="Cari nama, email, atau telepon" value={q.q ?? ''} onChange={(v) => set({ q: v })} width="100%" />
             </div>
             <div style={{ width: 170 }}>
               <Select size="sm" placeholder="Semua role" value={q.role ?? ''} onChange={(v) => set({ role: v })}
@@ -128,11 +128,12 @@ function AccountManagementView({ user, onLogout, query }) {
       </div>
 
       {adding && <AddUserDrawer user={user} onClose={() => setAdding(false)} onCreated={(u) => { setAdding(false); setHighlightId(u.id); set({ status: '', q: '', role: '', area: '' }); refresh(); }} />}
-      {detailId && <UserDetailDrawer userId={detailId} user={user} version={version} onClose={resend || disable || resetPw || emailEdit ? undefined : () => setDetailId(null)} onResend={setResend} onDisable={setDisable} onReset={setResetPw} onChangeEmail={setEmailEdit} />}
+      {detailId && <UserDetailDrawer userId={detailId} user={user} version={version} onClose={resend || disable || resetPw || emailEdit || phoneEdit ? undefined : () => setDetailId(null)} onResend={setResend} onDisable={setDisable} onReset={setResetPw} onChangeEmail={setEmailEdit} onChangePhone={setPhoneEdit} />}
       {resend && <ResendModal target={resend} user={user} onClose={() => setResend(null)} onDone={after} />}
       {disable && <DisableModal target={disable} user={user} onClose={() => setDisable(null)} onDone={after} />}
       {resetPw && <ResetPasswordModal target={resetPw} user={user} onClose={() => setResetPw(null)} onDone={after} />}
       {emailEdit && <ChangeEmailModal target={emailEdit} user={user} onClose={() => setEmailEdit(null)} onDone={after} />}
+      {phoneEdit && <ChangePhoneModal target={phoneEdit} user={user} onClose={() => setPhoneEdit(null)} onDone={after} />}
     </AdminShell>
   );
 }

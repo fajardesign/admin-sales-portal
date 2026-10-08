@@ -15,6 +15,15 @@ export function formatDateWIB(dt) {
   };
 }
 
+/** Jam lokal area: Date + offset UTC (7 WIB, 8 WITA) → "09:45 WITA". */
+export function formatTimeLocal(dt, area) {
+  if (!dt) return '-';
+  const t = new Date(new Date(dt).getTime() + (area?.utcOffset ?? 7) * 3600e3);
+  return `${pad(t.getUTCHours())}:${pad(t.getUTCMinutes())} ${area?.tz ?? 'WIB'}`;
+}
+/** Jarak km → "0,4 km". */
+export const formatKm = (km) => `${(km ?? 0).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km`;
+
 /** Format tampilan PRD: "DD MMM YYYY, HH:mm WIB"; kosong → "-". */
 export function formatDateTime(dt) {
   if (!dt) return '-';
@@ -35,10 +44,12 @@ export const monthLabel = (ym, long = false) => {
   return `${(long ? MONTHS_LONG : MONTHS)[m - 1]} ${y}`;
 };
 
-/** Sisa waktu tautan aktivasi: "20 jam 15 menit". */
+/** Sisa waktu tautan aktivasi: "2 hari 5 jam", "20 jam 15 menit", "45 menit". */
 export function formatDuration(ms) {
   const m = Math.max(0, Math.floor(ms / 60000));
   const h = Math.floor(m / 60);
+  const d = Math.floor(h / 24);
+  if (d > 0) return h % 24 > 0 ? `${d} hari ${h % 24} jam` : `${d} hari`;
   return h > 0 ? `${h} jam ${m % 60} menit` : `${m} menit`;
 }
 

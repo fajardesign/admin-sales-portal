@@ -7,7 +7,7 @@ import { EmptyState } from '../../components/EmptyState.jsx';
 import { bar } from '../../lib/cells.jsx';
 import { useToast } from '../../components/Toaster.jsx';
 import {
-  ApiError, getPartner, isFinal, onDataChange, retryPicAccount, setBankVerification, setDocVerification, verificationGap,
+  ApiError, getPartner, isFinal, onDataChange, retryPicAccount, setDocVerification, verificationGap,
 } from '../../api/mockApi.js';
 import { formatDateTime } from '../../lib/format.js';
 import { navigate } from '../../lib/router.js';
@@ -44,7 +44,7 @@ export function PartnerDetail({ id, user, onLogout }) {
   const [tab, setTab] = useState(preset?.detail?.tab ?? 'data');
   const [action, setAction] = useState(preset?.detail?.action ?? null); // status tujuan
   const [revision, setRevision] = useState(preset?.detail?.revision ?? false);
-  const [reason, setReason] = useState(null); // { kind: 'doc'|'bank', doc? }
+  const [reason, setReason] = useState(null); // { doc }
   const [viewer, setViewer] = useState(null); // { doc, file }
   const [pksModal, setPksModal] = useState(null); // 'delivery' | 'upload'
   const [retrying, setRetrying] = useState(false);
@@ -69,14 +69,11 @@ export function PartnerDetail({ id, user, onLogout }) {
   const gap = verificationGap(p);
   const buttons = BUTTONS[p.status] ?? [];
   const gapMsg = p.status === 'UNDER_REVIEW' && gap.count > 0
-    ? `Verifikasi Selesai aktif setelah semua dokumen wajib dan Data Rekening ditandai Valid (${gap.count} belum valid${gap.flagged ? `, ${gap.flagged} perlu revisi` : ''}).`
+    ? `Verifikasi Selesai aktif setelah semua dokumen wajib ditandai Valid (${gap.count} belum valid${gap.flagged ? `, ${gap.flagged} perlu revisi` : ''}).`
     : null;
 
   async function verifyDoc(doc, value, note) {
     try { setP(await setDocVerification(p.id, doc.key, value, note, user)); setReason(null); } catch (e) { if (e instanceof ApiError) toast('error', 'Status tidak dapat diubah.'); }
-  }
-  async function verifyBank(value, note) {
-    try { setP(await setBankVerification(p.id, value, note, user)); setReason(null); } catch (e) { if (e instanceof ApiError) toast('error', 'Status tidak dapat diubah.'); }
   }
   async function retryPic() {
     setRetrying(true);
@@ -126,11 +123,10 @@ export function PartnerDetail({ id, user, onLogout }) {
         { value: 'data', label: 'Data Partner' }, { value: 'stores', label: `Toko (${p.stores.length})` },
         { value: 'docs', label: `Dokumen (${uploaded})` }, { value: 'pks', label: 'PKS (Privy)' }, { value: 'history', label: 'Riwayat Status' },
       ]} />
-      {tab === 'data' && <DataPartnerTab partner={p} onGoStores={() => setTab('stores')} retrying={retrying} onRetryPic={retryPic}
-        onBank={(v) => (v === 'VALID' ? verifyBank('VALID') : setReason({ kind: 'bank' }))} />}
+      {tab === 'data' && <DataPartnerTab partner={p} onGoStores={() => setTab('stores')} retrying={retrying} onRetryPic={retryPic} />}
       {tab === 'stores' && <StoresTab partner={p} />}
       {tab === 'docs' && <DocumentsTab partner={p} onView={(doc, file) => setViewer({ doc, file })}
-        onVerify={(doc, v) => (v === 'VALID' ? verifyDoc(doc, 'VALID') : setReason({ kind: 'doc', doc }))} />}
+        onVerify={(doc, v) => (v === 'VALID' ? verifyDoc(doc, 'VALID') : setReason({ doc }))} />}
       {tab === 'pks' && <PksTab partner={p} onEditDelivery={() => setPksModal('delivery')} onUpload={() => setPksModal('upload')}
         onViewFile={() => setViewer({ doc: { label: 'Dokumen PKS' }, file: { ...p.pks.file, version: 1, pages: 3 } })} />}
       {tab === 'history' && <HistoryTab partner={p} />}
@@ -138,10 +134,8 @@ export function PartnerDetail({ id, user, onLogout }) {
       {action && <StatusActionModal partner={p} to={action} user={user} onClose={() => setAction(null)} onDone={done} />}
       {revision && <RevisionDrawer partner={p} user={user} onClose={() => setRevision(false)} onDone={done} />}
       {reason && (
-        <ReasonModal open title={`Perlu revisi: ${reason.kind === 'bank' ? 'Data Rekening' : reason.doc.label}`}
-          description={reason.kind === 'bank' ? 'Tulis alasan, misalnya nomor rekening tidak sama dengan buku rekening.' : 'Tulis alasan agar TL/SR tahu apa yang harus diperbaiki.'}
-          initial={(reason.kind === 'bank' ? p.bank.note : reason.doc.note) ?? ''} onClose={() => setReason(null)}
-          onSubmit={(note) => (reason.kind === 'bank' ? verifyBank('NEEDS_REVISION', note) : verifyDoc(reason.doc, 'NEEDS_REVISION', note))} />
+        <ReasonModal open title={`Perlu revisi: ${reason.doc.label}`} description="Tulis alasan agar TL/SR tahu apa yang harus diperbaiki."
+          initial={reason.doc.note ?? ''} onClose={() => setReason(null)} onSubmit={(note) => verifyDoc(reason.doc, 'NEEDS_REVISION', note)} />
       )}
       {viewer && <DocumentViewer doc={viewer.doc} file={viewer.file} onClose={() => setViewer(null)} />}
       {pksModal === 'delivery' && <PksDeliveryModal partner={p} user={user} onClose={() => setPksModal(null)} onDone={done} />}

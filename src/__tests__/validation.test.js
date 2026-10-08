@@ -1,20 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { passwordPolicy, validatePksFile, validateReason, validateUserForm } from '../lib/validation.js';
-import { formatDateTime, formatDateWIB, formatPhone, formatRp, normalizePhone } from '../lib/format.js';
-import { tierFor, tierLabel } from '../api/mockApi.js';
+import { passwordPolicy, validatePksFile, validateReason, validateReferralCode, validateUserForm } from '../lib/validation.js';
+import { formatDateTime, formatDateWIB, formatDuration, formatPhone, formatRp, normalizePhone } from '../lib/format.js';
+import { findByIdentifier, tierFor, tierLabel, verificationGap, visitWeeks } from '../api/mockApi.js';
+import { attendance, distanceKm, users, visits } from '../api/db.js';
+import { AREAS, OFFICES } from '../lib/constants.js';
 
-const ok = { email: 'budi@amarbank.co.id', phone: '081234567890', username: 'budi.santoso', fullName: 'Budi Santoso', role: 'REVIEWER', tlLevel: '', areaIds: [], leaderId: '' };
+const ok = { email: 'budi@amarbank.co.id', phone: '081234567890', fullName: 'Budi Santoso', role: 'REVIEWER', tlLevel: '', areaIds: [], leaderId: '' };
 const leaders = [{ value: '3', label: 'Hasan Basri' }];
 
 describe('validateUserForm (PRD §3B)', () => {
   it('lolos untuk Admin valid', () => expect(validateUserForm(ok)).toEqual({}));
-  it('wajib diisi', () => expect(validateUserForm({ ...ok, email: '', phone: '', username: '', fullName: '', role: '' })).toEqual({
-    email: 'Informasi wajib diisi', phone: 'Informasi wajib diisi', username: 'Informasi wajib diisi', fullName: 'Informasi wajib diisi', role: 'Informasi wajib diisi',
+  it('wajib diisi', () => expect(validateUserForm({ ...ok, email: '', phone: '', fullName: '', role: '' })).toEqual({
+    email: 'Informasi wajib diisi', phone: 'Informasi wajib diisi', fullName: 'Informasi wajib diisi', role: 'Informasi wajib diisi',
   }));
-  it('format email, telepon, username, nama', () => {
+  it('format email, telepon, nama', () => {
     expect(validateUserForm({ ...ok, email: 'budi@x' }).email).toBe('Format tidak valid');
     expect(validateUserForm({ ...ok, phone: '0212345678' }).phone).toBe('Format tidak valid');
-    expect(validateUserForm({ ...ok, username: 'Bu' }).username).toBe('Format tidak valid');
     expect(validateUserForm({ ...ok, fullName: 'Budi123' }).fullName).toBe('Format tidak valid');
     expect(validateUserForm({ ...ok, fullName: 'a'.repeat(101) }).fullName).toBe('Maksimal 100 karakter');
   });
@@ -40,6 +41,65 @@ describe('alasan & file PKS', () => {
   });
 });
 
+describe('revisi stakeholder 2026-10-08', () => {
+  it('kode referral wajib, huruf/angka, maks. 20', () => {
+    expect(validateReferralCode('')).toBe('Informasi wajib diisi');
+    expect(validateReferralCode('AMR-01')).toBe('Format tidak valid');
+    expect(validateReferralCode('A'.repeat(21))).toBe('Maksimal 20 karakter');
+    expect(validateReferralCode(' AMR6148 ')).toBeUndefined();
+  });
+  it('sisa waktu tautan 3x24 jam ditampilkan dalam hari', () => {
+    expect(formatDuration(72 * 3600e3)).toBe('3 hari');
+    expect(formatDuration(53 * 3600e3 + 10 * 60000)).toBe('2 hari 5 jam');
+    expect(formatDuration(20 * 3600e3 + 15 * 60000)).toBe('20 jam 15 menit');
+  });
+  it('Verifikasi Selesai hanya menunggu dokumen wajib (tanpa verifikasi Data Rekening)', () => {
+    const p = { documents: [{ mandatory: true, verification: 'VALID' }, { mandatory: false, verification: 'UNVERIFIED' }], bank: {} };
+    expect(verificationGap(p)).toEqual({ count: 0, flagged: 0 });
+  });
+});
+
+describe('identitas login email atau nomor telepon', () => {
+  it('nomor telepon 08/62/+62/8 dianggap sama; username tidak dipakai', () => {
+    const rina = findByIdentifier('rina.saraswati@amarbank.co.id');
+    expect(rina.fullName).toBe('Rina Saraswati');
+    ['0' + rina.phone, '62' + rina.phone, '+62 ' + rina.phone, rina.phone].forEach((id) => expect(findByIdentifier(id)?.id).toBe(rina.id));
+    expect(findByIdentifier('rina.saraswati')).toBeUndefined();
+  });
+});
+
+describe('absensi & kunjungan (revisi stakeholder 2026-10-08)', () => {
+  const area = (uid) => AREAS.find((a) => a.id === users.find((u) => u.id === uid).areaIds[0]);
+  const localMin = (d, a) => { const t = new Date(new Date(d).getTime() + a.utcOffset * 3600e3); return t.getUTCHours() * 60 + t.getUTCMinutes(); };
+  it('Tepat Waktu = check in ≤ 10:00 waktu lokal, Terlambat > 10:00', () => {
+    attendance.filter((a) => a.clockInAt).forEach((a) => {
+      const m = localMin(a.clockInAt, area(a.userId));
+      expect(a.status === 'ON_TIME' ? m <= 600 : m > 600).toBe(true);
+    });
+  });
+  it('lokasi check in dalam radius 3 km dari kantor terdaftar atau toko', () => {
+    attendance.filter((a) => a.place).forEach((a) => {
+      expect(a.distanceKm).toBeLessThanOrEqual(3);
+      if (a.place.kind === 'OFFICE') expect(distanceKm(OFFICES.find((o) => o.name === a.place.name), a)).toBeLessThanOrEqual(3);
+    });
+  });
+  it('kunjungan mulai 12:00 lokal, radius 3 km, maks. 1 per hari', () => {
+    const seen = new Set();
+    visits.forEach((v) => {
+      expect(localMin(v.checkInAt, area(v.userId))).toBeGreaterThanOrEqual(720);
+      expect(v.distanceKm).toBeLessThanOrEqual(3);
+      const k = `${v.userId}|${v.date}`;
+      expect(seen.has(k)).toBe(false);
+      seen.add(k);
+    });
+  });
+  it('target mingguan = hari kerja Senin–Sabtu', () => {
+    const w = visitWeeks(15, { from: '2026-09-07', to: '2026-09-12' })[0];
+    expect(w.target).toBe(6);
+    expect(w.complete).toBe(w.visited >= 6);
+  });
+});
+
 describe('format', () => {
   it('normalisasi telepon 0/62', () => {
     expect(normalizePhone('0812-3456-7890')).toBe('81234567890');
@@ -55,8 +115,15 @@ describe('format', () => {
 });
 
 describe('passwordPolicy', () => {
-  it('semua terpenuhi', () => expect(passwordPolicy('Rahasia123', 'dimas.pratama').every((c) => c.ok)).toBe(true));
-  it('menolak username', () => expect(passwordPolicy('Dimas.Pratama1', 'dimas.pratama1').find((c) => c.label === 'Tidak sama dengan username').ok).toBe(false));
+  const who = { email: 'dimas.pratama1@amarbank.co.id', phone: '81234567890' };
+  const rule = (pw) => passwordPolicy(pw, who).find((c) => c.label === 'Tidak sama dengan email atau nomor telepon').ok;
+  it('semua terpenuhi', () => expect(passwordPolicy('Rahasia123', who).every((c) => c.ok)).toBe(true));
+  it('menolak email atau nomor telepon (format apa pun)', () => {
+    expect(rule('Dimas.Pratama1@amarbank.co.id')).toBe(false);
+    expect(rule('081234567890')).toBe(false);
+    expect(rule('+62 812-3456-7890')).toBe(false);
+    expect(rule('Rahasia123')).toBe(true);
+  });
 });
 
 describe('tier insentif (rentang dari–sampai, PRD v3 §E2)', () => {
