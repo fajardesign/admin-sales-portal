@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { passwordPolicy, validatePksFile, validateReason, validateUserForm } from '../lib/validation.js';
-import { formatDateTime, formatDateWIB, formatPhone, formatRp, normalizePhone } from '../lib/format.js';
-import { tierFor, tierLabel } from '../api/mockApi.js';
+import { passwordPolicy, validatePksFile, validateReason, validateReferralCode, validateUserForm } from '../lib/validation.js';
+import { formatDateTime, formatDateWIB, formatDuration, formatPhone, formatRp, normalizePhone } from '../lib/format.js';
+import { tierFor, tierLabel, verificationGap } from '../api/mockApi.js';
 
 const ok = { email: 'budi@amarbank.co.id', phone: '081234567890', username: 'budi.santoso', fullName: 'Budi Santoso', role: 'REVIEWER', tlLevel: '', areaIds: [], leaderId: '' };
 const leaders = [{ value: '3', label: 'Hasan Basri' }];
@@ -37,6 +37,24 @@ describe('alasan & file PKS', () => {
     expect(validatePksFile({ name: 'pks.png', type: 'image/png', size: 10 })).toBe('Format file harus PDF.');
     expect(validatePksFile({ name: 'pks.pdf', type: 'application/pdf', size: 6 * 1024 * 1024 })).toBe('Ukuran file maksimal 5 MB.');
     expect(validatePksFile(null)).toBeUndefined();
+  });
+});
+
+describe('revisi stakeholder 2026-10-08', () => {
+  it('kode referral wajib, huruf/angka, maks. 20', () => {
+    expect(validateReferralCode('')).toBe('Informasi wajib diisi');
+    expect(validateReferralCode('AMR-01')).toBe('Format tidak valid');
+    expect(validateReferralCode('A'.repeat(21))).toBe('Maksimal 20 karakter');
+    expect(validateReferralCode(' AMR6148 ')).toBeUndefined();
+  });
+  it('sisa waktu tautan 3x24 jam ditampilkan dalam hari', () => {
+    expect(formatDuration(72 * 3600e3)).toBe('3 hari');
+    expect(formatDuration(53 * 3600e3 + 10 * 60000)).toBe('2 hari 5 jam');
+    expect(formatDuration(20 * 3600e3 + 15 * 60000)).toBe('20 jam 15 menit');
+  });
+  it('Verifikasi Selesai hanya menunggu dokumen wajib (tanpa verifikasi Data Rekening)', () => {
+    const p = { documents: [{ mandatory: true, verification: 'VALID' }, { mandatory: false, verification: 'UNVERIFIED' }], bank: {} };
+    expect(verificationGap(p)).toEqual({ count: 0, flagged: 0 });
   });
 });
 

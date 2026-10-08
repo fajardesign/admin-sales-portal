@@ -105,7 +105,7 @@ export function AddUserDrawer({ user, onClose, onCreated }) {
   return (
     <>
       <Drawer open width={480} onClose={confirmOpen ? undefined : requestCancel}
-        header={<DrawerHeader size="lg" title="Tambah Pengguna" description="Akun dibuat di Keycloak dan tautan aktivasi (berlaku 24 jam, sekali pakai) dikirim ke email pengguna." icon="UserAddLine" onClose={requestCancel} />}
+        header={<DrawerHeader size="lg" title="Tambah Pengguna" description="Akun dibuat di Keycloak dan tautan aktivasi (berlaku 3x24 jam, sekali pakai) dikirim ke email pengguna." icon="UserAddLine" onClose={requestCancel} />}
         footer={(
           <DrawerFooter>
             <Button variant="stroke" tone="neutral" size="sm" disabled={saving} onClick={requestCancel}>Batal</Button>

@@ -6,7 +6,7 @@ import { updatePartnerData } from '../../api/mockApi.js';
 import { BANKS, CHANNEL, PIC_STATUS } from '../../lib/constants.js';
 import { formatPhone, normalizePhone } from '../../lib/format.js';
 import { navigate } from '../../lib/router.js';
-import { EMAIL_RE, MSG, validateReason } from '../../lib/validation.js';
+import { EMAIL_RE, MSG, validateReason, validateReferralCode } from '../../lib/validation.js';
 
 const NAME_RE = /^[A-Za-zÀ-ÿ .'-]+$/;
 const len = (v, a, b) => { const t = v.trim(); return !t ? MSG.required : t.length < a ? `Minimal ${a} karakter` : t.length > b ? `Maksimal ${b} karakter` : undefined; };
@@ -19,7 +19,7 @@ export function EditPartnerDrawer({ partner: p, user, onClose, onDone }) {
   const toast = useToast();
   const stores = p.stores.filter((s) => s.status === 'ACTIVE');
   const init = {
-    partnerName: p.partnerName, address: p.address, businessEmail: p.businessEmail, channel: p.channel, businessLocationCount: String(p.businessLocationCount),
+    partnerName: p.partnerName, address: p.address, referralCode: p.referralCode, businessEmail: p.businessEmail, channel: p.channel, businessLocationCount: String(p.businessLocationCount),
     picName: p.pic.name, picPhone: p.pic.phone, picStatus: p.pic.status,
     ...Object.fromEntries(stores.flatMap((s) => [[`${s.id}|name`, s.name], [`${s.id}|address`, s.address]])),
   };
@@ -31,7 +31,7 @@ export function EditPartnerDrawer({ partner: p, user, onClose, onDone }) {
   const changedKeys = Object.keys(init).filter((k) => String(init[k]) !== String(f[k]));
 
   const errs = {
-    partnerName: len(f.partnerName, 3, 100), address: len(f.address, 5, 255),
+    partnerName: len(f.partnerName, 3, 100), address: len(f.address, 5, 255), referralCode: validateReferralCode(f.referralCode),
     businessEmail: !f.businessEmail.trim() ? MSG.required : EMAIL_RE.test(f.businessEmail.trim()) ? undefined : MSG.invalid,
     businessLocationCount: /^\d+$/.test(f.businessLocationCount) && Number(f.businessLocationCount) >= 1 ? undefined : 'Minimal 1',
     picName: len(f.picName, 3, 100) ?? (NAME_RE.test(f.picName.trim()) ? undefined : MSG.invalid),
@@ -42,8 +42,8 @@ export function EditPartnerDrawer({ partner: p, user, onClose, onDone }) {
   const show = (k) => (touched ? errs[k] : undefined);
   const invalid = Object.values(errs).some(Boolean);
 
-  const LABEL = { partnerName: 'Nama Partner', address: 'Alamat Partner', businessEmail: 'Email Bisnis', channel: 'Channel', businessLocationCount: 'Jumlah Tempat Usaha', picName: 'Nama PIC', picPhone: 'No. Handphone PIC', picStatus: 'Status PIC' };
-  const SECTION = { partnerName: 'partner', address: 'partner', businessEmail: 'business', channel: 'business', businessLocationCount: 'business', picName: 'pic', picPhone: 'pic', picStatus: 'pic' };
+  const LABEL = { partnerName: 'Nama Partner', address: 'Alamat Partner', referralCode: 'Kode Referral', businessEmail: 'Email Bisnis', channel: 'Channel', businessLocationCount: 'Jumlah Tempat Usaha', picName: 'Nama PIC', picPhone: 'No. Handphone PIC', picStatus: 'Status PIC' };
+  const SECTION = { partnerName: 'partner', address: 'partner', referralCode: 'partner', businessEmail: 'business', channel: 'business', businessLocationCount: 'business', picName: 'pic', picPhone: 'pic', picStatus: 'pic' };
   async function save() {
     setTouched(true);
     if (invalid || changedKeys.length === 0) return;
@@ -81,7 +81,7 @@ export function EditPartnerDrawer({ partner: p, user, onClose, onDone }) {
       )}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-24)', padding: 'var(--space-16) var(--space-24) var(--space-24)' }}>
         <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>Ubah data atas permintaan partner. Setiap perubahan dicatat di Riwayat Status beserta alasannya.</span>
-        {group('Informasi Partner', <>{text('partnerName', 'Nama Partner')}{text('address', 'Alamat Partner (sesuai legalitas)')}</>)}
+        {group('Informasi Partner', <>{text('partnerName', 'Nama Partner')}{text('address', 'Alamat Partner (sesuai legalitas)')}{text('referralCode', 'Kode Referral', { hint: 'Huruf dan angka, maks. 20 karakter.' })}</>)}
         {group('Data Bisnis', (
           <>
             {text('businessEmail', 'Email Bisnis', { leftIcon: 'MailLine' })}

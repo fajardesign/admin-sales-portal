@@ -3,7 +3,7 @@
 import { getScenario } from '../dev/scenario.js';
 import { normalizePhone } from '../lib/format.js';
 import {
-  ACCOUNT_STATUS, AREAS, CREATABLE_ROLES, FINAL_STATUSES, INVITE_TTL_MS, PAGE_SIZE, PARTNER_STATUS, ROLES, TRANSITIONS,
+  ACCOUNT_STATUS, AREAS, CREATABLE_ROLES, ACTIVATION_TTL_MS, FINAL_STATUSES, PAGE_SIZE, RESET_TTL_MS, PARTNER_STATUS, ROLES, TRANSITIONS,
 } from '../lib/constants.js';
 import {
   attendance, CURRENT_MONTH, loans, mfp, MONTHS, now, owningTl, partners, schemes, superAdmins, targets, users, visits, wibDate,
@@ -36,9 +36,9 @@ async function listGate(retry) {
 
 // ------------------------------------------------------------------ util
 export const userById = (id) => users.find((u) => u.id === id) ?? superAdmins.find((u) => u.id === id);
-/** Status akun Keycloak dengan Expired terhitung (PRD §3: Pending + tautan 24 jam lewat). */
+/** Status akun Keycloak dengan Expired terhitung (Pending + tautan aktivasi 3x24 jam lewat). */
 export function accountStatus(u) {
-  if (u.status === 'PENDING' && now() - u.inviteSentAt > INVITE_TTL_MS) return 'EXPIRED';
+  if (u.status === 'PENDING' && now() - u.inviteSentAt > ACTIVATION_TTL_MS) return 'EXPIRED';
   return u.status;
 }
 export const actorLabel = (by) => {
@@ -159,20 +159,13 @@ export async function setDocVerification(pid, key, verification, note, session) 
   return enrich(p);
 }
 
-/** Verifikasi manual Data Rekening (hanya Under Review). */
-export async function setBankVerification(pid, verification, note, session) {
-  await wait(250);
-  const p = findP(pid);
-  if (p.status !== 'UNDER_REVIEW') throw new ApiError('CONFLICT');
-  Object.assign(p.bank, { verification, note: verification === 'NEEDS_REVISION' ? note : null, verifiedBy: actorOf(session), verifiedAt: now() });
-  return enrich(p);
-}
-
-/** Jumlah dokumen wajib + rekening yang belum Valid (syarat "Verifikasi Selesai"). */
+/**
+ * Jumlah dokumen wajib yang belum Valid (syarat "Verifikasi Selesai").
+ * Data Rekening tidak diverifikasi terpisah (revisi stakeholder 2026-10-08); dokumen buku rekening tetap diverifikasi.
+ */
 export function verificationGap(p) {
   const pending = p.documents.filter((d) => d.mandatory && d.verification !== 'VALID');
-  const bankPending = p.bank.verification !== 'VALID';
-  return { count: pending.length + (bankPending ? 1 : 0), flagged: pending.filter((d) => d.verification === 'NEEDS_REVISION').length + (p.bank.verification === 'NEEDS_REVISION' ? 1 : 0) };
+  return { count: pending.length, flagged: pending.filter((d) => d.verification === 'NEEDS_REVISION').length };
 }
 
 /** US-P01 — Minta Revisi: items [{ kind: 'DOC'|'SEC', ref, label, note }]. */
@@ -182,7 +175,6 @@ export async function requestRevision(pid, items, general, session) {
   if (!TRANSITIONS[p.status].includes('REVISION_REQUIRED')) throw new ApiError('CONFLICT');
   items.forEach((it) => {
     if (it.kind === 'DOC') Object.assign(p.documents.find((d) => d.key === it.ref), { verification: 'NEEDS_REVISION', note: it.note, verifiedBy: actorOf(session), verifiedAt: now() });
-    if (it.kind === 'SEC' && it.ref === 'bank') Object.assign(p.bank, { verification: 'NEEDS_REVISION', note: it.note, verifiedBy: actorOf(session), verifiedAt: now() });
   });
   p.revisionRequest = { at: now(), by: actorOf(session), general: general || null, items };
   log(p, { from: p.status, to: 'REVISION_REQUIRED', by: actorOf(session), reason: `${items.length} item diminta revisi: ${items.map((i) => i.label).join(', ')}${general ? `. Catatan umum: ${general}` : ''}` });
@@ -205,7 +197,7 @@ export async function changeStatus(pid, to, opts, session) {
   if (to === 'VERIFIED') {
     if (verificationGap(p).count > 0) throw new ApiError('CONFLICT');
     p.verifiedAt = now(); p.verifiedBy = actor;
-    reason = 'Seluruh dokumen wajib dan data rekening valid';
+    reason = 'Seluruh dokumen wajib valid';
   }
   if (to === 'WAITING_PKS') {
     Object.assign(p.pks, { status: 'WAITING_SIGNATURE', sentAt: now(), sentVia: opts.via, inviteEmail: opts.via === 'EMAIL' ? opts.inviteEmail : null });
@@ -297,7 +289,7 @@ export async function simulateResubmit(pid) {
       d.file = { ...d.file, name: d.file.name.replace(/(_v\d+)?\.(\w+)$/, `_v${d.file.version + 1}.$2`), uploadedAt: now(), version: d.file.version + 1 };
       Object.assign(d, { verification: 'UNVERIFIED', note: null, verifiedBy: null, verifiedAt: null, revised: true });
     } else {
-      if (it.ref === 'bank') { change('bank', 'accountNumber', 'No. Rekening', p.bank, 'accountNumber', String(Number(p.bank.accountNumber) + 3141)); Object.assign(p.bank, { verification: 'UNVERIFIED', note: null, verifiedBy: null, verifiedAt: null }); }
+      if (it.ref === 'bank') { change('bank', 'accountNumber', 'No. Rekening', p.bank, 'accountNumber', String(Number(p.bank.accountNumber) + 3141)); }
       if (it.ref === 'pic') change('pic', 'phone', 'No. Handphone', p.pic, 'phone', `85${String(Number(p.pic.phone.slice(2)) + 271828).slice(0, 9)}`);
       if (it.ref === 'partner') change('partner', 'address', 'Alamat Partner (sesuai legalitas)', p, 'address', `${p.address} (Ruko Blok B)`);
       if (it.ref === 'business') change('business', 'businessEmail', 'Email Bisnis', p, 'businessEmail', p.businessEmail.replace('admin@', 'info@'));
@@ -395,7 +387,7 @@ export async function createUser(form, session) {
   return { user: enrichUser(u), inviteSent };
 }
 
-/** Kirim ulang tautan aktivasi (Pending/Expired) — tautan lama tidak berlaku, hitung mundur 24 jam diulang. */
+/** Kirim ulang tautan aktivasi (Pending/Expired) — tautan lama tidak berlaku, hitung mundur 3x24 jam diulang. */
 export async function resendInvite(id, session) {
   await wait(500);
   const u = userById(id);
@@ -427,7 +419,7 @@ export async function checkActivation(userId, mode = 'activate') {
   const u = userId ? userById(userId) : users.find((x) => x.id === 10);
   if (!userId) return { status: getScenario().activationState, user: { id: u.id, fullName: u.fullName, username: u.username, email: u.email, role: u.role } };
   if (mode === 'reset') {
-    const ok = u.status === 'ACTIVE' && u.resetSentAt && now() - u.resetSentAt <= INVITE_TTL_MS;
+    const ok = u.status === 'ACTIVE' && u.resetSentAt && now() - u.resetSentAt <= RESET_TTL_MS;
     return { status: ok ? 'valid' : 'expired', user: { id: u.id, fullName: u.fullName, username: u.username, email: u.email, role: u.role } };
   }
   const st = accountStatus(u);
@@ -493,7 +485,7 @@ export async function changeEmail(id, newEmail, reason, sendReset, session) {
  * Setiap perubahan dicatat (field, lama, baru, alasan, Admin, waktu) di changeLog dan Riwayat.
  */
 const EDITABLE = {
-  partnerName: (p) => [p, 'partnerName'], address: (p) => [p, 'address'], businessEmail: (p) => [p, 'businessEmail'], channel: (p) => [p, 'channel'],
+  partnerName: (p) => [p, 'partnerName'], address: (p) => [p, 'address'], referralCode: (p) => [p, 'referralCode'], businessEmail: (p) => [p, 'businessEmail'], channel: (p) => [p, 'channel'],
   businessLocationCount: (p) => [p, 'businessLocationCount'], picName: (p) => [p.pic, 'name'], picPhone: (p) => [p.pic, 'phone'], picStatus: (p) => [p.pic, 'status'],
 };
 export async function updatePartnerData(pid, changes, reason, session) {

@@ -20,7 +20,7 @@ export function ResendModal({ target, user, onClose, onDone }) {
     <ActionModal open onClose={onClose} title="Kirim ulang tautan aktivasi?" description={`${target.fullName} · ${ROLES[target.role].label}`} icon="SendPlaneLine"
       confirmLabel="Kirim Ulang" busy={busy} onConfirm={send} width={440}>
       <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>
-        Tautan baru dikirim ke <strong style={{ color: 'var(--text-strong-950)', fontWeight: 'inherit' }}>{target.email}</strong> dan berlaku 24 jam. Tautan sebelumnya tidak berlaku lagi.
+        Tautan baru dikirim ke <strong style={{ color: 'var(--text-strong-950)', fontWeight: 'inherit' }}>{target.email}</strong> dan berlaku 3x24 jam. Tautan sebelumnya tidak berlaku lagi.
       </span>
     </ActionModal>
   );

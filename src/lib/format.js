@@ -35,10 +35,12 @@ export const monthLabel = (ym, long = false) => {
   return `${(long ? MONTHS_LONG : MONTHS)[m - 1]} ${y}`;
 };
 
-/** Sisa waktu tautan aktivasi: "20 jam 15 menit". */
+/** Sisa waktu tautan aktivasi: "2 hari 5 jam", "20 jam 15 menit", "45 menit". */
 export function formatDuration(ms) {
   const m = Math.max(0, Math.floor(ms / 60000));
   const h = Math.floor(m / 60);
+  const d = Math.floor(h / 24);
+  if (d > 0) return h % 24 > 0 ? `${d} hari ${h % 24} jam` : `${d} hari`;
   return h > 0 ? `${h} jam ${m % 60} menit` : `${m} menit`;
 }
 

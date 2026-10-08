@@ -55,6 +55,15 @@ export function validateReason(v) {
   return undefined;
 }
 
+/** Kode Referral partner: wajib, huruf dan angka saja, maks. 20 karakter (revisi stakeholder 2026-10-08). */
+export function validateReferralCode(v) {
+  const t = (v || '').trim();
+  if (!t) return MSG.required;
+  if (t.length > 20) return 'Maksimal 20 karakter';
+  if (!/^[A-Za-z0-9]+$/.test(t)) return MSG.invalid;
+  return undefined;
+}
+
 /** File PKS: PDF, maks. 5 MB (opsional). */
 export function validatePksFile(file) {
   if (!file) return undefined;

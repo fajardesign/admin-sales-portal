@@ -141,11 +141,13 @@ describe('W3 Partner Pipeline', () => {
     await waitFor(() => expect(screen.queryByText('Sinar Jaya Ponsel')).toBeNull());
   });
 
-  it('Verifikasi Selesai nonaktif bila dokumen/rekening belum Valid', async () => {
+  it('Verifikasi Selesai nonaktif bila dokumen wajib belum Valid; Data Rekening tanpa tombol verifikasi', async () => {
     await start('rina.saraswati');
     go('/partner-pipeline/REG2026-0147');
     expect(await screen.findByText(/Verifikasi Selesai aktif setelah semua dokumen wajib/, {}, T)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Verifikasi Selesai' }).disabled).toBe(true);
+    expect(screen.getByText('Kode Referral')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Valid' })).toBeNull();
   });
 
   it('alur positif: Verified → Waiting PKS → Active membuat akun PIC Pending', async () => {

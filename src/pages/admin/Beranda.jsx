@@ -67,7 +67,7 @@ function BerandaView({ user, onLogout, query }) {
           <SectionCard title="Menunggu pihak lain">
             <StatGrid min={240}>
               <StatCard icon="EditLine" color="orange" label="Revisi oleh TL/SR" value={val(d?.revision)} hint="Status Revision Required" onClick={() => pl('REVISION_REQUIRED')} />
-              <StatCard icon="TimeLine" color="yellow" label="Akun belum diaktivasi" value={val(d?.pendingUsers)} hint="Tautan masih berlaku (24 jam)" onClick={() => am('pending')} />
+              <StatCard icon="TimeLine" color="yellow" label="Akun belum diaktivasi" value={val(d?.pendingUsers)} hint="Tautan masih berlaku (3x24 jam)" onClick={() => am('pending')} />
               <StatCard icon="CheckLine" color="green" label="Partner aktif" value={val(d?.active.count)} hint={d ? `${d.active.stores} toko aktif` : undefined} onClick={() => pl('ACTIVE')} />
             </StatGrid>
           </SectionCard>

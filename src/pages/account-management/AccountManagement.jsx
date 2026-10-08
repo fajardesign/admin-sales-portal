@@ -11,7 +11,7 @@ import { listUsers } from '../../api/mockApi.js';
 import { now } from '../../api/db.js';
 import { useScenario } from '../../dev/scenario.js';
 import { preset } from '../../dev/presets.js';
-import { ACCOUNT_STATUS, AREAS, INVITE_TTL_MS, ROLES, TL_LEVEL, areaName } from '../../lib/constants.js';
+import { ACCOUNT_STATUS, AREAS, ACTIVATION_TTL_MS, ROLES, TL_LEVEL, areaName } from '../../lib/constants.js';
 import { formatDateWIB, formatDuration, formatPhone } from '../../lib/format.js';
 import { navigate, withQuery } from '../../lib/router.js';
 import { AddUserDrawer } from './AddUserDrawer.jsx';
@@ -58,7 +58,7 @@ function AccountManagementView({ user, onLogout, query }) {
     return { priority: 'regular', title: nowrap(ROLES[u.role].label), description: extra };
   };
   const statusCell = (u) => {
-    const left = new Date(u.inviteSentAt).getTime() + INVITE_TTL_MS - now();
+    const left = new Date(u.inviteSentAt).getTime() + ACTIVATION_TTL_MS - now();
     return { misc: true, children: (
       <span style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
         <AccountStatusBadge status={u.accountStatus} />

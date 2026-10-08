@@ -5,7 +5,7 @@ import { KeyValueGrid } from '../../components/KeyValueGrid.jsx';
 import { Timeline } from '../../components/Timeline.jsx';
 import { getUser } from '../../api/mockApi.js';
 import { now } from '../../api/db.js';
-import { INVITE_TTL_MS, ROLES, TL_LEVEL, areaName } from '../../lib/constants.js';
+import { ACTIVATION_TTL_MS, ROLES, TL_LEVEL, areaName } from '../../lib/constants.js';
 import { DEMO } from '../../lib/env.js';
 import { formatDateTime, formatDuration, formatPhone } from '../../lib/format.js';
 import { navigate } from '../../lib/router.js';
@@ -24,7 +24,7 @@ export function UserDetailDrawer({ userId, user, version, onClose, onResend, onD
   if (!u) return <Drawer open width={480} onClose={onClose} header={<DrawerHeader title="Detail Pengguna" onClose={onClose} />} />;
   const st = u.accountStatus;
   const pending = st === 'PENDING' || st === 'EXPIRED';
-  const expires = new Date(new Date(u.inviteSentAt).getTime() + INVITE_TTL_MS);
+  const expires = new Date(new Date(u.inviteSentAt).getTime() + ACTIVATION_TTL_MS);
   const areas = u.role === 'REVIEWER' ? 'Semua area' : u.areaIds.map(areaName).join(', ');
   return (
     <Drawer open width={480} onClose={onClose}

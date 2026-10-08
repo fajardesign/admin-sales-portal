@@ -57,7 +57,7 @@ export const users = [
   user(11, 'Siti Rahmawati', 'SR', { areaIds: [1], supervisorId: 6, createdAt: ago(24 * 65) }),
   user(12, 'Dewi Lestari', 'SR', { areaIds: [2], supervisorId: 7, createdAt: ago(24 * 64) }),
   user(13, 'Agus Setiawan', 'SR', { areaIds: [5], supervisorId: 9, createdAt: ago(24 * 60) }),
-  user(14, 'Yohana Sitorus', 'SR', { areaIds: [3], supervisorId: 8, status: 'PENDING', createdAt: ago(40), inviteSentAt: ago(40) }),
+  user(14, 'Yohana Sitorus', 'SR', { areaIds: [3], supervisorId: 8, status: 'PENDING', createdAt: ago(80), inviteSentAt: ago(80) }),
   user(15, 'Eko Saputra', 'SA', { areaIds: [1], supervisorId: 6, createdAt: ago(24 * 62) }),
   user(16, 'Nurul Hidayah', 'SA', { areaIds: [1], supervisorId: 6, createdAt: ago(24 * 58) }),
   user(17, 'Taufik Hidayat', 'SA', { areaIds: [2], supervisorId: 7, createdAt: ago(24 * 57) }),
@@ -134,6 +134,7 @@ function partner(n, name, entity, areaId, status, submitterId, cfg = {}) {
   const reg = `REG2026-0${n}`;
   const p = {
     id: reg, registrationNumber: reg, partnerName: name, businessEntityType: entity,
+    referralCode: cfg.referralCode ?? `AMR${submitterId}${n}`,
     address: ADDR[n % ADDR.length], province: area.province, city: area.city, district: area.district, village: area.village,
     rt: String(between(1, 12)).padStart(3, '0'), rw: String(between(1, 9)).padStart(3, '0'),
     businessEmail: cfg.businessEmail ?? `admin@${name.toLowerCase().replace(/^(pt|cv) /, '').replace(/[^a-z]/g, '')}.co.id`,
@@ -148,9 +149,6 @@ function partner(n, name, entity, areaId, status, submitterId, cfg = {}) {
     bank: {
       code: BANK_CODES[n % BANK_CODES.length], branch: `KCP ${area.name} ${['Sudirman', 'Panakkukang', 'Dago', 'Petisah', 'Darmo'][n % 5]}`,
       accountNumber: String(1000000000 + n * 7654321).slice(0, 10), accountName: cfg.accountName ?? (entity === 'INDIVIDU' ? picName : name),
-      verification: cfg.bank ?? 'UNVERIFIED', note: cfg.bankNote ?? null,
-      verifiedBy: cfg.bank && cfg.bank !== 'UNVERIFIED' ? 'Rina Saraswati (Admin)' : null,
-      verifiedAt: cfg.bank && cfg.bank !== 'UNVERIFIED' ? new Date(submittedAt.getTime() + 20 * 3600e3) : null,
     },
     areaId, submittedBy: submitterId, submittedAt,
     verifiedAt: null, verifiedBy: null, activatedAt: null, statusUpdatedAt: submittedAt,
@@ -186,17 +184,17 @@ function advance(p, steps) {
     if (to === 'INACTIVE') p.stores.forEach((s) => { s.status = 'INACTIVE'; s.assigned = []; });
   });
 }
-const allValid = (p) => { p.documents.forEach((d) => { if (d.file) { d.verification = 'VALID'; d.verifiedBy = R; d.verifiedAt = new Date(p.submittedAt.getTime() + 20 * 3600e3); } }); Object.assign(p.bank, { verification: 'VALID', verifiedBy: R, verifiedAt: new Date(p.submittedAt.getTime() + 20 * 3600e3) }); };
+const allValid = (p) => { p.documents.forEach((d) => { if (d.file) { d.verification = 'VALID'; d.verifiedBy = R; d.verifiedAt = new Date(p.submittedAt.getTime() + 20 * 3600e3); } }); };
 
 export const partners = [];
 const add = (p) => { partners.push(p); return p; };
 
-add(partner(148, 'Sinar Jaya Ponsel', 'INDIVIDU', 1, 'UNDER_REVIEW', 6, { submittedH: 30, privyId: 'PRV70231', docs: { all: 'VALID' }, bank: 'VALID' }));
+add(partner(148, 'Sinar Jaya Ponsel', 'INDIVIDU', 1, 'UNDER_REVIEW', 6, { submittedH: 30, privyId: 'PRV70231', docs: { all: 'VALID' } }));
 add(partner(147, 'CV Maju Bersama Elektronik', 'CV', 2, 'UNDER_REVIEW', 12, { submittedH: 52, docs: { KTP_PIC: 'VALID', NPWP_COMPANY: 'VALID', AKTA: 'NEEDS_REVISION', optionalUploaded: true } }));
 add(partner(146, 'Berkah Cell Panakkukang', 'INDIVIDU', 1, 'UNDER_REVIEW', 11, { submittedH: 75, picStatus: 'KARYAWAN', accountName: 'Fitriani Lestari' }));
 add(partner(145, 'PT Toko Gadget Nusantara', 'PT', 5, 'UNDER_REVIEW', 9, { submittedH: 6, stores: 1 }));
-const p144 = add(partner(144, 'Mitra Abadi Gadget', 'INDIVIDU', 3, 'REVISION_REQUIRED', 8, { submittedH: 24 * 6, docs: { all: 'VALID', FOTO_DEPAN: 'NEEDS_REVISION', notes: { FOTO_DEPAN: 'Foto buram dan terpotong di bagian bawah' } }, bank: 'NEEDS_REVISION', bankNote: 'Nomor rekening tidak sesuai dengan buku rekening' }));
-const p143 = add(partner(143, 'CV Cahaya Digital', 'CV', 2, 'REVISION_REQUIRED', 7, { submittedH: 24 * 5, docs: { all: 'VALID', SK_KEMENKUMHAM: 'NEEDS_REVISION', notes: { SK_KEMENKUMHAM: 'SK Kemenkumham kedaluwarsa, mohon unggah versi terbaru' } }, bank: 'VALID' }));
+const p144 = add(partner(144, 'Mitra Abadi Gadget', 'INDIVIDU', 3, 'REVISION_REQUIRED', 8, { submittedH: 24 * 6, docs: { all: 'VALID', FOTO_DEPAN: 'NEEDS_REVISION', notes: { FOTO_DEPAN: 'Foto buram dan terpotong di bagian bawah' } } }));
+const p143 = add(partner(143, 'CV Cahaya Digital', 'CV', 2, 'REVISION_REQUIRED', 7, { submittedH: 24 * 5, docs: { all: 'VALID', SK_KEMENKUMHAM: 'NEEDS_REVISION', notes: { SK_KEMENKUMHAM: 'SK Kemenkumham kedaluwarsa, mohon unggah versi terbaru' } } }));
 const p142 = add(partner(142, 'Prima Phone Store', 'INDIVIDU', 1, 'UNDER_REVIEW', 6, { submittedH: 24 * 8, privyId: 'PRV55120' }));
 const p141 = add(partner(141, 'PT Sentosa Retail Indonesia', 'PT', 5, 'UNDER_REVIEW', 13, { submittedH: 24 * 9 }));
 const p140 = add(partner(140, 'Anugerah Gadget', 'INDIVIDU', 4, 'UNDER_REVIEW', 10, { submittedH: 24 * 12, privyId: 'PRV48802' }));
@@ -233,11 +231,11 @@ p143.statusUpdatedAt = ago(30);
 p143.revisionRequest = { at: ago(30), by: R, general: null, items: [{ kind: 'DOC', ref: 'SK_KEMENKUMHAM', label: 'SK Kemenkumham', note: 'SK Kemenkumham kedaluwarsa, mohon unggah versi terbaru' }, { kind: 'SEC', ref: 'pic', label: 'Informasi PIC', note: 'Nomor handphone PIC tidak aktif' }] };
 
 [p142, p141, p140, p139, p138, p137, p136, p132, p131, p133].forEach(allValid);
-advance(p142, [['VERIFIED', 40, 'Seluruh dokumen wajib dan data rekening valid']]);
-advance(p141, [['VERIFIED', 30, 'Seluruh dokumen wajib dan data rekening valid']]);
-advance(p140, [['VERIFIED', 26, 'Seluruh dokumen wajib dan data rekening valid'], ['WAITING_PKS', 50, 'PKS dikirim di Privy web via Privy ID PRV48802']]);
+advance(p142, [['VERIFIED', 40, 'Seluruh dokumen wajib valid']]);
+advance(p141, [['VERIFIED', 30, 'Seluruh dokumen wajib valid']]);
+advance(p140, [['VERIFIED', 26, 'Seluruh dokumen wajib valid'], ['WAITING_PKS', 50, 'PKS dikirim di Privy web via Privy ID PRV48802']]);
 const live = [[p139, 'via Privy ID PRV31877'], [p138, `via email ${p138.pic.email}`], [p137, `via email ${p137.pic.email}`], [p136, `via email ${p136.pic.email}`], [p132, `via email ${p132.pic.email}`], [p131, `via email ${p131.pic.email}`], [p133, 'via Privy ID PRV22014']];
-live.forEach(([p, via]) => advance(p, [['VERIFIED', 22, 'Seluruh dokumen wajib dan data rekening valid'], ['WAITING_PKS', 46, `PKS dikirim di Privy web ${via}`], ['ACTIVE', 24 * 6, 'PKS ditandatangani (dicek di Privy web); partner diaktifkan']]));
+live.forEach(([p, via]) => advance(p, [['VERIFIED', 22, 'Seluruh dokumen wajib valid'], ['WAITING_PKS', 46, `PKS dikirim di Privy web ${via}`], ['ACTIVE', 24 * 6, 'PKS ditandatangani (dicek di Privy web); partner diaktifkan']]));
 // Toko tambahan baru aktif setelah ditambahkan (setelah partner Active).
 p139.pks.file = { name: 'pks_jaya_abadi_signed.pdf', by: R, at: p139.activatedAt };
 advance(p135, [['REJECTED', 30, 'Usaha tidak sesuai kriteria partner (bukan toko gadget)']]);

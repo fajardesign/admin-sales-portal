@@ -1,12 +1,12 @@
-import { Alert, Button, Icon, LinkButton } from '@ds/index.js';
+import { Alert, Icon, LinkButton } from '@ds/index.js';
 import { KeyValueGrid, RevisedBadge, SectionCard } from '../../../components/KeyValueGrid.jsx';
-import { PartnerStatusBadge, VerificationBadge } from '../../../components/Badges.jsx';
+import { PartnerStatusBadge } from '../../../components/Badges.jsx';
 import { actorLabel } from '../../../api/mockApi.js';
 import { BANKS, CHANNEL, ENTITY, PIC_ACCOUNT_LABEL, PIC_STATUS, areaName } from '../../../lib/constants.js';
 import { formatDateTime, formatPhone } from '../../../lib/format.js';
 
-/** Tab Data Partner (PRD §2B) — read-only; verifikasi Data Rekening hanya saat Under Review. */
-export function DataPartnerTab({ partner: p, onGoStores, onBank, onRetryPic, retrying }) {
+/** Tab Data Partner (PRD §2B) — read-only. Data Rekening tanpa verifikasi terpisah (revisi stakeholder 2026-10-08). */
+export function DataPartnerTab({ partner: p, onGoStores, onRetryPic, retrying }) {
   const sec = (k) => p.revisedSections.includes(k);
   const changed = (field) => [...p.fieldChanges].reverse().find((c) => c.field === field);
   const fv = (label, value, field, extra = {}) => {
@@ -23,7 +23,7 @@ export function DataPartnerTab({ partner: p, onGoStores, onBank, onRetryPic, ret
         <KeyValueGrid items={[
           fv('No. Registrasi', p.registrationNumber), fv('Nama Partner', p.partnerName), fv('Jenis Badan Usaha', ENTITY[p.businessEntityType]),
           fv('Alamat Partner (sesuai legalitas)', p.address, 'address', { full: true }),
-          fv('Provinsi', p.province), fv('Kabupaten/Kota', p.city), fv('Kecamatan', p.district), fv('Kelurahan', p.village), fv('RT / RW', `${p.rt} / ${p.rw}`),
+          fv('Provinsi', p.province), fv('Kabupaten/Kota', p.city), fv('Kecamatan', p.district), fv('Kelurahan', p.village), fv('RT / RW', `${p.rt} / ${p.rw}`), fv('Kode Referral', p.referralCode, 'referralCode'),
         ]} />
       </SectionCard>
 
@@ -47,23 +47,16 @@ export function DataPartnerTab({ partner: p, onGoStores, onBank, onRetryPic, ret
         <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>PIC berada di level partner, bukan per toko. Akun login partner dibuat untuk PIC saat partner menjadi Active.</span>
       </SectionCard>
 
-      <SectionCard title="Data Rekening" badge={<>{sec('bank') && <RevisedBadge />}<VerificationBadge value={p.bank.verification} /></>}
-        actions={editable && (
-          <>
-            <Button size="xs" variant={p.bank.verification === 'VALID' ? 'lighter' : 'stroke'} tone={p.bank.verification === 'VALID' ? 'primary' : 'neutral'} leftIcon={<Icon name="CheckLine" />} onClick={() => onBank('VALID')}>Valid</Button>
-            <Button size="xs" variant="stroke" tone="error" leftIcon={<Icon name="CloseLine" />} onClick={() => onBank('NEEDS_REVISION')}>Perlu Revisi</Button>
-          </>
-        )}>
+      <SectionCard title="Data Rekening" badge={sec('bank') && <RevisedBadge />}>
         {mismatch && <Alert status="warning" size="sm" title="Nama rekening berbeda dengan nama partner/PIC" />}
-        {p.bank.verification === 'NEEDS_REVISION' && p.bank.note && <Alert status="error" size="sm" title={`Alasan: ${p.bank.note}`} />}
         <KeyValueGrid items={[
           fv('Bank', BANKS[p.bank.code]), fv('Cabang', p.bank.branch), fv('No. Rekening', p.bank.accountNumber, 'accountNumber'), fv('Nama Rekening', p.bank.accountName),
-          fv('Status Verifikasi', <VerificationBadge value={p.bank.verification} />),
-          fv('Diverifikasi oleh / pada', p.bank.verifiedBy ? `${p.bank.verifiedBy} · ${formatDateTime(p.bank.verifiedAt)}` : null),
         ]} />
-        <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>
-          {editable ? 'Fase 1 tanpa inquiry otomatis: cocokkan bank, nomor, dan nama rekening dengan dokumen buku rekening yang diunggah.' : p.status === 'ACTIVE' ? 'Data rekening tidak dapat diubah setelah partner aktif.' : 'Verifikasi hanya dapat diubah saat status Under Review.'}
-        </span>
+        {(editable || p.status === 'ACTIVE') && (
+          <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>
+            {editable ? 'Cocokkan bank, nomor, dan nama rekening dengan dokumen buku rekening yang diunggah. Minta revisi Data Rekening bila tidak sesuai.' : 'Data rekening tidak dapat diubah setelah partner aktif.'}
+          </span>
+        )}
       </SectionCard>
 
       <SectionCard title="Info Pengajuan">
