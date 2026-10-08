@@ -1,20 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { passwordPolicy, validatePksFile, validateReason, validateReferralCode, validateUserForm } from '../lib/validation.js';
 import { formatDateTime, formatDateWIB, formatDuration, formatPhone, formatRp, normalizePhone } from '../lib/format.js';
-import { tierFor, tierLabel, verificationGap } from '../api/mockApi.js';
+import { findByIdentifier, tierFor, tierLabel, verificationGap } from '../api/mockApi.js';
 
-const ok = { email: 'budi@amarbank.co.id', phone: '081234567890', username: 'budi.santoso', fullName: 'Budi Santoso', role: 'REVIEWER', tlLevel: '', areaIds: [], leaderId: '' };
+const ok = { email: 'budi@amarbank.co.id', phone: '081234567890', fullName: 'Budi Santoso', role: 'REVIEWER', tlLevel: '', areaIds: [], leaderId: '' };
 const leaders = [{ value: '3', label: 'Hasan Basri' }];
 
 describe('validateUserForm (PRD §3B)', () => {
   it('lolos untuk Admin valid', () => expect(validateUserForm(ok)).toEqual({}));
-  it('wajib diisi', () => expect(validateUserForm({ ...ok, email: '', phone: '', username: '', fullName: '', role: '' })).toEqual({
-    email: 'Informasi wajib diisi', phone: 'Informasi wajib diisi', username: 'Informasi wajib diisi', fullName: 'Informasi wajib diisi', role: 'Informasi wajib diisi',
+  it('wajib diisi', () => expect(validateUserForm({ ...ok, email: '', phone: '', fullName: '', role: '' })).toEqual({
+    email: 'Informasi wajib diisi', phone: 'Informasi wajib diisi', fullName: 'Informasi wajib diisi', role: 'Informasi wajib diisi',
   }));
-  it('format email, telepon, username, nama', () => {
+  it('format email, telepon, nama', () => {
     expect(validateUserForm({ ...ok, email: 'budi@x' }).email).toBe('Format tidak valid');
     expect(validateUserForm({ ...ok, phone: '0212345678' }).phone).toBe('Format tidak valid');
-    expect(validateUserForm({ ...ok, username: 'Bu' }).username).toBe('Format tidak valid');
     expect(validateUserForm({ ...ok, fullName: 'Budi123' }).fullName).toBe('Format tidak valid');
     expect(validateUserForm({ ...ok, fullName: 'a'.repeat(101) }).fullName).toBe('Maksimal 100 karakter');
   });
@@ -58,6 +57,15 @@ describe('revisi stakeholder 2026-10-08', () => {
   });
 });
 
+describe('identitas login email atau nomor telepon', () => {
+  it('nomor telepon 08/62/+62/8 dianggap sama; username tidak dipakai', () => {
+    const rina = findByIdentifier('rina.saraswati@amarbank.co.id');
+    expect(rina.fullName).toBe('Rina Saraswati');
+    ['0' + rina.phone, '62' + rina.phone, '+62 ' + rina.phone, rina.phone].forEach((id) => expect(findByIdentifier(id)?.id).toBe(rina.id));
+    expect(findByIdentifier('rina.saraswati')).toBeUndefined();
+  });
+});
+
 describe('format', () => {
   it('normalisasi telepon 0/62', () => {
     expect(normalizePhone('0812-3456-7890')).toBe('81234567890');
@@ -73,8 +81,15 @@ describe('format', () => {
 });
 
 describe('passwordPolicy', () => {
-  it('semua terpenuhi', () => expect(passwordPolicy('Rahasia123', 'dimas.pratama').every((c) => c.ok)).toBe(true));
-  it('menolak username', () => expect(passwordPolicy('Dimas.Pratama1', 'dimas.pratama1').find((c) => c.label === 'Tidak sama dengan username').ok).toBe(false));
+  const who = { email: 'dimas.pratama1@amarbank.co.id', phone: '81234567890' };
+  const rule = (pw) => passwordPolicy(pw, who).find((c) => c.label === 'Tidak sama dengan email atau nomor telepon').ok;
+  it('semua terpenuhi', () => expect(passwordPolicy('Rahasia123', who).every((c) => c.ok)).toBe(true));
+  it('menolak email atau nomor telepon (format apa pun)', () => {
+    expect(rule('Dimas.Pratama1@amarbank.co.id')).toBe(false);
+    expect(rule('081234567890')).toBe(false);
+    expect(rule('+62 812-3456-7890')).toBe(false);
+    expect(rule('Rahasia123')).toBe(true);
+  });
 });
 
 describe('tier insentif (rentang dari–sampai, PRD v3 §E2)', () => {

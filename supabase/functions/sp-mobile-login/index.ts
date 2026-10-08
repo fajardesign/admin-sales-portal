@@ -1,8 +1,9 @@
 // S&P Portal — login aplikasi mobile (Android) untuk akun yang dibuat di Account Management.
-// POST { identifier: email | username, password, platform? } → 200 { session, user, access } atau 4xx { error }.
+// POST { identifier: email | nomor telepon, password, platform? } → 200 { session, user, access } atau 4xx { error }.
 // platform: 'sales-app-access' (default, aplikasi Android TL/SR/SA) | 'partner-web-access' (Partner Dashboard, Partner PIC).
 // Cek akses mengikuti roles_matrix (PRD v3): realm role → platform access → feature access roles.
 // error: INVALID | LOCKED | DISABLED | NOT_ACTIVATED | FORBIDDEN_PLATFORM (platform role ≠ platform aplikasi) | BAD_REQUEST.
+// Nomor telepon: 08…, 62…, +62…, 8… dianggap sama (disimpan ternormalisasi 8…). Username tidak dipakai (revisi 2026-10-08).
 // Setelah login, aplikasi memakai session ini dengan supabase-js (`auth.setSession`) dan bisa membaca profilnya
 // sendiri dari tabel app_user (RLS: auth_user_id = auth.uid()).
 import { createClient } from 'npm:@supabase/supabase-js@2';
@@ -31,6 +32,13 @@ const ACCESS: Record<string, { realmRole: string; platform: string; features: st
   PARTNER: { realmRole: 'PARTNER', platform: 'partner-web-access', features: ['PARTNER_SALES_DASHBOARD', 'PARTNER_COMMISSION', 'PARTNER_PROFILE', 'TRANSACTION_INQUIRY', 'DOCUMENT_REPOSITORY'] },
 };
 const PLATFORMS = ['sales-app-access', 'partner-web-access'];
+/** Normalisasi nomor telepon sama dengan portal (format.js normalizePhone). */
+const normalizePhone = (v: string) => {
+  let d = v.replace(/\D/g, '');
+  if (d.startsWith('62')) d = d.slice(2);
+  if (d.startsWith('0')) d = d.slice(1);
+  return d;
+};
 const MAX_FAILS = 5;
 const LOCK_MS = 15 * 60_000;
 
@@ -49,8 +57,10 @@ Deno.serve(async (req) => {
   } catch { /* ditangani di bawah */ }
   if (!identifier || !password || !PLATFORMS.includes(platform)) return json({ error: 'BAD_REQUEST' }, 400);
 
-  const col = identifier.includes('@') ? 'email' : 'username';
-  const { data: u } = await admin.from('app_user').select('*').eq(col, identifier).maybeSingle();
+  const byEmail = identifier.includes('@');
+  const value = byEmail ? identifier : normalizePhone(identifier);
+  if (!value) return json({ error: 'INVALID' }, 401);
+  const { data: u } = await admin.from('app_user').select('*').eq(byEmail ? 'email' : 'phone', value).maybeSingle();
   if (!u || !u.auth_user_id) return json({ error: 'INVALID' }, 401);
   if (u.lock_until && new Date(u.lock_until).getTime() > Date.now()) return json({ error: 'LOCKED', lockUntil: u.lock_until }, 423);
 

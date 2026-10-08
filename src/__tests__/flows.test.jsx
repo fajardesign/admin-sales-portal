@@ -3,7 +3,7 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/react
 import userEvent from '@testing-library/user-event';
 import App from '../App.jsx';
 import { DEFAULT_SCENARIO, setScenario } from '../dev/scenario.js';
-import { DEMO_PASSWORD } from '../api/db.js';
+import { DEMO_PASSWORD, users } from '../api/db.js';
 import { simulateResubmit } from '../api/mockApi.js';
 
 const T = { timeout: 4000 };
@@ -16,8 +16,11 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-async function login(user, id, pw = DEMO_PASSWORD) {
-  await user.type(screen.getByPlaceholderText('nama@amarbank.co.id atau username'), id);
+/** id tanpa "@" dan bukan angka = handle demo (mis. 'rina.saraswati') → email @amarbank.co.id. */
+const loginId = (id) => (id.includes('@') || /^[+\d]/.test(id) ? id : `${id}@amarbank.co.id`);
+async function login(user, rawId, pw = DEMO_PASSWORD) {
+  const id = loginId(rawId);
+  await user.type(screen.getByPlaceholderText('nama@amarbank.co.id atau 08123456789'), id);
   await user.type(screen.getByPlaceholderText('••••••••'), pw);
   await user.click(screen.getByRole('button', { name: 'Masuk' }));
 }
@@ -44,9 +47,9 @@ describe('W1 Login & akses per role', () => {
     const user = userEvent.setup();
     render(<App />);
     await login(user, 'bayu.prasetyo', 'salah');
-    expect(await screen.findByText('Email/username atau password salah. Silakan coba lagi.', {}, T)).toBeTruthy();
+    expect(await screen.findByText('Email/nomor telepon atau password salah. Silakan coba lagi.', {}, T)).toBeTruthy();
     for (let i = 0; i < 4; i += 1) {
-      await user.clear(screen.getByPlaceholderText('nama@amarbank.co.id atau username'));
+      await user.clear(screen.getByPlaceholderText('nama@amarbank.co.id atau 08123456789'));
       await login(user, 'bayu.prasetyo', 'salah');
     }
     expect(await screen.findByText('Akun terkunci sementara. Coba lagi dalam 15 menit.', {}, T)).toBeTruthy();
@@ -57,7 +60,7 @@ describe('W1 Login & akses per role', () => {
     render(<App />);
     await login(user, 'rizky.ramadhan');
     expect(await screen.findByText('Akun Anda tidak aktif. Hubungi Admin.', {}, T)).toBeTruthy();
-    await user.clear(screen.getByPlaceholderText('nama@amarbank.co.id atau username'));
+    await user.clear(screen.getByPlaceholderText('nama@amarbank.co.id atau 08123456789'));
     await login(user, 'fajar.nugroho@amarbank.co.id');
     expect(await screen.findByText('Akun belum diaktivasi. Cek email undangan Anda.', {}, T)).toBeTruthy();
   });
@@ -254,7 +257,6 @@ describe('W2 Account Management', () => {
     await user.click(screen.getByRole('button', { name: 'Tambah Pengguna' }));
     await user.type(await screen.findByPlaceholderText('nama@amarbank.co.id', {}, T), 'gilang.ramadhan@amarbank.co.id');
     await user.type(screen.getByPlaceholderText('812 3456 7890'), '081277776666');
-    await user.type(screen.getByPlaceholderText('budi.santoso'), 'gilang.ramadhan');
     await user.type(screen.getByPlaceholderText('Budi Santoso'), 'Gilang Ramadhan');
     const save = screen.getByRole('button', { name: 'Simpan' });
     expect(save.disabled).toBe(true);
@@ -285,11 +287,41 @@ describe('W2 Account Management', () => {
     await user.click(screen.getByRole('button', { name: 'Tambah Pengguna' }));
     await user.type(await screen.findByPlaceholderText('nama@amarbank.co.id', {}, T), 'bayu.prasetyo@amarbank.co.id');
     await user.type(screen.getByPlaceholderText('812 3456 7890'), '81277776666');
-    await user.type(screen.getByPlaceholderText('budi.santoso'), 'bayu.baru');
     await user.type(screen.getByPlaceholderText('Budi Santoso'), 'Bayu Baru');
     await pick(user, 'Pilih role', 'Admin (Reviewer)');
     await user.click(screen.getByRole('button', { name: 'Simpan' }));
     expect(await screen.findByText('Email sudah terdaftar', {}, T)).toBeTruthy();
+  });
+
+  it('nomor telepon terdaftar ditolak; username tidak ada lagi di form', async () => {
+    const user = await start('rina.saraswati');
+    go('/account-management');
+    await screen.findByText('Yohana Sitorus', {}, T);
+    await user.click(screen.getByRole('button', { name: 'Tambah Pengguna' }));
+    expect(screen.queryByText('Username')).toBeNull();
+    await user.type(await screen.findByPlaceholderText('nama@amarbank.co.id', {}, T), 'orang.baru@amarbank.co.id');
+    await user.type(screen.getByPlaceholderText('812 3456 7890'), `0${users[1].phone}`);
+    await user.type(screen.getByPlaceholderText('Budi Santoso'), 'Orang Baru');
+    await pick(user, 'Pilih role', 'Admin (Reviewer)');
+    await user.click(screen.getByRole('button', { name: 'Simpan' }));
+    expect(await screen.findByText('Nomor telepon sudah terdaftar', {}, T)).toBeTruthy();
+  });
+
+  it('Ubah Nomor Telepon lalu login dengan nomor baru', async () => {
+    let user = await start('rina.saraswati');
+    go('/account-management?q=andi');
+    await user.click(await screen.findByText('Andi Pratama', {}, T));
+    await user.click(await screen.findByRole('button', { name: 'Ubah Nomor Telepon' }, T));
+    const dialog = await screen.findByRole('dialog', {}, T);
+    await user.type(within(dialog).getByPlaceholderText('812 3456 7890'), '081299998888');
+    await user.type(within(dialog).getByPlaceholderText('Contoh: Nomor lama tidak aktif'), 'Nomor lama hilang');
+    await user.click(within(dialog).getByRole('button', { name: 'Simpan' }));
+    expect(await screen.findByText('Nomor telepon berhasil diubah.', {}, T)).toBeTruthy();
+    cleanup();
+    sessionStorage.clear();
+    go('/login');
+    user = await start('+62 812-9999-8888');
+    expect(await screen.findByText('Akses ditolak. Akun ini tidak memiliki akses ke aplikasi ini.', {}, T)).toBeTruthy();
   });
 
   it('kirim ulang tautan dan nonaktifkan pengguna', async () => {

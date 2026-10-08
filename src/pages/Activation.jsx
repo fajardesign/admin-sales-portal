@@ -40,7 +40,7 @@ function ActivationView({ userId, mode, onBackToLogin }) {
 
   if (!link) return <AuthLayout label="Sales & Partner Portal" />;
 
-  const checks = passwordPolicy(pw, link.user.username);
+  const checks = passwordPolicy(pw, { email: link.user.email, phone: link.user.phone });
   const pwOk = checks.every((c) => c.ok);
   const matchOk = pw2.length > 0 && pw2 === pw;
   const msg = done ? (reset ? MESSAGES.resetDone : MESSAGES.done) : link.status === 'expired' && reset ? MESSAGES.resetExpired : MESSAGES[link.status];

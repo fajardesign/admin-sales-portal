@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { Alert, CheckboxLabel, TextArea, TextInput } from '@ds/index.js';
 import { ActionModal } from '../../components/ActionModal.jsx';
 import { useToast } from '../../components/Toaster.jsx';
-import { ApiError, changeEmail, disableUser, resendInvite, sendResetPassword } from '../../api/mockApi.js';
+import { ApiError, changeEmail, changePhone, disableUser, resendInvite, sendResetPassword } from '../../api/mockApi.js';
 import { ROLES } from '../../lib/constants.js';
-import { EMAIL_RE, MSG, validateReason } from '../../lib/validation.js';
+import { formatPhone, normalizePhone } from '../../lib/format.js';
+import { EMAIL_RE, MSG, validatePhone, validateReason } from '../../lib/validation.js';
 
 /** Kirim ulang tautan aktivasi (Pending/Expired). */
 export function ResendModal({ target, user, onClose, onDone }) {
@@ -112,8 +113,46 @@ export function ChangeEmailModal({ target, user, onClose, onDone }) {
       <TextArea label="Alasan" required maxLength={255} rows={2} value={reason} onChange={setReason} placeholder="Contoh: Email kantor berubah" error={touched ? reasonErr : undefined} />
       {active && <CheckboxLabel checked={sendReset} onChange={setSendReset} label="Kirim tautan reset password ke email baru" />}
       <Alert status="information" size="sm" title={target.role === 'PARTNER'
-        ? 'Perubahan berlaku langsung. Username akun PIC ikut berubah dan pemberitahuan dikirim ke email lama.'
+        ? 'Perubahan berlaku langsung. Email PIC di data partner ikut berubah dan pemberitahuan dikirim ke email lama.'
         : 'Perubahan berlaku langsung dan pemberitahuan dikirim ke email lama.'} />
+    </ActionModal>
+  );
+}
+
+/** Ubah nomor telepon (Pending, Expired, Active; revisi stakeholder 2026-10-08): nomor dipakai untuk login, wajib unik, alasan wajib. */
+export function ChangePhoneModal({ target, user, onClose, onDone }) {
+  const toast = useToast();
+  const [phone, setPhone] = useState('');
+  const [reason, setReason] = useState('');
+  const [touched, setTouched] = useState(false);
+  const [serverErr, setServerErr] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const phoneErr = serverErr || validatePhone(phone) || (normalizePhone(phone) === target.phone ? 'Nomor telepon baru sama dengan nomor saat ini' : undefined);
+  const reasonErr = validateReason(reason);
+  async function save() {
+    setTouched(true);
+    if (phoneErr || reasonErr) return;
+    setBusy(true);
+    try {
+      const u = await changePhone(target.id, phone, reason.trim(), user);
+      toast('success', 'Nomor telepon berhasil diubah.');
+      onDone(u);
+    } catch (err) {
+      setBusy(false);
+      if (err instanceof ApiError && err.code === 'DUPLICATE') setServerErr('Nomor telepon sudah terdaftar');
+      else toast('error', 'Gagal mengubah nomor telepon. Coba lagi.');
+    }
+  }
+  return (
+    <ActionModal open onClose={onClose} title="Ubah Nomor Telepon" description={`${target.fullName} · ${ROLES[target.role].label}`} icon="PhoneLine" confirmLabel="Simpan" busy={busy} onConfirm={save}>
+      <TextInput label="Nomor telepon saat ini" disabled value={target.phone ? formatPhone(target.phone) : '-'} />
+      <TextInput label="Nomor telepon baru" required placeholder="812 3456 7890" inputMode="numeric" value={phone}
+        prefix={<span style={{ padding: '0 var(--space-12)', font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>+62</span>}
+        onChange={(ev) => { setPhone(ev.target.value.replace(/\D/g, '').slice(0, 14)); setServerErr(null); }} error={touched ? phoneErr : undefined} />
+      <TextArea label="Alasan" required maxLength={255} rows={2} value={reason} onChange={setReason} placeholder="Contoh: Nomor lama tidak aktif" error={touched ? reasonErr : undefined} />
+      <Alert status="information" size="sm" title={target.role === 'PARTNER'
+        ? 'Perubahan berlaku langsung dan nomor ini dipakai untuk login. No. Handphone PIC di data partner ikut berubah.'
+        : 'Perubahan berlaku langsung dan nomor ini dipakai untuk login.'} />
     </ActionModal>
   );
 }

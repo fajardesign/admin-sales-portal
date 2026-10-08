@@ -1,7 +1,7 @@
 // Mock API — pengganti backend Sales Portal + Keycloak (realm sales-portal). Perilaku mengikuti PRD S&P Portal.
 // Semua data di src/api/db.js (memori). Fungsi async dengan jeda kecil agar state loading terlihat.
 import { getScenario } from '../dev/scenario.js';
-import { normalizePhone } from '../lib/format.js';
+import { formatPhone, normalizePhone } from '../lib/format.js';
 import {
   ACCOUNT_STATUS, AREAS, CREATABLE_ROLES, ACTIVATION_TTL_MS, FINAL_STATUSES, PAGE_SIZE, RESET_TTL_MS, PARTNER_STATUS, ROLES, TRANSITIONS,
 } from '../lib/constants.js';
@@ -35,6 +35,17 @@ async function listGate(retry) {
 }
 
 // ------------------------------------------------------------------ util
+const allAccounts = () => [...users, ...superAdmins];
+/** Cari akun dari identitas login: berisi "@" = email; selain itu nomor telepon (08…, 62…, +62…, 8… dianggap sama). */
+export function findByIdentifier(identifier) {
+  const id = (identifier || '').trim().toLowerCase();
+  if (!id) return undefined;
+  if (id.includes('@')) return allAccounts().find((x) => x.email === id);
+  const phone = normalizePhone(id);
+  return phone ? allAccounts().find((x) => x.phone && x.phone === phone) : undefined;
+}
+const phoneTaken = (phone, exceptId) => allAccounts().some((x) => x.phone === phone && x.id !== exceptId);
+
 export const userById = (id) => users.find((u) => u.id === id) ?? superAdmins.find((u) => u.id === id);
 /** Status akun Keycloak dengan Expired terhitung (Pending + tautan aktivasi 3x24 jam lewat). */
 export function accountStatus(u) {
@@ -54,14 +65,13 @@ const MAX_FAILS = 5;
 const LOCK_MS = 15 * 60000;
 
 /**
- * Login Keycloak: email atau username + password.
+ * Login Keycloak: email atau nomor telepon + password (revisi stakeholder 2026-10-08; username tidak dipakai).
  * Error: OUTAGE | LOCKED | INVALID | DISABLED | NOT_ACTIVATED. Role tanpa platform web-access tetap mendapat sesi (web menampilkan Akses ditolak).
  */
 export async function login(identifier, password) {
   await wait(600);
   if (getScenario().service === 'outage') throw new ApiError('OUTAGE');
-  const id = identifier.trim().toLowerCase();
-  const u = [...users, ...superAdmins].find((x) => x.email === id || x.username === id);
+  const u = findByIdentifier(identifier);
   if (u?.lockUntil && now() < u.lockUntil) throw new ApiError('LOCKED');
   if (!u || u.password !== password) {
     if (u) {
@@ -84,13 +94,14 @@ export function sessionFor(u, loginId = u.email) {
   };
 }
 /** Sesi contoh untuk DevToolbar / preset. */
-export const demoSession = (username) => sessionFor([...users, ...superAdmins].find((u) => u.username === username));
+export const demoSession = (handle) => sessionFor(allAccounts().find((u) => u.email === handle || u.email.startsWith(`${handle}@`)));
+// handle = email atau bagian sebelum "@" (mis. 'rina.saraswati'), hanya untuk DevToolbar/preset/tes.
 
 // ------------------------------------------------------------------ Partner Pipeline (W3)
 function picAccount(p) {
   if (p.picAccountFailed) return { status: 'FAILED' };
   const u = users.find((x) => x.partnerId === p.id);
-  return u ? { status: accountStatus(u), userId: u.id, username: u.username } : { status: 'NONE' };
+  return u ? { status: accountStatus(u), userId: u.id } : { status: 'NONE' };
 }
 function enrich(p) {
   const sub = userById(p.submittedBy);
@@ -325,13 +336,13 @@ export function userCounts() {
   return counts;
 }
 
-/** PRD §3A — daftar pengguna: status, cari (nama/username/email/telepon), role, area; terbaru di atas; 20 per halaman. */
+/** PRD §3A — daftar pengguna: status, cari (nama/email/telepon), role, area; terbaru di atas; 20 per halaman. */
 export async function listUsers(q = {}, { retry = false } = {}) {
   const empty = await listGate(retry);
   if (empty) return { rows: [], total: 0, counts: { ALL: 0, PENDING: 0, EXPIRED: 0, ACTIVE: 0, DISABLED: 0 } };
   const term = (q.q ?? '').trim().toLowerCase();
   const rows = users.filter((u) => (!q.status || accountStatus(u) === q.status)
-    && (!term || [u.fullName, u.username, u.email, u.phone].some((v) => v.toLowerCase().includes(term.replace(/^\+?62|^0/, ''))))
+    && (!term || [u.fullName, u.email, u.phone].some((v) => v.toLowerCase().includes(term.replace(/^\+?62|^0/, ''))))
     && (!q.role || u.role === q.role)
     && (!q.area || u.areaIds.includes(Number(q.area))))
     .sort((a, b) => b.createdAt - a.createdAt);
@@ -362,21 +373,21 @@ export function leaderOptions(role, areaId) {
 
 /**
  * PRD §3B — POST /api/v1/users. Return { user, inviteSent }.
- * Error: DUPLICATE (field email/username, 409) | KEYCLOAK_FAILED.
+ * Error: DUPLICATE (field email/phone, 409) | KEYCLOAK_FAILED. Username Keycloak = email.
  */
 export async function createUser(form, session) {
   const { saveOutcome } = getScenario();
   await wait(900);
   const email = form.email.trim().toLowerCase();
-  const username = form.username.trim().toLowerCase();
+  const phone = normalizePhone(form.phone);
   if (!CREATABLE_ROLES.includes(form.role)) throw new ApiError('INVALID');
   if ([...users, ...superAdmins].some((u) => u.email === email)) throw new ApiError('DUPLICATE', 'email');
-  if ([...users, ...superAdmins].some((u) => u.username === username)) throw new ApiError('DUPLICATE', 'username');
+  if (phoneTaken(phone)) throw new ApiError('DUPLICATE', 'phone');
   if (saveOutcome === 'kcFail') throw new ApiError('KEYCLOAK_FAILED');
   const inviteSent = saveOutcome !== 'emailFail';
   const u = {
-    id: Math.max(...users.map((x) => x.id)) + 1, fullName: form.fullName.trim(), role: form.role, username, email,
-    phone: normalizePhone(form.phone), tlLevel: form.role === 'TL' ? form.tlLevel : null,
+    id: Math.max(...users.map((x) => x.id)) + 1, fullName: form.fullName.trim(), role: form.role, username: email, email,
+    phone, tlLevel: form.role === 'TL' ? form.tlLevel : null,
     areaIds: form.role === 'REVIEWER' ? [] : form.areaIds, supervisorId: form.leaderId ? Number(form.leaderId) : null, partnerId: null,
     status: 'PENDING', inviteSentAt: now(), inviteResendCount: 0, activatedAt: null, disabledAt: null, disabledBy: null, disabledReason: null,
     createdBy: actorOf(session), createdAt: now(), password: null, fails: 0, lockUntil: null,
@@ -417,14 +428,14 @@ export async function disableUser(id, reason, session) {
 export async function checkActivation(userId, mode = 'activate') {
   await wait(200);
   const u = userId ? userById(userId) : users.find((x) => x.id === 10);
-  if (!userId) return { status: getScenario().activationState, user: { id: u.id, fullName: u.fullName, username: u.username, email: u.email, role: u.role } };
+  if (!userId) return { status: getScenario().activationState, user: { id: u.id, fullName: u.fullName, phone: u.phone, email: u.email, role: u.role } };
   if (mode === 'reset') {
     const ok = u.status === 'ACTIVE' && u.resetSentAt && now() - u.resetSentAt <= RESET_TTL_MS;
-    return { status: ok ? 'valid' : 'expired', user: { id: u.id, fullName: u.fullName, username: u.username, email: u.email, role: u.role } };
+    return { status: ok ? 'valid' : 'expired', user: { id: u.id, fullName: u.fullName, phone: u.phone, email: u.email, role: u.role } };
   }
   const st = accountStatus(u);
   const status = st === 'ACTIVE' ? 'already' : st === 'PENDING' ? 'valid' : 'expired';
-  return { status, user: { id: u.id, fullName: u.fullName, username: u.username, email: u.email, role: u.role } };
+  return { status, user: { id: u.id, fullName: u.fullName, phone: u.phone, email: u.email, role: u.role } };
 }
 
 export async function activateAccount(userId, password, mode = 'activate') {
@@ -457,8 +468,8 @@ export async function sendResetPassword(id, session) {
 }
 
 /**
- * Ubah email (Pending, Expired, Active): valid & unik, alasan wajib, berlaku langsung. Untuk Partner (PIC) username ikut berubah
- * dan email PIC di data partner diperbarui. Pemberitahuan dikirim ke email lama. Opsional kirim tautan reset ke email baru (akun Active).
+ * Ubah email (Pending, Expired, Active): valid & unik, alasan wajib, berlaku langsung. Username Keycloak (= email) ikut berubah;
+ * untuk Partner (PIC) email PIC di data partner diperbarui. Pemberitahuan dikirim ke email lama. Opsional kirim tautan reset ke email baru (akun Active).
  */
 export async function changeEmail(id, newEmail, reason, sendReset, session) {
   await wait(600);
@@ -468,13 +479,34 @@ export async function changeEmail(id, newEmail, reason, sendReset, session) {
   if ([...users, ...superAdmins].some((x) => x.email === email && x.id !== id)) throw new ApiError('DUPLICATE', 'email');
   const old = u.email;
   u.email = email;
+  u.username = email;
   if (u.role === 'PARTNER') {
-    u.username = email;
     const p = findP(u.partnerId);
     if (p) { p.changeLog.push({ at: now(), by: actorOf(session), section: 'pic', field: 'Email PIC', old, new: email, reason }); p.pic.email = email; }
   }
   u.log.push({ at: now(), text: `Email diubah dari ${old} ke ${email} oleh ${actorOf(session)}: ${reason}. Pemberitahuan dikirim ke email lama` });
   if (sendReset && accountStatus(u) === 'ACTIVE') { u.resetSentAt = now(); u.log.push({ at: now(), text: `Tautan reset password dikirim ke ${email}` }); }
+  syncUser(u);
+  return enrichUser(u);
+}
+
+/**
+ * Ubah nomor telepon (Pending, Expired, Active; revisi stakeholder 2026-10-08): nomor dipakai untuk login, wajib valid & unik,
+ * alasan wajib, berlaku langsung. Untuk Partner (PIC) No. Handphone PIC di data partner ikut diperbarui.
+ */
+export async function changePhone(id, newPhone, reason, session) {
+  await wait(600);
+  const u = userById(id);
+  const phone = normalizePhone(newPhone);
+  if (accountStatus(u) === 'DISABLED') throw new ApiError('CONFLICT');
+  if (phoneTaken(phone, id)) throw new ApiError('DUPLICATE', 'phone');
+  const old = u.phone;
+  u.phone = phone;
+  if (u.role === 'PARTNER') {
+    const p = findP(u.partnerId);
+    if (p) { p.changeLog.push({ at: now(), by: actorOf(session), section: 'pic', field: 'No. Handphone PIC', old: formatPhone(old), new: formatPhone(phone), reason }); p.pic.phone = phone; }
+  }
+  u.log.push({ at: now(), text: `Nomor telepon diubah dari ${formatPhone(old)} ke ${formatPhone(phone)} oleh ${actorOf(session)}: ${reason}` });
   syncUser(u);
   return enrichUser(u);
 }
@@ -492,6 +524,9 @@ export async function updatePartnerData(pid, changes, reason, session) {
   await wait(600);
   const p = findP(pid);
   if (p.status !== 'ACTIVE') throw new ApiError('CONFLICT');
+  const account = users.find((x) => x.partnerId === p.id);
+  const phoneChange = changes.find((c) => c.field === 'picPhone');
+  if (phoneChange && phoneTaken(phoneChange.value, account?.id)) throw new ApiError('DUPLICATE', 'picPhone');
   changes.forEach((c) => {
     let obj; let key;
     if (c.storeId) { obj = p.stores.find((s) => s.id === c.storeId); key = c.field; } else [obj, key] = EDITABLE[c.field](p);
@@ -499,8 +534,12 @@ export async function updatePartnerData(pid, changes, reason, session) {
     p.changeLog.push({ at: now(), by: actorOf(session), section: c.section, field: c.label, storeId: c.storeId ?? null, old: c.display?.old ?? obj[key], new: c.display?.new ?? c.value, reason });
     obj[key] = c.value;
   });
-  const u = users.find((x) => x.partnerId === p.id);
-  if (u) { u.fullName = p.pic.name; syncUser(u); }
+  // Nama dan No. Handphone PIC ikut ke akun login PIC (nomor telepon dipakai untuk login).
+  if (account) {
+    if (phoneChange && account.phone !== p.pic.phone) account.log.push({ at: now(), text: `Nomor telepon diubah dari ${formatPhone(account.phone)} ke ${formatPhone(p.pic.phone)} lewat Ubah Data Partner oleh ${actorOf(session)}` });
+    Object.assign(account, { fullName: p.pic.name, phone: p.pic.phone });
+    syncUser(account);
+  }
   log(p, { from: null, to: null, by: actorOf(session), reason: `Data partner diubah (${changes.map((c) => c.label).join(', ')}): ${reason}` });
   return enrich(p);
 }

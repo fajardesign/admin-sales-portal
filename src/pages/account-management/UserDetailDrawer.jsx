@@ -18,7 +18,7 @@ const Section = ({ title, children }) => (
 );
 
 /** W2c · Detail pengguna (PRD §3C): informasi, role & akses, aktivasi, nonaktif, riwayat; aksi footer sesuai status. */
-export function UserDetailDrawer({ userId, user, version, onClose, onResend, onDisable, onReset, onChangeEmail }) {
+export function UserDetailDrawer({ userId, user, version, onClose, onResend, onDisable, onReset, onChangeEmail, onChangePhone }) {
   const [u, setU] = useState(null);
   useEffect(() => { getUser(userId).then(setU); }, [userId, version]);
   if (!u) return <Drawer open width={480} onClose={onClose} header={<DrawerHeader title="Detail Pengguna" onClose={onClose} />} />;
@@ -31,6 +31,7 @@ export function UserDetailDrawer({ userId, user, version, onClose, onResend, onD
       header={<DrawerHeader size="lg" title={u.fullName} description={`${ROLES[u.role].label} · ${areas}`} badge={<AccountStatusBadge status={st} />} onClose={onClose} />}
       footer={(
         <DrawerFooter left={st !== 'DISABLED' && u.id !== user.userId && <Button variant="ghost" tone="error" size="sm" onClick={() => onDisable(u)}>Nonaktifkan</Button>}>
+          {st !== 'DISABLED' && <Button variant="stroke" tone="neutral" size="sm" onClick={() => onChangePhone(u)}>Ubah Nomor Telepon</Button>}
           {st !== 'DISABLED' && <Button variant="stroke" tone="neutral" size="sm" onClick={() => onChangeEmail(u)}>Ubah Email</Button>}
           {st === 'ACTIVE' && <Button size="sm" onClick={() => onReset(u)}>Reset Password</Button>}
           {pending && <Button size="sm" onClick={() => onResend(u)}>Kirim Ulang Aktivasi</Button>}
@@ -40,8 +41,8 @@ export function UserDetailDrawer({ userId, user, version, onClose, onResend, onD
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-24)', padding: 'var(--space-16) var(--space-24) var(--space-24)' }}>
         <Section title="Informasi Pengguna">
           <KeyValueGrid items={[
-            { label: 'Nama Lengkap', value: u.fullName }, { label: 'Username', value: u.username },
-            { label: 'Email', value: u.email, full: true }, { label: 'Nomor Telepon (kontak)', value: formatPhone(u.phone) },
+            { label: 'Nama Lengkap', value: u.fullName, full: true },
+            { label: 'Email', value: u.email }, { label: 'Nomor Telepon', value: formatPhone(u.phone) },
           ]} />
         </Section>
         <Section title="Role & Akses">

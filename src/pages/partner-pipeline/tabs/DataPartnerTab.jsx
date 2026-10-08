@@ -42,7 +42,7 @@ export function DataPartnerTab({ partner: p, onGoStores, onRetryPic, retrying })
         )}
         <KeyValueGrid items={[
           fv('Nama PIC', p.pic.name), fv('Email PIC', p.pic.email), fv('No. Handphone', formatPhone(p.pic.phone), 'phone'), fv('Status PIC', PIC_STATUS[p.pic.status]),
-          fv('Status Akun Login', PIC_ACCOUNT_LABEL[pa.status]), fv('Username', pa.username ?? null),
+          fv('Status Akun Login', PIC_ACCOUNT_LABEL[pa.status])
         ]} />
         <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>PIC berada di level partner, bukan per toko. Akun login partner dibuat untuk PIC saat partner menjadi Active.</span>
       </SectionCard>

@@ -23,7 +23,7 @@ function user(id, fullName, role, extra = {}) {
   const inviteSentAt = extra.inviteSentAt ?? createdAt;
   return {
     id, fullName, role,
-    username: extra.username ?? local,
+    username: extra.email ?? `${local}@amarbank.co.id`, // username Keycloak = email (internal, tidak ditampilkan)
     email: extra.email ?? `${local}@amarbank.co.id`,
     phone: extra.phone ?? `81${String(200000000 + id * 7919).slice(0, 9)}`,
     tlLevel: extra.tlLevel ?? null,
@@ -73,7 +73,7 @@ export const users = [
 
 /** Super Admin dibuat manual di Keycloak dan tidak tercatat di app_user (enum role PRD tidak memuat SUPER_ADMIN). */
 export const superAdmins = [
-  { id: 900, fullName: 'Hendra Wijaya', role: 'SUPER_ADMIN', username: 'hendra.wijaya', email: 'hendra.wijaya@amarbank.co.id', status: 'ACTIVE', password: DEMO_PASSWORD, fails: 0, lockUntil: null },
+  { id: 900, fullName: 'Hendra Wijaya', role: 'SUPER_ADMIN', username: 'hendra.wijaya@amarbank.co.id', email: 'hendra.wijaya@amarbank.co.id', phone: null, status: 'ACTIVE', password: DEMO_PASSWORD, fails: 0, lockUntil: null },
 ];
 
 // ---------------------------------------------------------------- partner
