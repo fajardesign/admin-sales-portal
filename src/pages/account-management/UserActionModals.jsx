@@ -113,8 +113,8 @@ export function ChangeEmailModal({ target, user, onClose, onDone }) {
       <TextArea label="Alasan" required maxLength={255} rows={2} value={reason} onChange={setReason} placeholder="Contoh: Email kantor berubah" error={touched ? reasonErr : undefined} />
       {active && <CheckboxLabel checked={sendReset} onChange={setSendReset} label="Kirim tautan reset password ke email baru" />}
       <Alert status="information" size="sm" title={target.role === 'PARTNER'
-        ? 'Perubahan berlaku langsung. Email PIC di data partner ikut berubah dan pemberitahuan dikirim ke email lama.'
-        : 'Perubahan berlaku langsung dan pemberitahuan dikirim ke email lama.'} />
+        ? 'Perubahan berlaku langsung. Email PIC di data partner ikut berubah, pemberitahuan dikirim ke email lama, dan sesi pengguna yang aktif berakhir.'
+        : 'Perubahan berlaku langsung, pemberitahuan dikirim ke email lama, dan sesi pengguna yang aktif berakhir.'} />
     </ActionModal>
   );
 }
@@ -151,8 +151,8 @@ export function ChangePhoneModal({ target, user, onClose, onDone }) {
         onChange={(ev) => { setPhone(ev.target.value.replace(/\D/g, '').slice(0, 14)); setServerErr(null); }} error={touched ? phoneErr : undefined} />
       <TextArea label="Alasan" required maxLength={255} rows={2} value={reason} onChange={setReason} placeholder="Contoh: Nomor lama tidak aktif" error={touched ? reasonErr : undefined} />
       <Alert status="information" size="sm" title={target.role === 'PARTNER'
-        ? 'Perubahan berlaku langsung dan nomor ini dipakai untuk login. No. Handphone PIC di data partner ikut berubah.'
-        : 'Perubahan berlaku langsung dan nomor ini dipakai untuk login.'} />
+        ? 'Perubahan berlaku langsung dan nomor ini dipakai untuk login. No. Handphone PIC di data partner ikut berubah dan sesi pengguna yang aktif berakhir.'
+        : 'Perubahan berlaku langsung, nomor ini dipakai untuk login, dan sesi pengguna yang aktif berakhir.'} />
     </ActionModal>
   );
 }

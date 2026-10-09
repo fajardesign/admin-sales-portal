@@ -6,7 +6,7 @@ import { BANKS, CHANNEL, ENTITY, PIC_ACCOUNT_LABEL, PIC_STATUS, areaName } from 
 import { formatDateTime, formatPhone } from '../../../lib/format.js';
 
 /** Tab Data Partner (PRD §2B) — read-only. Data Rekening tanpa verifikasi terpisah (revisi stakeholder 2026-10-08). */
-export function DataPartnerTab({ partner: p, onGoStores, onRetryPic, retrying }) {
+export function DataPartnerTab({ partner: p, onGoStores }) {
   const sec = (k) => p.revisedSections.includes(k);
   const changed = (field) => [...p.fieldChanges].reverse().find((c) => c.field === field);
   const fv = (label, value, field, extra = {}) => {
@@ -35,11 +35,6 @@ export function DataPartnerTab({ partner: p, onGoStores, onRetryPic, retrying })
       </SectionCard>
 
       <SectionCard title="Informasi PIC & Akun Login" badge={sec('pic') && <RevisedBadge />}>
-        {pa.status === 'FAILED' && (
-          <Alert status="error" size="lg" title="Akun PIC gagal dibuat" actionLabel={retrying ? 'Memproses...' : 'Coba buat ulang'} onAction={retrying ? undefined : onRetryPic}>
-            Partner tetap Active dan operasional. Buat ulang akun agar PIC menerima undangan login.
-          </Alert>
-        )}
         <KeyValueGrid items={[
           fv('Nama PIC', p.pic.name), fv('Email PIC', p.pic.email), fv('No. Handphone', formatPhone(p.pic.phone), 'phone'), fv('Status PIC', PIC_STATUS[p.pic.status]),
           fv('Status Akun Login', PIC_ACCOUNT_LABEL[pa.status])

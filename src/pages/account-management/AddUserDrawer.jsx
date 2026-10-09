@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button, CheckboxLabel, Drawer, DrawerFooter, DrawerHeader, Field, Modal, Select, StatusModal, TextInput } from '@ds/index.js';
-import { ApiError, aplAreaHolders, createUser, leaderOptions } from '../../api/mockApi.js';
+import { ApiError, aplAreaHolders, createUser, identityTaken, leaderOptions } from '../../api/mockApi.js';
 import { useToast } from '../../components/Toaster.jsx';
 import { AREAS, CREATABLE_ROLES, ROLES, TL_LEVEL } from '../../lib/constants.js';
 import { validateUserForm } from '../../lib/validation.js';
@@ -39,7 +39,11 @@ export function AddUserDrawer({ user, onClose, onCreated }) {
   const saveDisabled = saving || Object.keys(allErrs).length > 0 || Object.values(serverErr).some(Boolean);
 
   const setField = (k, v) => { setForm((f) => ({ ...f, [k]: v })); setServerErr((s) => ({ ...s, [k]: undefined })); };
-  const touch = (k) => setTouched((t) => ({ ...t, [k]: true }));
+  const touch = (k) => {
+    setTouched((t) => ({ ...t, [k]: true }));
+    // Email/telepon yang sudah dipakai langsung ditolak saat field ditinggalkan, Simpan tetap nonaktif (AC-AM-005).
+    if ((k === 'email' || k === 'phone') && !allErrs[k] && identityTaken(k, form[k])) setServerErr((s) => ({ ...s, [k]: DUPLICATE_MSG[k] }));
+  };
   const setRole = (role) => { setForm((f) => ({ ...f, role, tlLevel: '', areaIds: [], leaderId: '' })); touch('role'); };
   const setArea = (ids) => { setForm((f) => ({ ...f, areaIds: ids, leaderId: '' })); touch('areaIds'); };
 

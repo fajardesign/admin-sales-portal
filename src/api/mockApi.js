@@ -55,6 +55,16 @@ export function picPhoneTaken(phone, exceptPartnerId) {
   return !!n && partners.some((p) => p.id !== exceptPartnerId && !['REJECTED', 'CANCELLED'].includes(p.status) && normalizePhone(p.pic.phone) === n);
 }
 
+/**
+ * Cek unik email / nomor telepon saat field ditinggalkan (PRD Scope 1 AC-AM-005). Telepon juga dibanding No. Handphone PIC
+ * partner (kecuali Rejected/Cancelled). Di produksi ini panggilan API; di prototipe dihitung dari data contoh.
+ */
+export function identityTaken(field, value, exceptId) {
+  if (field === 'email') { const e = (value || '').trim().toLowerCase(); return !!e && allAccounts().some((x) => x.email === e && x.id !== exceptId); }
+  const n = normalizePhone(value);
+  return !!n && (phoneTaken(n, exceptId) || picPhoneTaken(n, exceptId ? userById(exceptId)?.partnerId : undefined));
+}
+
 export const userById = (id) => users.find((u) => u.id === id) ?? superAdmins.find((u) => u.id === id);
 /** Status akun Keycloak dengan Expired terhitung (Pending + tautan aktivasi 3x24 jam lewat). */
 export function accountStatus(u) {
@@ -108,7 +118,6 @@ export const demoSession = (handle) => sessionFor(allAccounts().find((u) => u.em
 
 // ------------------------------------------------------------------ Partner Pipeline (W3)
 function picAccount(p) {
-  if (p.picAccountFailed) return { status: 'FAILED' };
   const u = users.find((x) => x.partnerId === p.id);
   return u ? { status: accountStatus(u), userId: u.id } : { status: 'NONE' };
 }
@@ -141,18 +150,21 @@ const SORTERS = {
 /** PRD §2A — daftar partner: filter status/area/badan usaha/channel/pengaju/tanggal, cari, sort, 20 per halaman. */
 export async function listPartners(q = {}, { retry = false } = {}) {
   const empty = await listGate(retry);
-  const counts = partnerCounts();
-  if (empty) return { rows: [], total: 0, counts: Object.fromEntries(Object.keys(counts).map((k) => [k, 0])) };
+  if (empty) return { rows: [], total: 0, counts: Object.fromEntries(['ALL', ...Object.keys(PARTNER_STATUS)].map((k) => [k, 0])) };
   const term = (q.q ?? '').trim().toLowerCase();
   const from = q.from ? new Date(`${q.from}T00:00:00+07:00`) : null;
   const to = q.to ? new Date(`${q.to}T23:59:59+07:00`) : null;
-  let rows = partners.filter((p) => (!q.status || p.status === q.status)
-    && (!term || p.partnerName.toLowerCase().includes(term) || p.registrationNumber.toLowerCase().includes(term))
+  // Cari No. Registrasi, Nama Partner, atau Kode Referral (PRD Scope 1 FR-003/FR-019, AC-025).
+  const filtered = partners.filter((p) => (!term || [p.partnerName, p.registrationNumber, p.referralCode].some((v) => v.toLowerCase().includes(term)))
     && (!q.area || p.areaId === Number(q.area))
     && (!q.entity || p.businessEntityType === q.entity)
     && (!q.channel || p.channel === q.channel)
     && (!q.submitter || p.submittedBy === Number(q.submitter))
     && (!from || p.submittedAt >= from) && (!to || p.submittedAt <= to));
+  // Jumlah per tab mengikuti filter, pencarian, dan area yang aktif (AC-004, AC-BR-002).
+  const counts = { ALL: filtered.length };
+  Object.keys(PARTNER_STATUS).forEach((s) => { counts[s] = filtered.filter((p) => p.status === s).length; });
+  let rows = filtered.filter((p) => !q.status || p.status === q.status);
   const [key, dir] = (q.sort || 'submittedAt:desc').split(':');
   const f = SORTERS[key] ?? SORTERS.submittedAt;
   rows = rows.sort((a, b) => { const x = f(a); const y = f(b); return (x < y ? -1 : x > y ? 1 : 0) * (dir === 'asc' ? 1 : -1); });
@@ -224,6 +236,17 @@ export async function changeStatus(pid, to, opts, session) {
     reason = `PKS dikirim di Privy web via ${opts.via === 'PRIVY_ID' ? `Privy ID ${p.privyId}` : `email ${opts.inviteEmail}`}`;
   }
   if (to === 'ACTIVE') {
+    // PRD Scope 1 FR-010 / AC-016: akun PIC dibuat lebih dulu; bila bentrok atau gagal, status tetap Waiting PKS dan
+    // tidak ada kode merchant/toko yang tersisa. Email/HP PIC yang sudah dipakai pengguna lain memblokir aktivasi (OQ-03).
+    const email = p.pic.email.trim().toLowerCase();
+    if (allAccounts().some((x) => x.email === email) || phoneTaken(normalizePhone(p.pic.phone))) {
+      log(p, { from: null, to: null, by: actor, reason: 'Aktivasi gagal: email atau nomor HP PIC sudah digunakan pengguna lain' });
+      throw new ApiError('PIC_CONFLICT');
+    }
+    if (getScenario().picAccount === 'fail') {
+      log(p, { from: null, to: null, by: 'Sistem', reason: 'Aktivasi gagal: akun PIC tidak dapat dibuat' });
+      throw new ApiError('PIC_FAILED');
+    }
     p.activatedAt = now();
     Object.assign(p.pks, { status: 'SIGNED', confirmedBy: actor, confirmedAt: now() });
     if (opts.file) p.pks.file = { name: opts.file.name, by: actor, at: now() };
@@ -248,8 +271,6 @@ export async function changeStatus(pid, to, opts, session) {
 }
 
 function createPicAccount(p, actor) {
-  if (getScenario().picAccount === 'fail') { p.picAccountFailed = true; log(p, { from: null, to: null, by: 'Sistem', reason: 'Akun PIC gagal dibuat di Keycloak' }); return; }
-  p.picAccountFailed = false;
   const id = Math.max(...users.map((u) => u.id)) + 1;
   users.push({
     id, fullName: p.pic.name, role: 'PARTNER', username: p.pic.email, email: p.pic.email, phone: p.pic.phone, tlLevel: null,
@@ -259,17 +280,6 @@ function createPicAccount(p, actor) {
     log: [{ at: now(), text: `Akun partner dibuat otomatis saat partner Active, tautan aktivasi dikirim ke ${p.pic.email}` }],
   });
   syncUser(users.at(-1));
-}
-
-/** "Coba buat ulang" bila akun PIC gagal dibuat saat aktivasi. */
-export async function retryPicAccount(pid, session) {
-  await wait(500);
-  const p = findP(pid);
-  const prev = getScenario().picAccount;
-  if (prev === 'fail') throw new ApiError('KEYCLOAK_FAILED');
-  createPicAccount(p, actorOf(session));
-  log(p, { from: null, to: null, by: actorOf(session), reason: `Akun PIC dibuat ulang, tautan aktivasi dikirim ke ${p.pic.email}` });
-  return enrich(p);
 }
 
 /** Waiting PKS — catat pengiriman ulang ke Privy ID/email lain. Tanggal kirim pertama tidak berubah. */
@@ -319,8 +329,9 @@ export async function simulateResubmit(pid) {
   });
   p.fieldChanges.push(...changes);
   const summary = changes.map((c) => `${c.label}: ${c.old} → ${c.new}`).join('; ');
-  log(p, { from: 'REVISION_REQUIRED', to: 'UNDER_REVIEW', by: editor, reason: `Perbaikan dikirim ulang dari aplikasi mobile${summary ? `. ${summary}` : ''}` });
+  log(p, { from: 'REVISION_REQUIRED', to: 'UNDER_REVIEW', by: editor, reason: `Perbaikan dikirim ulang dari aplikasi mobile (revisi ke-${p.revisionRound + 1})${summary ? `. ${summary}` : ''}` });
   p.status = 'UNDER_REVIEW';
+  p.revisionRound += 1;
   p.revisionRequest = null;
   emitChange();
   return enrich(p);
@@ -493,7 +504,7 @@ export async function changeEmail(id, newEmail, reason, sendReset, session) {
     const p = findP(u.partnerId);
     if (p) { p.changeLog.push({ at: now(), by: actorOf(session), section: 'pic', field: 'Email PIC', old, new: email, reason }); p.pic.email = email; }
   }
-  u.log.push({ at: now(), text: `Email diubah dari ${old} ke ${email} oleh ${actorOf(session)}: ${reason}. Pemberitahuan dikirim ke email lama` });
+  u.log.push({ at: now(), text: `Email diubah dari ${old} ke ${email} oleh ${actorOf(session)}: ${reason}. Pemberitahuan dikirim ke email lama; sesi aktif diakhiri` });
   if (sendReset && accountStatus(u) === 'ACTIVE') { u.resetSentAt = now(); u.log.push({ at: now(), text: `Tautan reset password dikirim ke ${email}` }); }
   syncUser(u);
   return enrichUser(u);
@@ -515,7 +526,7 @@ export async function changePhone(id, newPhone, reason, session) {
     const p = findP(u.partnerId);
     if (p) { p.changeLog.push({ at: now(), by: actorOf(session), section: 'pic', field: 'No. Handphone PIC', old: formatPhone(old), new: formatPhone(phone), reason }); p.pic.phone = phone; }
   }
-  u.log.push({ at: now(), text: `Nomor telepon diubah dari ${formatPhone(old)} ke ${formatPhone(phone)} oleh ${actorOf(session)}: ${reason}` });
+  u.log.push({ at: now(), text: `Nomor telepon diubah dari ${formatPhone(old)} ke ${formatPhone(phone)} oleh ${actorOf(session)}: ${reason}; sesi aktif diakhiri` });
   syncUser(u);
   return enrichUser(u);
 }

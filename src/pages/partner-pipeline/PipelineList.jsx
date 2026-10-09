@@ -27,7 +27,7 @@ export function PipelineList(props) {
 
 function PipelineListView({ user, onLogout, query }) {
   const q = Object.fromEntries(query.entries());
-  const statusParam = q.status ?? 'under_review';
+  const statusParam = q.status ?? 'semua'; // default tab Semua (PRD Scope 1 AC-002)
   const status = statusParam === 'semua' ? null : statusFromSlug(statusParam);
   const page = Number(q.page) || 1;
   const sort = q.sort || 'submittedAt:desc';
@@ -83,7 +83,7 @@ function PipelineListView({ user, onLogout, query }) {
           ]} />
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-12)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
-            <SearchField placeholder="Cari nama partner atau no. registrasi" value={q.q ?? ''} onChange={(v) => set({ q: v })} />
+            <SearchField placeholder="Cari nama partner, no. registrasi, atau kode referral" value={q.q ?? ''} onChange={(v) => set({ q: v })} />
             <FilterButton count={activeCount} open={filterOpen} onClick={() => setFilterOpen((o) => !o)} />
           </div>
           <FilterPanel key={`${qs}-${filterOpen}`} open={filterOpen} onOpenChange={setFilterOpen}

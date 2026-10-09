@@ -156,6 +156,7 @@ function partner(n, name, entity, areaId, status, submitterId, cfg = {}) {
     pks: { inviteEmail: null, sentVia: null, sentAt: null, status: 'NOT_SENT', confirmedBy: null, confirmedAt: null, file: null },
     merchantCode: null, picAccountFailed: false,
     revisedSections: [], fieldChanges: [], changeLog: [], revisionRequest: null,
+    revisionRound: 0, // bertambah 1 setiap TL/SR mengirim ulang perbaikan (PRD Scope 1 FR-007, AC-010)
     history: [{ at: submittedAt, from: null, to: 'UNDER_REVIEW', by: submitterId, reason: 'Pengajuan dikirim dari aplikasi mobile' }],
     stores: [],
     documents: [],
