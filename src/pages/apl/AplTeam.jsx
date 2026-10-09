@@ -5,7 +5,7 @@ import { DataTable } from '../../components/DataTable.jsx';
 import { ListCard } from '../../components/ListCard.jsx';
 import { KeyValueGrid, SectionCard } from '../../components/KeyValueGrid.jsx';
 import { SearchField } from '../../components/FilterBar.jsx';
-import { ATTENDANCE_TODAY, aplTeam, personSummary } from '../../api/mockApi.js';
+import { ATTENDANCE_TODAY, aplTeam, personSummary, weekStatusLabel } from '../../api/mockApi.js';
 import { useScenario } from '../../dev/scenario.js';
 import { nowrap } from '../../lib/cells.jsx';
 import { TL_LEVEL, areaName } from '../../lib/constants.js';
@@ -82,7 +82,8 @@ function PersonDrawer({ person: r, period, onClose }) {
         <SectionCard title={`Produktivitas · ${period.label}`}>
           <KeyValueGrid items={s ? [
             { label: 'Tingkat kehadiran', value: formatPct(s.productivity.attendanceRate) }, { label: 'Tepat waktu', value: formatPct(s.productivity.onTimeRate) },
-            { label: 'Pencapaian kunjungan', value: formatPct(s.productivity.visitRate) },
+            { label: 'Minggu kunjungan lengkap', value: `${s.productivity.visitWeeksComplete}/${s.productivity.visitWeeks}` },
+            { label: 'Kunjungan minggu ini', value: weekStatusLabel(s.thisWeek) },
           ] : [{ label: 'Memuat', value: '…' }]} />
         </SectionCard>
       </div>

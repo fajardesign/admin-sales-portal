@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Drawer, DrawerHeader, Icon, LinkButton, SegmentedControl, StatusBadge } from '@ds/index.js';
-import { attendanceDetail, visitDetail } from '../../api/mockApi.js';
+import { attendanceDetail, visitDetail, weekStatusLabel } from '../../api/mockApi.js';
 import { DataTable } from '../../components/DataTable.jsx';
 import { AREAS, ATTENDANCE_LABEL } from '../../lib/constants.js';
 import { nowrap } from '../../lib/cells.jsx';
@@ -59,18 +59,22 @@ export function ProductivityDrawer({ person, tab, period, onClose }) {
     data = weeks.map((w) => ({ ...w, id: w.start }));
     columns = [
       { key: 'p', header: 'Minggu', render: (w) => ({ priority: 'regular', title: nowrap(groupLabel(w.start)) }) },
-      { key: 'v', header: 'Dikunjungi / target', align: 'right', render: (w) => `${w.visited}/${w.target}` },
-      { key: 's', header: 'Status', render: (w) => (w.closed ? { misc: true, children: <StatusBadge status={WEEK[w.complete][0]}>{WEEK[w.complete][1]}</StatusBadge> } : 'Berjalan') },
+      { key: 's', header: 'Status', render: (w) => ({ misc: true, children: <StatusBadge status={WEEK[w.complete][0]}>{weekStatusLabel(w)}</StatusBadge> }) },
+      { key: 'run', header: '', render: (w) => (w.closed ? '' : 'Minggu berjalan') },
+    ];
+  } else if (tab === 'kunjungan') {
+    const m = new Map();
+    weeks.filter((w) => w.closed).forEach((w) => { const k = w.start.slice(0, 7); m.set(k, [...(m.get(k) ?? []), w]); });
+    data = [...m.entries()].map(([k, ws]) => ({ id: k, k, ws }));
+    columns = [
+      { key: 'p', header: 'Bulan', render: (g) => ({ priority: 'regular', title: nowrap(monthLabel(g.k, true)) }) },
+      { key: 'weeks', header: 'Minggu lengkap', align: 'right', render: (g) => `${g.ws.filter((w) => w.complete).length}/${g.ws.length}` },
     ];
   } else {
     const m = new Map();
     rows.forEach((r) => { const k = groupKey(r.date); m.set(k, [...(m.get(k) ?? []), r]); });
     data = [...m.entries()].map(([k, rs]) => ({ id: k, k, rs }));
-    columns = tab === 'kunjungan' ? [
-      { key: 'p', header: mode === 'mingguan' ? 'Minggu' : 'Bulan', render: (g) => ({ priority: 'regular', title: nowrap(groupLabel(g.k)) }) },
-      { key: 'done', header: 'Hari dikunjungi', align: 'right', render: (g) => String(new Set(g.rs.map((v) => v.date)).size) },
-      { key: 'weeks', header: 'Minggu lengkap', align: 'right', render: (g) => { const ws = weeks.filter((w) => w.closed && w.target > 0 && w.start.slice(0, 7) === g.k); return ws.length ? `${ws.filter((w) => w.complete).length}/${ws.length}` : '-'; } },
-    ] : [
+    columns = [
       { key: 'p', header: mode === 'mingguan' ? 'Minggu' : 'Bulan', render: (g) => ({ priority: 'regular', title: nowrap(groupLabel(g.k)) }) },
       { key: 'present', header: ATTENDANCE_LABEL.CHECKED_IN, align: 'right', render: (g) => String(g.rs.filter((a) => a.status !== 'ABSENT').length) },
       { key: 'on', header: ATTENDANCE_LABEL.ON_TIME, align: 'right', render: (g) => String(g.rs.filter((a) => a.status === 'ON_TIME').length) },

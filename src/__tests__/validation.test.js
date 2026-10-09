@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { passwordPolicy, validatePksFile, validateReason, validateReferralCode, validateUserForm } from '../lib/validation.js';
 import { formatDateTime, formatDateWIB, formatDuration, formatPhone, formatRp, normalizePhone } from '../lib/format.js';
-import { findByIdentifier, tierFor, tierLabel, verificationGap, visitWeeks } from '../api/mockApi.js';
+import { currentVisitWeek, findByIdentifier, tierFor, tierLabel, verificationGap, visitWeeks, weekStatusLabel } from '../api/mockApi.js';
 import { attendance, distanceKm, users, visits } from '../api/db.js';
 import { AREAS, OFFICES } from '../lib/constants.js';
 
@@ -93,10 +93,19 @@ describe('absensi & kunjungan (revisi stakeholder 2026-10-08)', () => {
       seen.add(k);
     });
   });
-  it('target mingguan = hari kerja Senin–Sabtu', () => {
+  it('target mingguan = 6 hari kerja Senin–Sabtu satu minggu penuh, bukan sampai kemarin (review 2026-10-09)', () => {
     const w = visitWeeks(15, { from: '2026-09-07', to: '2026-09-12' })[0];
-    expect(w.target).toBe(6);
+    expect(w).toMatchObject({ start: '2026-09-07', target: 6, closed: true });
     expect(w.complete).toBe(w.visited >= 6);
+    // Minggu berjalan (jam demo Rabu 07 Okt 2026): target tetap 6, bukan hari yang sudah lewat.
+    const cur = currentVisitWeek(15);
+    expect(cur).toMatchObject({ start: '2026-10-05', target: 6, closed: false, complete: false });
+    expect(weekStatusLabel({ visited: 3, target: 6, complete: false })).toBe('Belum lengkap 3/6');
+    expect(weekStatusLabel({ visited: 6, target: 6, complete: true })).toBe('Lengkap 6/6');
+  });
+  it('minggu masuk periode yang memuat hari Seninnya', () => {
+    const ws = visitWeeks(15, { from: '2026-09-01', to: '2026-09-30' });
+    expect(ws.map((w) => w.start)).toEqual(['2026-09-07', '2026-09-14', '2026-09-21', '2026-09-28']);
   });
 });
 

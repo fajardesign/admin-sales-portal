@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Select, TabMenuHorizontal } from '@ds/index.js';
+import { Select, StatusBadge, TabMenuHorizontal } from '@ds/index.js';
 import { AdminShell } from '../../components/AdminShell.jsx';
 import { DataTable } from '../../components/DataTable.jsx';
 import { ListCard } from '../../components/ListCard.jsx';
-import { aplProductivity, subordinateOptions } from '../../api/mockApi.js';
+import { aplProductivity, subordinateOptions, weekStatusLabel } from '../../api/mockApi.js';
 import { useScenario } from '../../dev/scenario.js';
 import { nowrap } from '../../lib/cells.jsx';
 import { ATTENDANCE_LABEL, TL_LEVEL, areaName } from '../../lib/constants.js';
-import { formatPct } from '../../lib/format.js';
 import { navigate, withQuery } from '../../lib/router.js';
 import { PeriodFilter } from './aplCommon.jsx';
 import { useAplScope, usePeriod } from './aplPeriod.js';
@@ -46,10 +45,8 @@ function AplProductivityView({ user, onLogout, query }) {
     { key: 'avg', header: 'Rata-rata check in', align: 'right', render: (r) => r.attendance.avgCheckIn ?? '-' },
   ] : [
     lead,
-    { key: 'done', header: 'Hari dikunjungi', align: 'right', render: (r) => n(r.visits.visited) },
-    { key: 'target', header: 'Target', align: 'right', render: (r) => n(r.visits.target) },
-    { key: 'weeks', header: 'Minggu lengkap', align: 'right', render: (r) => (r.visits.weeks ? `${r.visits.weeksComplete}/${r.visits.weeks}` : '-') },
-    { key: 'ach', header: 'Pencapaian', align: 'right', render: (r) => ({ priority: 'leading', title: formatPct(r.visits.achievement) }) },
+    { key: 'week', header: 'Minggu ini', render: (r) => ({ misc: true, children: <StatusBadge status={r.visits.thisWeek.complete ? 'completed' : 'pending'}>{weekStatusLabel(r.visits.thisWeek)}</StatusBadge> }) },
+    { key: 'weeks', header: 'Minggu lengkap', align: 'right', render: (r) => ({ priority: 'leading', title: r.visits.weeks ? `${r.visits.weeksComplete}/${r.visits.weeks}` : '-' }) },
   ];
   return (
     <AdminShell active="/apl/produktivitas" icon="TimeLine" title="Produktivitas" description="Absensi dan pencapaian kunjungan TL, SR, dan SA di area Anda." user={user} onLogout={onLogout}>
@@ -67,8 +64,8 @@ function AplProductivityView({ user, onLogout, query }) {
       </ListCard>
       <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>
         {tab === 'absensi'
-          ? 'Hari kerja Senin–Sabtu. Check in dengan selfie dan lokasi dalam radius 3 km dari kantor terdaftar atau toko partner. Check in setelah 10:00 waktu lokal (WIB/WITA) dihitung Terlambat; tidak check in sampai akhir hari dihitung Absen.'
-          : 'Target = 1 kunjungan per hari kerja Senin–Sabtu sampai kemarin (maks. 1 kunjungan dihitung per hari). Check in kunjungan mulai 12:00 waktu lokal di toko yang ditugaskan, radius 3 km. Minggu lengkap = target minggu itu tercapai.'}
+          ? 'Hari kerja Senin–Sabtu. Check in dengan selfie dan lokasi dalam radius 3 km dari titik lokasi kantor atau toko partner yang terdaftar. Check in setelah 10:00 waktu lokal (WIB/WITA) dihitung Terlambat; tidak check in sampai akhir hari dihitung Absen.'
+          : 'Target per minggu = 6 hari kerja Senin–Sabtu, maks. 1 kunjungan dihitung per hari. Check in kunjungan mulai 12:00 waktu lokal di toko yang ditugaskan, dalam radius 3 km dari titik lokasi toko yang terdaftar. Minggu lengkap = minggu yang sudah selesai dengan target tercapai; minggu masuk periode yang memuat hari Seninnya.'}
       </span>
       {person && <ProductivityDrawer person={person} tab={tab} period={period} onClose={() => setPerson(null)} />}
     </AdminShell>

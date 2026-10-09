@@ -21,7 +21,7 @@ const SALES = [
 ];
 const PROD = [
   { key: 'attendanceRate', label: 'Tingkat kehadiran', hint: 'Hari check in / hari kerja Senin–Sabtu', icon: 'CalendarLine', color: 'blue' },
-  { key: 'visitRate', label: 'Pencapaian kunjungan', hint: 'Hari dikunjungi / target (1 per hari kerja)', icon: 'MapPinLine', color: 'orange' },
+  { key: 'visitRate', label: 'Minggu kunjungan lengkap', hint: 'Minggu selesai dengan target 6 hari tercapai', icon: 'MapPinLine', color: 'orange', value: (p) => `${p.visitWeeksComplete}/${p.visitWeeks}` },
   { key: 'onTimeRate', label: 'Tepat waktu', hint: 'Check in ≤ 10:00 waktu lokal / hadir', icon: 'TimeLine', color: 'teal' },
 ];
 
@@ -56,7 +56,7 @@ function AplDashboardView({ user, onLogout, query }) {
           </SectionCard>
           <SectionCard title={`Produktivitas · ${period.label}`}>
             <StatGrid min={230}>
-              {PROD.map((m) => <StatCard key={m.key} icon={m.icon} color={m.color} label={m.label} value={ld ? '…' : formatPct(d.productivity.cur[m.key])}
+              {PROD.map((m) => <StatCard key={m.key} icon={m.icon} color={m.color} label={m.label} value={ld ? '…' : m.value ? m.value(d.productivity.cur) : formatPct(d.productivity.cur[m.key])}
                 hint={ld ? m.hint : <span style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', alignItems: 'flex-start' }}>{m.hint}<DeltaBadge d={delta(d.productivity.cur[m.key], d.productivity.prev[m.key])} /></span>}
                 onClick={() => go('/apl/produktivitas', { tab: m.key === 'visitRate' ? 'kunjungan' : '' })} />)}
             </StatGrid>
