@@ -27,16 +27,16 @@ export function EditPartnerDrawer({ partner: p, user, onClose, onDone }) {
   const [reason, setReason] = useState('');
   const [touched, setTouched] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [phoneTaken, setPhoneTaken] = useState(false);
+  const [dup, setDup] = useState({}); // { referralCode: true, picPhone: true } dari 409 backend
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
   const changedKeys = Object.keys(init).filter((k) => String(init[k]) !== String(f[k]));
 
   const errs = {
-    partnerName: len(f.partnerName, 3, 100), address: len(f.address, 5, 255), referralCode: validateReferralCode(f.referralCode),
+    partnerName: len(f.partnerName, 3, 100), address: len(f.address, 5, 255), referralCode: validateReferralCode(f.referralCode) ?? (dup.referralCode ? 'Kode referral sudah dipakai partner lain' : undefined),
     businessEmail: !f.businessEmail.trim() ? MSG.required : EMAIL_RE.test(f.businessEmail.trim()) ? undefined : MSG.invalid,
     businessLocationCount: /^\d+$/.test(f.businessLocationCount) && Number(f.businessLocationCount) >= 1 ? undefined : 'Minimal 1',
     picName: len(f.picName, 3, 100) ?? (NAME_RE.test(f.picName.trim()) ? undefined : MSG.invalid),
-    picPhone: !f.picPhone ? MSG.required : !/^8\d{7,11}$/.test(normalizePhone(f.picPhone)) ? MSG.invalid : phoneTaken ? 'Nomor telepon sudah terdaftar' : undefined,
+    picPhone: !f.picPhone ? MSG.required : !/^8\d{7,11}$/.test(normalizePhone(f.picPhone)) ? MSG.invalid : dup.picPhone ? 'Nomor telepon sudah terdaftar' : undefined,
     reason: validateReason(reason),
     ...Object.fromEntries(stores.flatMap((s) => [[`${s.id}|name`, len(f[`${s.id}|name`], 3, 100)], [`${s.id}|address`, len(f[`${s.id}|address`], 5, 255)]])),
   };
@@ -65,7 +65,7 @@ export function EditPartnerDrawer({ partner: p, user, onClose, onDone }) {
       onDone(np);
     } catch (e) {
       setBusy(false);
-      if (e instanceof ApiError && e.code === 'DUPLICATE') setPhoneTaken(true);
+      if (e instanceof ApiError && e.code === 'DUPLICATE') setDup((d) => ({ ...d, [e.field]: true }));
       else toast('error', 'Gagal menyimpan perubahan. Coba lagi.');
     }
   }
@@ -88,7 +88,7 @@ export function EditPartnerDrawer({ partner: p, user, onClose, onDone }) {
       )}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-24)', padding: 'var(--space-16) var(--space-24) var(--space-24)' }}>
         <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>Ubah data atas permintaan partner. Setiap perubahan dicatat di Riwayat Status beserta alasannya.</span>
-        {group('Informasi Partner', <>{text('partnerName', 'Nama Partner')}{text('address', 'Alamat Partner (sesuai legalitas)')}{text('referralCode', 'Kode Referral', { hint: 'Huruf dan angka, maks. 20 karakter.' })}</>)}
+        {group('Informasi Partner', <>{text('partnerName', 'Nama Partner')}{text('address', 'Alamat Partner (sesuai legalitas)')}{text('referralCode', 'Kode Referral', { hint: 'Huruf dan angka, maks. 20 karakter. Unik per partner.', onChange: (e) => { set('referralCode', e.target.value); setDup((d) => ({ ...d, referralCode: false })); } })}</>)}
         {group('Data Bisnis', (
           <>
             {text('businessEmail', 'Email Bisnis', { leftIcon: 'MailLine' })}
@@ -102,7 +102,7 @@ export function EditPartnerDrawer({ partner: p, user, onClose, onDone }) {
           <>
             {text('picName', 'Nama PIC')}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-12)' }}>
-              {text('picPhone', 'No. Handphone', { inputMode: 'numeric', prefix: <span style={{ padding: '0 var(--space-12)', font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>+62</span>, hint: 'Juga dipakai untuk login akun PIC.', onChange: (e) => { set('picPhone', e.target.value.replace(/\D/g, '').slice(0, 14)); setPhoneTaken(false); } })}
+              {text('picPhone', 'No. Handphone', { inputMode: 'numeric', prefix: <span style={{ padding: '0 var(--space-12)', font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>+62</span>, hint: 'Juga dipakai untuk login akun PIC.', onChange: (e) => { set('picPhone', e.target.value.replace(/\D/g, '').slice(0, 14)); setDup((d) => ({ ...d, picPhone: false })); } })}
               <Select label="Status PIC" required value={f.picStatus} onChange={(v) => set('picStatus', v)} placeholder="Pilih status" options={Object.entries(PIC_STATUS).map(([value, label]) => ({ value, label }))} />
             </div>
             <TextInput label="Email PIC" disabled value={p.pic.email} hint="Email PIC (dipakai untuk login akun PIC) diubah melalui Account Management › Ubah Email." />

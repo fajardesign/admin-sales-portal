@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { passwordPolicy, validatePksFile, validateReason, validateReferralCode, validateUserForm } from '../lib/validation.js';
 import { formatDateTime, formatDateWIB, formatDuration, formatPhone, formatRp, normalizePhone } from '../lib/format.js';
-import { currentVisitWeek, findByIdentifier, tierFor, tierLabel, verificationGap, visitWeeks, weekStatusLabel } from '../api/mockApi.js';
+import { currentVisitWeek, findByIdentifier, referralTaken, tierFor, tierLabel, verificationGap, visitWeeks, weekStatusLabel } from '../api/mockApi.js';
 import { attendance, distanceKm, users, visits } from '../api/db.js';
 import { AREAS, OFFICES } from '../lib/constants.js';
 
@@ -106,6 +106,16 @@ describe('absensi & kunjungan (revisi stakeholder 2026-10-08)', () => {
   it('minggu masuk periode yang memuat hari Seninnya', () => {
     const ws = visitWeeks(15, { from: '2026-09-01', to: '2026-09-30' });
     expect(ws.map((w) => w.start)).toEqual(['2026-09-07', '2026-09-14', '2026-09-21', '2026-09-28']);
+  });
+});
+
+describe('Kode Referral unik per partner (review 2026-10-09)', () => {
+  it('dibandingkan setelah trim tanpa beda huruf besar/kecil; partner sendiri, Rejected, dan Cancelled tidak dihitung', () => {
+    expect(referralTaken(' amr7138 ', 'REG2026-0139')).toBe(true);
+    expect(referralTaken('AMR7138', 'REG2026-0138')).toBe(false);
+    expect(referralTaken('AMR11135')).toBe(false); // REG2026-0135 Rejected
+    expect(referralTaken('AMR10134')).toBe(false); // REG2026-0134 Cancelled
+    expect(referralTaken('KODEBARU1')).toBe(false);
   });
 });
 

@@ -516,6 +516,17 @@ export async function changePhone(id, newPhone, reason, session) {
  * Hanya partner Active. changes: [{ section, field, label, storeId?, value, display? }]. Rekening tidak bisa diubah.
  * Setiap perubahan dicatat (field, lama, baru, alasan, Admin, waktu) di changeLog dan Riwayat.
  */
+/** Partner yang dihitung untuk cek unik (Kode Referral, No. Handphone PIC): semua kecuali Rejected/Cancelled. */
+const registeredPartners = (exceptId) => partners.filter((p) => p.id !== exceptId && !['REJECTED', 'CANCELLED'].includes(p.status));
+/**
+ * Kode Referral di level partner menjadi penghubung loan yang diajukan dari partner itu (lewat PIC-nya), jadi unik per partner:
+ * dibandingkan setelah trim, tanpa beda huruf besar/kecil (keputusan review 2026-10-09; sama dengan Android `referralTaken`).
+ */
+export function referralTaken(code, exceptId) {
+  const c = (code || '').trim().toLowerCase();
+  return !!c && registeredPartners(exceptId).some((p) => p.referralCode.trim().toLowerCase() === c);
+}
+
 const EDITABLE = {
   partnerName: (p) => [p, 'partnerName'], address: (p) => [p, 'address'], referralCode: (p) => [p, 'referralCode'], businessEmail: (p) => [p, 'businessEmail'], channel: (p) => [p, 'channel'],
   businessLocationCount: (p) => [p, 'businessLocationCount'], picName: (p) => [p.pic, 'name'], picPhone: (p) => [p.pic, 'phone'], picStatus: (p) => [p.pic, 'status'],
@@ -525,6 +536,8 @@ export async function updatePartnerData(pid, changes, reason, session) {
   const p = findP(pid);
   if (p.status !== 'ACTIVE') throw new ApiError('CONFLICT');
   const account = users.find((x) => x.partnerId === p.id);
+  const referralChange = changes.find((c) => c.field === 'referralCode');
+  if (referralChange && referralTaken(referralChange.value, p.id)) throw new ApiError('DUPLICATE', 'referralCode');
   const phoneChange = changes.find((c) => c.field === 'picPhone');
   if (phoneChange && phoneTaken(phoneChange.value, account?.id)) throw new ApiError('DUPLICATE', 'picPhone');
   changes.forEach((c) => {

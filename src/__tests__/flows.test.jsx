@@ -240,6 +240,18 @@ describe('W3 Ubah Data Partner (US-P09)', () => {
     await user.click(screen.getByRole('tab', { name: 'Riwayat Status' }));
     expect(await screen.findByText('Nama PIC: Rudi Hartono → Rudi Hartono Saputra', {}, T)).toBeTruthy();
   });
+
+  it('Kode Referral unik per partner (tanpa beda huruf besar/kecil)', async () => {
+    const user = await start('rina.saraswati');
+    go('/partner-pipeline/REG2026-0139');
+    await user.click(await screen.findByRole('button', { name: 'Ubah Data Partner' }, T));
+    const code = screen.getByDisplayValue('AMR6139');
+    await user.clear(code);
+    await user.type(code, ' amr7138 ');
+    await user.type(screen.getByPlaceholderText(/Partner pindah alamat/), 'Kode referral salah input');
+    await user.click(screen.getByRole('button', { name: 'Simpan Perubahan' }));
+    expect(await screen.findByText('Kode referral sudah dipakai partner lain', {}, T)).toBeTruthy();
+  });
 });
 
 describe('W2 Account Management', () => {
