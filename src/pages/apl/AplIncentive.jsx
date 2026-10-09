@@ -12,7 +12,7 @@ import { navigate, withQuery } from '../../lib/router.js';
 import { PeriodFilter } from './aplCommon.jsx';
 import { useAplScope, usePeriod } from './aplPeriod.js';
 
-const TABS = [{ value: 'TL', label: 'TL' }, { value: 'SALES', label: 'SA/SR' }, { value: 'PARTNER', label: 'Partner' }];
+const TABS = [{ value: 'TL', label: 'TL' }, { value: 'SALES', label: 'SA/SR' }, { value: 'PARTNER', label: 'Partner' }, { value: 'CRP', label: 'Customer (CRP)' }];
 
 /** B6 · Insentif (PRD v3): estimasi insentif TL, SA/SR, dan partner per bulan dari skema Super Admin; read-only. */
 export function AplIncentive(props) {

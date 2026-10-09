@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Drawer, DrawerHeader, Icon, LinkButton, SegmentedControl, StatusBadge } from '@ds/index.js';
+import { Drawer, DrawerHeader, LinkButton, SegmentedControl, StatusBadge } from '@ds/index.js';
 import { attendanceDetail, visitDetail, weekStatusLabel } from '../../api/mockApi.js';
 import { DataTable } from '../../components/DataTable.jsx';
 import { AREAS, ATTENDANCE_LABEL } from '../../lib/constants.js';
 import { nowrap } from '../../lib/cells.jsx';
 import { formatDate, formatKm, formatTimeLocal, monthLabel } from '../../lib/format.js';
+import { selfieUrl } from '../../lib/selfies.js';
 
 const ATT = { ON_TIME: ['completed', ATTENDANCE_LABEL.ON_TIME], LATE: ['pending', ATTENDANCE_LABEL.LATE], ABSENT: ['failed', ATTENDANCE_LABEL.ABSENT] };
 const WEEK = { true: ['completed', 'Lengkap'], false: ['pending', 'Belum lengkap'] };
@@ -12,22 +13,23 @@ const day = (ymd) => formatDate(new Date(`${ymd}T05:00:00Z`));
 /** Senin awal minggu dari tanggal "YYYY-MM-DD". */
 const weekStart = (ymd) => { const d = new Date(`${ymd}T12:00:00Z`); const w = (d.getUTCDay() + 6) % 7; return new Date(d.getTime() - w * 864e5).toISOString().slice(0, 10); };
 const openMap = (lat, lng) => window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank', 'noopener');
-/** Bukti selfie: prototipe tidak menyimpan foto — placeholder. */
-const Selfie = () => (
-  <span title="Selfie (placeholder)" style={{ width: 32, height: 32, borderRadius: 'var(--rounded-8)', background: 'var(--bg-weak-50)', boxShadow: 'var(--shadow-stroke)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--icon-soft-400)' }}>
-    <Icon name="User6Line" size={16} />
-  </span>
-);
+/** Bukti selfie dari data check in (PRD Scope 2 §2.3); prototipe memakai foto contoh. */
+const Selfie = ({ n }) => (n ? (
+  <img src={selfieUrl(n)} alt="Foto selfie check in" width={32} height={32}
+    style={{ width: 32, height: 32, borderRadius: 'var(--rounded-8)', boxShadow: 'var(--shadow-stroke)', objectFit: 'cover', display: 'block' }} />
+) : '-');
 
 /** Detail produktivitas satu orang (PRD v3 §B3) — tampilan harian, mingguan, bulanan. */
 export function ProductivityDrawer({ person, tab, period, onClose }) {
   const area = AREAS.find((a) => a.id === person.areaId);
-  const time = (d) => formatTimeLocal(d, area);
+  // Jam ditampilkan pada zona perangkat yang tercatat di check in (WIB/WITA/WIT), bila ada.
+  const time = (d, rec) => formatTimeLocal(d, rec?.tz ? rec : area);
   const [rows, setRows] = useState(null);
   const [weeks, setWeeks] = useState([]);
+  const [thisWeek, setThisWeek] = useState([]);
   const [mode, setMode] = useState('harian');
   const key = `${person.id}|${tab}|${period.from}|${period.to}`;
-  const fetchRows = () => (tab === 'kunjungan' ? visitDetail(person.id, period).then((r) => { setWeeks(r.weeks); return r.rows; }) : attendanceDetail(person.id, period));
+  const fetchRows = () => (tab === 'kunjungan' ? visitDetail(person.id, period).then((r) => { setWeeks(r.weeks); setThisWeek(r.thisWeek); return r.rows; }) : attendanceDetail(person.id, period));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { setRows(null); fetchRows().then(setRows); }, [key]);
 
@@ -39,19 +41,19 @@ export function ProductivityDrawer({ person, tab, period, onClose }) {
       columns = [
         { key: 'date', header: 'Tanggal', render: (v) => ({ priority: 'regular', title: nowrap(day(v.date)) }) },
         { key: 'store', header: 'Toko', render: (v) => ({ priority: 'regular', title: v.storeName, description: v.partnerName }) },
-        { key: 'in', header: 'Check in / out', render: (v) => nowrap(`${time(v.checkInAt)} – ${time(v.checkOutAt)}`) },
+        { key: 'in', header: 'Check in / out', render: (v) => nowrap(`${time(v.checkInAt, v)} – ${time(v.checkOutAt, v)}`) },
         { key: 'dur', header: 'Durasi', render: (v) => `${Math.round((new Date(v.checkOutAt) - new Date(v.checkInAt)) / 60000)} menit` },
         { key: 'dist', header: 'Jarak ke toko', align: 'right', render: (v) => formatKm(v.distanceKm) },
-        { key: 'ev', header: 'Bukti', render: (v) => ({ misc: true, children: <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-8)' }}><Selfie /><LinkButton size="sm" onClick={() => openMap(v.lat, v.lng)}>Peta</LinkButton></span> }) },
+        { key: 'ev', header: 'Bukti', render: (v) => ({ misc: true, children: <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-8)' }}><Selfie n={v.selfie} /><LinkButton size="sm" onClick={() => openMap(v.lat, v.lng)}>Peta</LinkButton></span> }) },
       ];
     } else {
       columns = [
         { key: 'date', header: 'Tanggal', render: (a) => ({ priority: 'regular', title: nowrap(day(a.date)) }) },
         { key: 'status', header: 'Status', render: (a) => ({ misc: true, children: <StatusBadge status={ATT[a.status][0]}>{ATT[a.status][1]}</StatusBadge> }) },
-        { key: 'in', header: 'Check in', render: (a) => time(a.clockInAt) },
-        { key: 'out', header: 'Check out', render: (a) => (a.clockOutAt ? time(a.clockOutAt) : a.clockInAt ? ATTENDANCE_LABEL.CHECKED_IN : '-') },
+        { key: 'in', header: 'Check in', render: (a) => time(a.clockInAt, a) },
+        { key: 'out', header: 'Check out', render: (a) => (a.clockOutAt ? time(a.clockOutAt, a) : a.clockInAt ? ATTENDANCE_LABEL.CHECKED_IN : '-') },
         { key: 'place', header: 'Lokasi', render: (a) => (a.place ? { priority: 'regular', title: a.place.name, description: `${a.place.kind === 'OFFICE' ? 'Kantor terdaftar' : 'Toko partner'} · ${formatKm(a.distanceKm)}` } : '-') },
-        { key: 'ev', header: 'Bukti', render: (a) => (a.clockInAt ? { misc: true, children: <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-8)' }}><Selfie /><LinkButton size="sm" onClick={() => openMap(a.lat, a.lng)}>Peta</LinkButton></span> } : '-') },
+        { key: 'ev', header: 'Bukti', render: (a) => (a.clockInAt ? { misc: true, children: <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-8)' }}><Selfie n={a.selfie} /><LinkButton size="sm" onClick={() => openMap(a.lat, a.lng)}>Peta</LinkButton></span> } : '-') },
       ];
     }
     data = rows.map((r, i) => ({ ...r, id: r.id ?? `${r.date}-${i}` }));
@@ -88,12 +90,30 @@ export function ProductivityDrawer({ person, tab, period, onClose }) {
     <Drawer open width={860} onClose={onClose}
       header={<DrawerHeader size="lg" title={person.name} description={`${person.role} · ${tab === 'kunjungan' ? 'Kunjungan' : 'Absensi'} · ${period.label}`} icon={tab === 'kunjungan' ? 'MapPinLine' : 'CalendarLine'} onClose={onClose} />}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-12)', padding: 'var(--space-16) var(--space-24) var(--space-24)' }}>
+        {tab === 'kunjungan' && thisWeek.length > 0 && (
+          <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
+            <h3 style={{ margin: 0, font: 'var(--subheading-xs)', letterSpacing: 'var(--subheading-xs-ls)', textTransform: 'uppercase', color: 'var(--text-soft-400)' }}>Minggu ini per partner</h3>
+            {thisWeek.map((g) => (
+              <div key={g.partnerId} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: 'var(--space-10) var(--space-12)', borderRadius: 'var(--rounded-10)', boxShadow: 'var(--shadow-stroke)' }}>
+                <span style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-8)', font: 'var(--label-sm)', color: 'var(--text-strong-950)' }}>
+                  {g.partnerName}
+                  <StatusBadge status={g.visited ? 'completed' : 'pending'}>{g.visited ? 'Sudah dikunjungi minggu ini' : 'Belum dikunjungi'}</StatusBadge>
+                </span>
+                {g.stores.map((st) => (
+                  <span key={st.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-8)', font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>
+                    {st.name}<span>{st.visited ? 'Sudah dikunjungi' : 'Belum dikunjungi'}</span>
+                  </span>
+                ))}
+              </div>
+            ))}
+          </section>
+        )}
         <SegmentedControl value={mode} onChange={setMode} items={[{ value: 'harian', label: 'Harian' }, { value: 'mingguan', label: 'Mingguan' }, { value: 'bulanan', label: 'Bulanan' }]} style={{ alignSelf: 'flex-start' }} />
         <div style={{ overflowX: 'auto' }}>
           <DataTable loading={!rows} rows={data} columns={columns} minWidth={720} />
           {rows && rows.length === 0 && <span style={{ display: 'block', padding: 'var(--space-16)', font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>Belum ada data pada periode ini.</span>}
         </div>
-        <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>Jam dalam waktu lokal {area?.tz ?? 'WIB'}. Foto selfie ditampilkan sebagai placeholder di prototipe ini.</span>
+        <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>Jam dalam zona waktu perangkat saat check in (WIB/WITA/WIT). Foto selfie di prototipe ini adalah foto contoh.</span>
       </div>
     </Drawer>
   );

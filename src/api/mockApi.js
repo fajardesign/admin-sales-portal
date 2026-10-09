@@ -6,7 +6,7 @@ import {
   ACCOUNT_STATUS, AREAS, CREATABLE_ROLES, ACTIVATION_TTL_MS, FINAL_STATUSES, PAGE_SIZE, RESET_TTL_MS, PARTNER_STATUS, ROLES, TRANSITIONS,
 } from '../lib/constants.js';
 import {
-  attendance, CURRENT_MONTH, loans, mfp, MONTHS, now, owningTl, partners, schemes, superAdmins, targets, users, visits, wibDate,
+  attendance, CURRENT_MONTH, loans, mfp, MONTHS, now, owningTl, partners, schemes, superAdmins, targets, users, validStoresOf, visits, wibDate,
 } from './db.js';
 import { hydrateUsers, syncUser } from './supabaseSync.js';
 
@@ -53,6 +53,16 @@ const phoneTaken = (phone, exceptId) => allAccounts().some((x) => x.phone === ph
 export function picPhoneTaken(phone, exceptPartnerId) {
   const n = normalizePhone(phone);
   return !!n && partners.some((p) => p.id !== exceptPartnerId && !['REJECTED', 'CANCELLED'].includes(p.status) && normalizePhone(p.pic.phone) === n);
+}
+
+/**
+ * Cek unik email / nomor telepon saat field ditinggalkan (PRD Scope 1 AC-AM-005). Telepon juga dibanding No. Handphone PIC
+ * partner (kecuali Rejected/Cancelled). Di produksi ini panggilan API; di prototipe dihitung dari data contoh.
+ */
+export function identityTaken(field, value, exceptId) {
+  if (field === 'email') { const e = (value || '').trim().toLowerCase(); return !!e && allAccounts().some((x) => x.email === e && x.id !== exceptId); }
+  const n = normalizePhone(value);
+  return !!n && (phoneTaken(n, exceptId) || picPhoneTaken(n, exceptId ? userById(exceptId)?.partnerId : undefined));
 }
 
 export const userById = (id) => users.find((u) => u.id === id) ?? superAdmins.find((u) => u.id === id);
@@ -108,7 +118,6 @@ export const demoSession = (handle) => sessionFor(allAccounts().find((u) => u.em
 
 // ------------------------------------------------------------------ Partner Pipeline (W3)
 function picAccount(p) {
-  if (p.picAccountFailed) return { status: 'FAILED' };
   const u = users.find((x) => x.partnerId === p.id);
   return u ? { status: accountStatus(u), userId: u.id } : { status: 'NONE' };
 }
@@ -141,18 +150,21 @@ const SORTERS = {
 /** PRD §2A — daftar partner: filter status/area/badan usaha/channel/pengaju/tanggal, cari, sort, 20 per halaman. */
 export async function listPartners(q = {}, { retry = false } = {}) {
   const empty = await listGate(retry);
-  const counts = partnerCounts();
-  if (empty) return { rows: [], total: 0, counts: Object.fromEntries(Object.keys(counts).map((k) => [k, 0])) };
+  if (empty) return { rows: [], total: 0, counts: Object.fromEntries(['ALL', ...Object.keys(PARTNER_STATUS)].map((k) => [k, 0])) };
   const term = (q.q ?? '').trim().toLowerCase();
   const from = q.from ? new Date(`${q.from}T00:00:00+07:00`) : null;
   const to = q.to ? new Date(`${q.to}T23:59:59+07:00`) : null;
-  let rows = partners.filter((p) => (!q.status || p.status === q.status)
-    && (!term || p.partnerName.toLowerCase().includes(term) || p.registrationNumber.toLowerCase().includes(term))
+  // Cari No. Registrasi, Nama Partner, atau Kode Referral (PRD Scope 1 FR-003/FR-019, AC-025).
+  const filtered = partners.filter((p) => (!term || [p.partnerName, p.registrationNumber, p.referralCode].some((v) => v.toLowerCase().includes(term)))
     && (!q.area || p.areaId === Number(q.area))
     && (!q.entity || p.businessEntityType === q.entity)
     && (!q.channel || p.channel === q.channel)
     && (!q.submitter || p.submittedBy === Number(q.submitter))
     && (!from || p.submittedAt >= from) && (!to || p.submittedAt <= to));
+  // Jumlah per tab mengikuti filter, pencarian, dan area yang aktif (AC-004, AC-BR-002).
+  const counts = { ALL: filtered.length };
+  Object.keys(PARTNER_STATUS).forEach((s) => { counts[s] = filtered.filter((p) => p.status === s).length; });
+  let rows = filtered.filter((p) => !q.status || p.status === q.status);
   const [key, dir] = (q.sort || 'submittedAt:desc').split(':');
   const f = SORTERS[key] ?? SORTERS.submittedAt;
   rows = rows.sort((a, b) => { const x = f(a); const y = f(b); return (x < y ? -1 : x > y ? 1 : 0) * (dir === 'asc' ? 1 : -1); });
@@ -224,6 +236,17 @@ export async function changeStatus(pid, to, opts, session) {
     reason = `PKS dikirim di Privy web via ${opts.via === 'PRIVY_ID' ? `Privy ID ${p.privyId}` : `email ${opts.inviteEmail}`}`;
   }
   if (to === 'ACTIVE') {
+    // PRD Scope 1 FR-010 / AC-016: akun PIC dibuat lebih dulu; bila bentrok atau gagal, status tetap Waiting PKS dan
+    // tidak ada kode merchant/toko yang tersisa. Email/HP PIC yang sudah dipakai pengguna lain memblokir aktivasi (OQ-03).
+    const email = p.pic.email.trim().toLowerCase();
+    if (allAccounts().some((x) => x.email === email) || phoneTaken(normalizePhone(p.pic.phone))) {
+      log(p, { from: null, to: null, by: actor, reason: 'Aktivasi gagal: email atau nomor HP PIC sudah digunakan pengguna lain' });
+      throw new ApiError('PIC_CONFLICT');
+    }
+    if (getScenario().picAccount === 'fail') {
+      log(p, { from: null, to: null, by: 'Sistem', reason: 'Aktivasi gagal: akun PIC tidak dapat dibuat' });
+      throw new ApiError('PIC_FAILED');
+    }
     p.activatedAt = now();
     Object.assign(p.pks, { status: 'SIGNED', confirmedBy: actor, confirmedAt: now() });
     if (opts.file) p.pks.file = { name: opts.file.name, by: actor, at: now() };
@@ -248,8 +271,6 @@ export async function changeStatus(pid, to, opts, session) {
 }
 
 function createPicAccount(p, actor) {
-  if (getScenario().picAccount === 'fail') { p.picAccountFailed = true; log(p, { from: null, to: null, by: 'Sistem', reason: 'Akun PIC gagal dibuat di Keycloak' }); return; }
-  p.picAccountFailed = false;
   const id = Math.max(...users.map((u) => u.id)) + 1;
   users.push({
     id, fullName: p.pic.name, role: 'PARTNER', username: p.pic.email, email: p.pic.email, phone: p.pic.phone, tlLevel: null,
@@ -259,17 +280,6 @@ function createPicAccount(p, actor) {
     log: [{ at: now(), text: `Akun partner dibuat otomatis saat partner Active, tautan aktivasi dikirim ke ${p.pic.email}` }],
   });
   syncUser(users.at(-1));
-}
-
-/** "Coba buat ulang" bila akun PIC gagal dibuat saat aktivasi. */
-export async function retryPicAccount(pid, session) {
-  await wait(500);
-  const p = findP(pid);
-  const prev = getScenario().picAccount;
-  if (prev === 'fail') throw new ApiError('KEYCLOAK_FAILED');
-  createPicAccount(p, actorOf(session));
-  log(p, { from: null, to: null, by: actorOf(session), reason: `Akun PIC dibuat ulang, tautan aktivasi dikirim ke ${p.pic.email}` });
-  return enrich(p);
 }
 
 /** Waiting PKS — catat pengiriman ulang ke Privy ID/email lain. Tanggal kirim pertama tidak berubah. */
@@ -319,8 +329,9 @@ export async function simulateResubmit(pid) {
   });
   p.fieldChanges.push(...changes);
   const summary = changes.map((c) => `${c.label}: ${c.old} → ${c.new}`).join('; ');
-  log(p, { from: 'REVISION_REQUIRED', to: 'UNDER_REVIEW', by: editor, reason: `Perbaikan dikirim ulang dari aplikasi mobile${summary ? `. ${summary}` : ''}` });
+  log(p, { from: 'REVISION_REQUIRED', to: 'UNDER_REVIEW', by: editor, reason: `Perbaikan dikirim ulang dari aplikasi mobile (revisi ke-${p.revisionRound + 1})${summary ? `. ${summary}` : ''}` });
   p.status = 'UNDER_REVIEW';
+  p.revisionRound += 1;
   p.revisionRequest = null;
   emitChange();
   return enrich(p);
@@ -493,7 +504,7 @@ export async function changeEmail(id, newEmail, reason, sendReset, session) {
     const p = findP(u.partnerId);
     if (p) { p.changeLog.push({ at: now(), by: actorOf(session), section: 'pic', field: 'Email PIC', old, new: email, reason }); p.pic.email = email; }
   }
-  u.log.push({ at: now(), text: `Email diubah dari ${old} ke ${email} oleh ${actorOf(session)}: ${reason}. Pemberitahuan dikirim ke email lama` });
+  u.log.push({ at: now(), text: `Email diubah dari ${old} ke ${email} oleh ${actorOf(session)}: ${reason}. Pemberitahuan dikirim ke email lama; sesi aktif diakhiri` });
   if (sendReset && accountStatus(u) === 'ACTIVE') { u.resetSentAt = now(); u.log.push({ at: now(), text: `Tautan reset password dikirim ke ${email}` }); }
   syncUser(u);
   return enrichUser(u);
@@ -515,7 +526,7 @@ export async function changePhone(id, newPhone, reason, session) {
     const p = findP(u.partnerId);
     if (p) { p.changeLog.push({ at: now(), by: actorOf(session), section: 'pic', field: 'No. Handphone PIC', old: formatPhone(old), new: formatPhone(phone), reason }); p.pic.phone = phone; }
   }
-  u.log.push({ at: now(), text: `Nomor telepon diubah dari ${formatPhone(old)} ke ${formatPhone(phone)} oleh ${actorOf(session)}: ${reason}` });
+  u.log.push({ at: now(), text: `Nomor telepon diubah dari ${formatPhone(old)} ke ${formatPhone(phone)} oleh ${actorOf(session)}: ${reason}; sesi aktif diakhiri` });
   syncUser(u);
   return enrichUser(u);
 }
@@ -652,18 +663,30 @@ const scopeLoans = (areaIds, period, f = {}) => loans.filter((l) => inArea(areaI
 
 const fieldUsers = (areaIds) => users.filter((u) => ['TL', 'SR', 'SA'].includes(u.role) && u.status === 'ACTIVE' && inArea(areaIds, u.areaIds[0]));
 /**
- * Kunjungan = hanya pemenuhan target per minggu, sama dengan Android (keputusan review 2026-10-09).
- * Target satu minggu penuh = hari kerja Senin–Sabtu (6), dikurangi hari libur bila datanya ada (web belum punya data libur);
- * maks. 1 kunjungan dihitung per hari. Contoh: Jumat dengan 3 hari terkunjungi = "Belum lengkap 3/6".
+ * Kunjungan = hanya pemenuhan target per minggu, sama dengan Android (PRD Scope 2 §2.2 + keputusan review 2026-10-09):
+ * target satu minggu = setiap toko yang ditugaskan (SA/SR) atau toko partner milik TL dikunjungi sekali, tanpa jumlah hari tetap;
+ * boleh lebih dari satu toko per hari. Status "Lengkap n/n" / "Belum lengkap n/m" (n = toko yang sudah dikunjungi minggu itu).
  */
-const WEEK_WORKDAYS = 6;
 const mondayOf = (ymd) => { const d = new Date(`${ymd}T12:00:00Z`); return addDays(ymd, -((d.getUTCDay() + 6) % 7)); };
-function visitWeek(uid, start) {
-  const days = new Set(visits.filter((v) => v.userId === uid && v.date >= start && v.date <= addDays(start, 5)).map((v) => v.date));
-  const target = WEEK_WORKDAYS;
-  return { start, visited: Math.min(days.size, target), target, closed: addDays(start, 5) < todayDate(), complete: days.size >= target };
+/** Toko target satu orang, dikelompokkan per partner, dengan status kunjungan minggu yang dimulai `start`. */
+export function visitWeekStores(uid, start) {
+  const u = userById(uid);
+  const end = addDays(start, 5);
+  const seen = new Set(visits.filter((v) => v.userId === uid && v.date >= start && v.date <= end).map((v) => v.storeId));
+  const groups = new Map();
+  validStoresOf(u).forEach(({ p, s }) => {
+    const g = groups.get(p.id) ?? { partnerId: p.id, partnerName: p.partnerName, stores: [] };
+    g.stores.push({ id: s.id, name: s.name, visited: seen.has(s.id) });
+    groups.set(p.id, g);
+  });
+  return [...groups.values()].map((g) => ({ ...g, visited: g.stores.every((x) => x.visited) }));
 }
-/** "Lengkap 6/6" / "Belum lengkap 3/6". */
+function visitWeek(uid, start) {
+  const stores = visitWeekStores(uid, start).flatMap((g) => g.stores);
+  const visited = stores.filter((x) => x.visited).length;
+  return { start, visited, target: stores.length, closed: addDays(start, 5) < todayDate(), complete: stores.length > 0 && visited >= stores.length };
+}
+/** "Lengkap 5/5" / "Belum lengkap 3/5". */
 export const weekStatusLabel = (w) => `${w.complete ? 'Lengkap' : 'Belum lengkap'} ${w.visited}/${w.target}`;
 /** Minggu kunjungan satu orang yang hari Seninnya ada di periode (minggu masuk periode yang memuat hari Seninnya). */
 export function visitWeeks(uid, period) {
@@ -778,7 +801,8 @@ export async function aplProductivity(areaIds, period, f = {}, { retry = false }
     const area = AREAS.find((a) => a.id === u.areaIds[0]);
     const att = attendance.filter((a) => a.userId === u.id && inP(a.date, period));
     const present = att.filter((a) => a.status !== 'ABSENT');
-    const mins = present.map((a) => { const t = new Date(new Date(a.clockInAt).getTime() + area.utcOffset * 3600e3); return t.getUTCHours() * 60 + t.getUTCMinutes(); });
+    // Jam check in dibaca pada zona perangkat yang tercatat di tiap check in (WIB/WITA/WIT).
+    const mins = present.map((a) => { const t = new Date(new Date(a.clockInAt).getTime() + (a.utcOffset ?? area.utcOffset) * 3600e3); return t.getUTCHours() * 60 + t.getUTCMinutes(); });
     const avg = mins.length ? Math.round(mins.reduce((a, b) => a + b, 0) / mins.length) : null;
     const weeks = visitWeeks(u.id, period).filter((w) => w.closed);
     return {
@@ -786,7 +810,7 @@ export async function aplProductivity(areaIds, period, f = {}, { retry = false }
       attendance: {
         days: att.length, present: present.length, onTime: att.filter((a) => a.status === 'ON_TIME').length, late: att.filter((a) => a.status === 'LATE').length,
         checkedOut: att.filter((a) => a.clockOutAt).length, absent: att.filter((a) => a.status === 'ABSENT').length,
-        avgCheckIn: avg == null ? null : `${String(Math.floor(avg / 60)).padStart(2, '0')}:${String(avg % 60).padStart(2, '0')} ${area.tz}`,
+        avgCheckIn: avg == null ? null : `${String(Math.floor(avg / 60)).padStart(2, '0')}:${String(avg % 60).padStart(2, '0')} ${present[0]?.tz ?? area.tz}`,
       },
       visits: { thisWeek: currentVisitWeek(u.id), weeksComplete: weeks.filter((w) => w.complete).length, weeks: weeks.length },
     };
@@ -804,7 +828,7 @@ export async function visitDetail(userId, period) {
     const p = findP(v.partnerId);
     return { ...clone(v), storeName: p.stores.find((x) => x.id === v.storeId).name, partnerName: p.partnerName };
   });
-  return { rows, weeks: visitWeeks(userId, period) };
+  return { rows, weeks: visitWeeks(userId, period), thisWeek: visitWeekStores(userId, mondayOf(todayDate())) };
 }
 
 // ------------------------------------------------------------------ APL B4 Partner
@@ -871,11 +895,15 @@ export function versionStatus(s, v) {
   return v.effectiveFrom > CURRENT_MONTH ? 'SCHEDULED' : 'ARCHIVED';
 }
 /** Tier yang cocok: nilai > from (tier pertama ≥ 0) dan ≤ to (to null = tak terbatas). */
+/**
+ * Tier rentang dari–sampai: batas bawah ikut tier (≥ dari), batas atas tidak (< sampai), tier terakhir tanpa batas atas
+ * (keputusan review 2026-10-09 mengikuti PRD: MFP 10% masuk tier 10–13% = 0,05%).
+ */
 export function tierFor(component, value) {
   const tiers = [...component.tiers].sort((a, b) => a.from - b.from);
-  return tiers.find((t, i) => (i === 0 ? value >= t.from : value > t.from) && (t.to == null || value <= t.to)) ?? tiers[tiers.length - 1];
+  return tiers.find((t) => value >= t.from && (t.to == null || value < t.to)) ?? tiers[tiers.length - 1];
 }
-export const tierLabel = (t) => (t.to == null ? `> ${t.from}%` : t.from === 0 ? `0% s/d ${t.to}%` : `> ${t.from}% s/d ${t.to}%`);
+export const tierLabel = (t) => (t.to == null ? `≥ ${t.from}%` : `${t.from}% s/d < ${t.to}%`);
 const fmtRp = (n) => `Rp\u00A0${Math.round(n).toLocaleString("id-ID")}`;
 const rate = (r) => `${String(r).replace('.', ',')}%`;
 
@@ -917,6 +945,14 @@ export function computeIncentives(areaIds, ym) {
       { label: 'Collection Incentive (MFP)', amount: (paid * tc.rate) / 100, detail: `MFP ${m.toFixed(1).replace('.', ',')}% · tier ${tierLabel(tc)} · tarif ${rate(tc.rate)}` },
     ];
     rows.push({ kind: 'PARTNER', id, name: p.partnerName, role: 'Partner', areaId: p.areaId, target, paidOutAmount: paid, achievement: ach, tier: tierLabel(tv), components, total: components.reduce((a, c) => a + c.amount, 0), version: v.version, status });
+  });
+  // Customer Referral Program (skema CRP): komisi % dari total disbursement pinjaman yang direferensikan nasabah.
+  const crp = new Map();
+  paidIn.filter((l) => l.crpReferrer).forEach((l) => crp.set(l.crpReferrer, [...(crp.get(l.crpReferrer) ?? []), l]));
+  crp.forEach((ls, name) => {
+    const v = versionFor('CRP', ym); const c = v.components[0]; const paid = ls.reduce((a, l) => a + l.amount, 0);
+    const components = [{ label: c.label, amount: (paid * c.rate) / 100, detail: `${rate(c.rate)} × disbursement ${ls.length} pinjaman referensi` }];
+    rows.push({ kind: 'CRP', id: `CRP:${name}`, name, role: 'Customer (CRP)', areaId: ls[0].areaId, target: 0, paidOutAmount: paid, achievement: 0, tier: '-', components, total: components[0].amount, version: v.version, status });
   });
   return rows.sort((a, b) => b.total - a.total);
 }

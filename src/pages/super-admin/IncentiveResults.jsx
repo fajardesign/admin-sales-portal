@@ -11,7 +11,7 @@ import { AREAS } from '../../lib/constants.js';
 import { formatNumber, formatRp, monthLabel } from '../../lib/format.js';
 import { navigate, withQuery } from '../../lib/router.js';
 
-const ROLE_OPTS = [{ value: '', label: 'Semua role' }, { value: 'TL', label: 'TL' }, { value: 'SR', label: 'SR' }, { value: 'SA', label: 'SA' }, { value: 'Partner', label: 'Partner' }];
+const ROLE_OPTS = [{ value: '', label: 'Semua role' }, { value: 'TL', label: 'TL' }, { value: 'SR', label: 'SR' }, { value: 'SA', label: 'SA' }, { value: 'Partner', label: 'Partner' }, { value: 'Customer (CRP)', label: 'Customer (CRP)' }];
 
 /** E3 · Hasil Perhitungan (read-only): insentif bulanan per penerima — pencapaian, tier, nominal, versi skema. Pembayaran di luar portal. */
 export function IncentiveResults(props) {

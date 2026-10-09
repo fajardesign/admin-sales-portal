@@ -156,6 +156,7 @@ function partner(n, name, entity, areaId, status, submitterId, cfg = {}) {
     pks: { inviteEmail: null, sentVia: null, sentAt: null, status: 'NOT_SENT', confirmedBy: null, confirmedAt: null, file: null },
     merchantCode: null, picAccountFailed: false,
     revisedSections: [], fieldChanges: [], changeLog: [], revisionRequest: null,
+    revisionRound: 0, // bertambah 1 setiap TL/SR mengirim ulang perbaikan (PRD Scope 1 FR-007, AC-010)
     history: [{ at: submittedAt, from: null, to: 'UNDER_REVIEW', by: submitterId, reason: 'Pengajuan dikirim dari aplikasi mobile' }],
     stores: [],
     documents: [],
@@ -328,6 +329,13 @@ partners.filter((p) => p.activatedAt).forEach((p) => {
   });
 });
 
+/**
+ * Customer Referral Program (CRP, skema E1): sebagian pinjaman berasal dari referensi nasabah lain. Data contoh ditandai
+ * deterministik (tanpa PRNG agar data lain tetap sama dengan Android): tiap pinjaman ke-15 mulai indeks 7 mereferensikan nasabah
+ * pinjaman 3 baris sebelumnya.
+ */
+loans.forEach((l, i) => { l.crpReferrer = i >= 7 && i % 15 === 7 ? loans[i - 3].customer : null; });
+
 /** targets: target nominal paid out per toko per bulan (read-only; sumber target masih TBD). Bulan berjalan = prorata s/d hari ini. */
 export const targets = {};
 /** mfp: rasio MFP (collection) per toko per bulan, dalam persen. */
@@ -373,7 +381,7 @@ users.filter((u) => ['TL', 'SR', 'SA'].includes(u.role) && u.status === 'ACTIVE'
     const r = rnd();
     if (today && r < 0.15) return; // belum check in
     const status = r < 0.05 && !today ? 'ABSENT' : r < 0.22 ? 'LATE' : 'ON_TIME';
-    if (status === 'ABSENT') { attendance.push({ userId: u.id, date: d, status, clockInAt: null, clockOutAt: null, lat: null, lng: null, place: null, distanceKm: null }); return; }
+    if (status === 'ABSENT') { attendance.push({ userId: u.id, date: d, status, clockInAt: null, clockOutAt: null, lat: null, lng: null, place: null, distanceKm: null, tz: area.tz, utcOffset: area.utcOffset, selfie: null }); return; }
     // Hari ini jam demo 10:30 WIB / 11:30 WITA: check in terlambat hari ini sebelum jam demo.
     const inAt = status === 'LATE' ? atLocal(d, area, 10, between(1, today && area.tz === 'WIB' ? 29 : 59)) : atLocal(d, area, between(8, 9), between(0, 59));
     const atStore = stores.length && rnd() < 0.4 ? stores[between(0, stores.length - 1)].s : null;
@@ -383,39 +391,44 @@ users.filter((u) => ['TL', 'SR', 'SA'].includes(u.role) && u.status === 'ACTIVE'
       userId: u.id, date: d, status, clockInAt: inAt,
       clockOutAt: today ? null : atLocal(d, area, between(17, 18), between(0, 59)),
       ...pt, place: { kind: atStore ? 'STORE' : 'OFFICE', name: ref.name }, distanceKm: +distanceKm(ref, pt).toFixed(2),
+      // Zona waktu perangkat saat check in (PRD Scope 2 §2.1: WIB/WITA/WIT) dan foto selfie contoh 1–6.
+      tz: area.tz, utcOffset: area.utcOffset, selfie: (u.id + d.length + inAt.getUTCMinutes()) % 6 + 1,
     });
   });
 });
 
 /**
- * visits: check-in kunjungan (revisi stakeholder 2026-10-08) — tanpa jadwal per jam. Mulai 12:00 lokal, di toko yang sah, radius 3 km dari
- * titik lokasi toko yang tercatat (distanceKm),
- * maks. 1 kunjungan dihitung per hari; target mingguan = hari kerja Senin–Sabtu. Hari absen tidak ada kunjungan.
+ * visits: check-in kunjungan (PRD Scope 2 §2.2 + keputusan review 2026-10-09). Target per minggu = setiap toko yang ditugaskan
+ * (SA/SR) atau toko partner milik TL dikunjungi sekali; boleh lebih dari satu toko per hari. Check in mulai 12:00 lokal, radius
+ * 3 km dari titik lokasi toko yang tercatat (distanceKm). Hari absen tidak ada kunjungan; hari ini belum ada (jam demo < 12:00).
  */
 export const visits = [];
 let visitSeq = 0;
+const mondayOfYmd = (ymd) => { const t = Date.parse(`${ymd}T12:00:00Z`); const w = (new Date(t).getUTCDay() + 6) % 7; return new Date(t - w * DAY_MS).toISOString().slice(0, 10); };
 users.filter((u) => ['TL', 'SR', 'SA'].includes(u.role) && u.status === 'ACTIVE').forEach((u) => {
   const own = validStoresOf(u);
   if (!own.length) return;
   const area = AREAS.find((a) => a.id === u.areaIds[0]);
-  daysFrom(u.activatedAt).filter(isWorkday).forEach((d, di) => {
-    if (d === TODAY) return; // jam demo sebelum 12:00 lokal
-    const att = attendance.find((a) => a.userId === u.id && a.date === d);
-    if (!att || att.status === 'ABSENT' || rnd() > 0.82) return;
-    const { p, s } = own[di % own.length];
+  const present = new Set(attendance.filter((a) => a.userId === u.id && a.status !== 'ABSENT' && a.date !== TODAY).map((a) => a.date));
+  const weeks = new Map();
+  daysFrom(u.activatedAt).filter((d) => isWorkday(d) && d !== TODAY && present.has(d)).forEach((d) => { const k = mondayOfYmd(d); weeks.set(k, [...(weeks.get(k) ?? []), d]); });
+  weeks.forEach((days) => own.forEach(({ p, s }) => {
+    if (rnd() > 0.85) return; // toko ini tidak dikunjungi minggu itu
+    const d = days[between(0, days.length - 1)];
     if (s.addedAt > atLocal(d, area, 23)) return;
     const inAt = atLocal(d, area, between(12, 16), between(0, 59));
     const pt = near(s, 0.8);
     visits.push({
       id: ++visitSeq, userId: u.id, partnerId: p.id, storeId: s.id, date: d,
       checkInAt: inAt, checkOutAt: new Date(inAt.getTime() + between(25, 110) * 60000), ...pt, distanceKm: +distanceKm(s, pt).toFixed(2),
+      tz: area.tz, utcOffset: area.utcOffset, selfie: (u.id + visitSeq) % 6 + 1,
     });
-  });
+  }));
 });
 
 // ---------------------------------------------------------------- skema insentif (Super Admin, PRD v3 §E)
 /**
- * Versi skema per penerima. Tier memakai rentang: cocok bila nilai > from dan ≤ to (tier pertama mulai 0% inklusif; to null = tak terbatas).
+ * Versi skema per penerima. Tier memakai rentang: cocok bila nilai ≥ from dan < to (to null = tak terbatas; review 2026-10-09).
  * Isi awal dari BRD V2.2 (PRD v3 §E1). status versi: ACTIVE | SCHEDULED | ARCHIVED; draft disimpan terpisah.
  */
 const T = (rows) => rows.map(([from, to, rate]) => ({ from, to, rate }));

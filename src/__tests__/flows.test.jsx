@@ -1,5 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, render, renderHook, screen, waitFor, within } from '@testing-library/react';
+import { IDLE_MS, MAX_SESSION_MS, useSessionTimeout } from '../lib/useSessionTimeout.js';
 import userEvent from '@testing-library/user-event';
 import App from '../App.jsx';
 import { DEFAULT_SCENARIO, setScenario } from '../dev/scenario.js';
@@ -130,18 +131,24 @@ describe('W0 Beranda Admin', () => {
 });
 
 describe('W3 Partner Pipeline', () => {
-  it('daftar default Under Review, bisa ganti status dan cari', async () => {
+  it('daftar default Semua, bisa ganti status dan cari (termasuk Kode Referral); jumlah tab ikut pencarian', async () => {
     const user = await start('rina.saraswati');
     go('/partner-pipeline');
     expect(await screen.findByText('Sinar Jaya Ponsel', {}, T)).toBeTruthy();
-    expect(screen.queryByText('Jaya Abadi Cellular')).toBeNull();
+    expect(window.location.hash).not.toContain('status=under_review');
     await user.click(screen.getByRole('tab', { name: /Active/ }));
     expect(await screen.findByText('Jaya Abadi Cellular', {}, T)).toBeTruthy();
+    await waitFor(() => expect(screen.queryByText('Sinar Jaya Ponsel')).toBeNull());
     expect(window.location.hash).toContain('status=active');
     await user.click(screen.getByRole('tab', { name: /Semua/ }));
-    await user.type(screen.getByPlaceholderText('Cari nama partner atau no. registrasi'), '0135');
+    await user.type(screen.getByPlaceholderText('Cari nama partner, no. registrasi, atau kode referral'), '0135');
     expect(await screen.findByText('Mega Cell Makassar', {}, T)).toBeTruthy();
     await waitFor(() => expect(screen.queryByText('Sinar Jaya Ponsel')).toBeNull());
+    const search = screen.getByPlaceholderText('Cari nama partner, no. registrasi, atau kode referral');
+    await user.clear(search);
+    await user.type(search, 'amr6139');
+    expect(await screen.findByText('Jaya Abadi Cellular', {}, T)).toBeTruthy();
+    await waitFor(() => expect(screen.getByRole('tab', { name: /Semua/ }).textContent).toMatch(/1/));
   });
 
   it('Verifikasi Selesai nonaktif bila dokumen wajib belum Valid; Data Rekening tanpa tombol verifikasi', async () => {
@@ -211,6 +218,33 @@ describe('W3 Partner Pipeline', () => {
     await user.click(screen.getByRole('tab', { name: /Dokumen/ }));
     expect(await screen.findByText(/ktp_pic_0146_v2\.jpg/, {}, T)).toBeTruthy();
     expect(screen.getAllByText('Direvisi').length).toBeGreaterThan(0);
+    expect(screen.getByText('Revisi ke-1')).toBeTruthy();
+  });
+
+  it('Nonaktifkan menyebut dampak; Batalkan di Waiting PKS mengingatkan Privy (FR-012, FR-013)', async () => {
+    const user = await start('rina.saraswati');
+    go('/partner-pipeline/REG2026-0139');
+    await user.click(await screen.findByRole('button', { name: 'Nonaktifkan' }, T));
+    expect(await screen.findByText('3 toko akan nonaktif, 2 SA/SR dilepas, dan akun PIC dinonaktifkan.', {}, T)).toBeTruthy();
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Batal' }));
+    go('/partner-pipeline/REG2026-0140');
+    await user.click(await screen.findByRole('button', { name: 'Batalkan' }, T));
+    expect(await screen.findByText('Batalkan juga dokumen PKS di Privy.', {}, T)).toBeTruthy();
+  });
+
+  it('aktivasi gagal: akun PIC tidak dapat dibuat, status tetap Waiting PKS tanpa kode (FR-010, AC-016)', async () => {
+    setScenario({ ...DEFAULT_SCENARIO, picAccount: 'fail' });
+    const user = await start('rina.saraswati');
+    go('/partner-pipeline/REG2026-0140');
+    await user.click(await screen.findByRole('button', { name: 'Konfirmasi PKS Ditandatangani & Aktifkan' }, T));
+    const dlg = await screen.findByRole('dialog', {}, T);
+    await user.click(within(dlg).getByText(/Saya sudah memastikan di Privy web/));
+    await user.click(within(dlg).getByRole('button', { name: 'Konfirmasi PKS Ditandatangani & Aktifkan' }));
+    expect(await within(dlg).findByText('Aktivasi gagal: akun PIC tidak dapat dibuat.', {}, T)).toBeTruthy();
+    const p = partners.find((x) => x.id === 'REG2026-0140');
+    expect(p.status).toBe('WAITING_PKS');
+    expect(p.merchantCode).toBeNull();
+    expect(p.stores.every((x) => x.code === null)).toBe(true);
   });
 
   it('Kembali dari detail memulihkan tampilan daftar sebelumnya', async () => {
@@ -330,6 +364,20 @@ describe('W2 Account Management', () => {
     await pick(user, 'Pilih role', 'Admin (Reviewer)');
     await user.click(screen.getByRole('button', { name: 'Simpan' }));
     expect(await screen.findByText('Nomor telepon sudah terdaftar', {}, T)).toBeTruthy();
+  });
+
+  it('email/telepon yang sudah dipakai ditolak saat field ditinggalkan, sebelum Simpan (AC-AM-005)', async () => {
+    const user = await start('rina.saraswati');
+    go('/account-management');
+    await screen.findByText('Yohana Sitorus', {}, T);
+    await user.click(screen.getByRole('button', { name: 'Tambah Pengguna' }));
+    await user.type(await screen.findByPlaceholderText('nama@amarbank.co.id', {}, T), 'bayu.prasetyo@amarbank.co.id');
+    await user.click(screen.getByPlaceholderText('Budi Santoso'));
+    expect(await screen.findByText('Email sudah terdaftar', {}, T)).toBeTruthy();
+    await user.type(screen.getByPlaceholderText('812 3456 7890'), `0${users[1].phone}`);
+    await user.click(screen.getByPlaceholderText('Budi Santoso'));
+    expect(await screen.findByText('Nomor telepon sudah terdaftar', {}, T)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Simpan' }).disabled).toBe(true);
   });
 
   it('Ubah Nomor Telepon lalu login dengan nomor baru', async () => {
@@ -504,5 +552,26 @@ describe('Tidak ada layar buntu', () => {
     go('/partner-pipeline/REG2026-9999');
     expect(await screen.findByText('Partner tidak ditemukan atau gagal dimuat.', {}, T)).toBeTruthy();
     expect(screen.getAllByRole('button', { name: 'Kembali' }).length).toBeGreaterThan(0);
+  });
+});
+
+describe('Sesi web (PRD Scope 1: idle 30 menit, maks. 12 jam)', () => {
+  it('memanggil onExpire setelah 30 menit tanpa aktivitas atau 12 jam sejak login', () => {
+    vi.useFakeTimers();
+    try {
+      let n = 0;
+      const { unmount } = renderHook(() => useSessionTimeout(true, Date.now(), () => { n += 1; }));
+      vi.advanceTimersByTime(IDLE_MS - 60000);
+      expect(n).toBe(0);
+      vi.advanceTimersByTime(90000);
+      expect(n).toBeGreaterThan(0);
+      unmount();
+      n = 0;
+      renderHook(() => useSessionTimeout(true, Date.now() - MAX_SESSION_MS, () => { n += 1; }));
+      vi.advanceTimersByTime(30000);
+      expect(n).toBeGreaterThan(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

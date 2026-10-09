@@ -8,6 +8,13 @@ import { EMAIL_RE, validatePksFile, validateReason } from '../../lib/validation.
 import { ACTIONS } from './actions.js';
 
 
+/** Dampak Nonaktifkan (PRD Scope 1 FR-013, SCR-05): jumlah toko aktif, SA/SR yang ditugaskan, akun PIC. */
+function impactText(p) {
+  const stores = p.stores.filter((s) => s.status === 'ACTIVE');
+  const people = new Set(stores.flatMap((s) => s.assigned)).size;
+  return `${stores.length} toko akan nonaktif, ${people} SA/SR dilepas, dan akun PIC dinonaktifkan.`;
+}
+
 /** W3d · Konfirmasi "Ubah status menjadi {status}?" dengan isian sesuai aksi. */
 export function StatusActionModal({ partner, to, user, onClose, onDone }) {
   const toast = useToast();
@@ -19,6 +26,7 @@ export function StatusActionModal({ partner, to, user, onClose, onDone }) {
   const [file, setFile] = useState(null);
   const [touched, setTouched] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [failure, setFailure] = useState(null); // galat aktivasi ditampilkan di modal, modal tetap terbuka (PRD Scope 1 §11)
 
   const errs = {
     reason: a.reason ? validateReason(reason) : undefined,
@@ -32,13 +40,16 @@ export function StatusActionModal({ partner, to, user, onClose, onDone }) {
     setTouched(true);
     if (invalid) return;
     setBusy(true);
+    setFailure(null);
     try {
       const p = await changeStatus(partner.id, to, { reason: reason.trim(), via, inviteEmail: inviteEmail.trim().toLowerCase(), file }, user);
       toast('success', 'Status berhasil diperbarui.');
       onDone(p);
     } catch (e) {
       setBusy(false);
-      toast('error', e instanceof ApiError && e.code === 'CONFLICT' ? 'Status tidak dapat diubah.' : 'Gagal memperbarui status. Coba lagi.');
+      if (e instanceof ApiError && e.code === 'PIC_FAILED') setFailure('Aktivasi gagal: akun PIC tidak dapat dibuat.');
+      else if (e instanceof ApiError && e.code === 'PIC_CONFLICT') setFailure('Email atau nomor HP PIC sudah digunakan pengguna lain.');
+      else toast('error', e instanceof ApiError && e.code === 'CONFLICT' ? 'Status tidak dapat diubah.' : 'Gagal memperbarui status. Coba lagi.');
     }
   }
 
@@ -48,6 +59,9 @@ export function StatusActionModal({ partner, to, user, onClose, onDone }) {
       confirmDisabled={to === 'ACTIVE' && !signedChecked}>
       <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>{a.desc}</span>
       {a.final && <Alert status="warning" size="sm" title="Status ini final dan tidak dapat diubah kembali." />}
+      {to === 'INACTIVE' && <Alert status="error" size="sm" title={impactText(partner)} />}
+      {to === 'CANCELLED' && partner.status === 'WAITING_PKS' && <Alert status="warning" size="sm" title="Batalkan juga dokumen PKS di Privy." />}
+      {failure && <Alert status="error" size="sm" title={failure} />}
       {to === 'WAITING_PKS' && (
         <>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>

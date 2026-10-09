@@ -17,6 +17,8 @@ export const areaName = (id) => AREAS.find((a) => a.id === id)?.name ?? '-';
 export const OFFICES = AREAS.map((a) => ({ areaId: a.id, name: `Kantor Amar Bank ${a.name}`, lat: +(a.lat + 0.004).toFixed(6), lng: +(a.lng - 0.003).toFixed(6) }));
 /** Radius check in absensi (kantor atau toko partner) dan kunjungan (toko), km. */
 export const CHECK_IN_RADIUS_KM = 3;
+/** Zona waktu Indonesia yang didukung (PRD Scope 2 §2.1): offset UTC dalam jam. */
+export const TIME_ZONES = { WIB: 7, WITA: 8, WIT: 9 };
 /** Check in absensi ≤ 10:00 waktu lokal = Tepat Waktu; kunjungan bisa check in mulai 12:00 waktu lokal. */
 export const ON_TIME_LIMIT = '10:00';
 export const VISIT_START = '12:00';
@@ -106,10 +108,10 @@ export const DOC_TYPES = [
  * Role akun & pemetaan Keycloak (PRD v3 "Role mapping"): realm role, platform access role, feature access roles.
  * Menu dan API mengikuti feature access roles; login web butuh platform "web-access".
  */
-const SALES_COMMON = ['ATTENDANCE', 'VISIT_EXECUTION', 'LOAN_TRACKING', 'SALES_PERFORMANCE', 'PRODUCTIVITY_PERFORMANCE_CHECK_IN', 'PRODUCTIVITY_PERFORMANCE_VISIT_PLAN', 'INCENTIVE_ESTIMATION', 'PARTNER_VIEW'];
+const SALES_COMMON = ['ATTENDANCE', 'VISIT_EXECUTION', 'LOAN_TRACKING', 'SALES_PERFORMANCE', 'PRODUCTIVITY_PERFORMANCE_CHECK_IN', 'PRODUCTIVITY_PERFORMANCE_VISIT', 'INCENTIVE_ESTIMATION', 'PARTNER_VIEW'];
 export const ROLES = {
   REVIEWER: { label: 'Admin (Reviewer)', short: 'Admin', realm: 'ADMIN', platform: 'web-access', features: ['DASHBOARD', 'PARTNER_PIPELINE', 'ACCOUNT_CREATION'] },
-  APL: { label: 'APL', short: 'APL', realm: 'APL', platform: 'web-access', features: ['SALES_PERFORMANCE', 'PRODUCTIVITY_PERFORMANCE_CHECK_IN', 'PRODUCTIVITY_PERFORMANCE_VISIT_PLAN', 'INCENTIVE_ESTIMATION', 'PARTNER_VIEW', 'TEAM_VIEW'] },
+  APL: { label: 'APL', short: 'APL', realm: 'APL', platform: 'web-access', features: ['SALES_PERFORMANCE', 'PRODUCTIVITY_PERFORMANCE_CHECK_IN', 'PRODUCTIVITY_PERFORMANCE_VISIT', 'INCENTIVE_ESTIMATION', 'PARTNER_VIEW', 'TEAM_VIEW'] },
   TL: { label: 'TL', short: 'TL', realm: 'TL', platform: 'sales-app-access', features: ['PARTNER_ACQUISITION', 'SALES_ASSIGNMENT', 'VISIT_PLAN_MANAGEMENT', ...SALES_COMMON, 'TEAM_VIEW'] },
   SR: { label: 'SR', short: 'SR', realm: 'SR', platform: 'sales-app-access', features: ['PARTNER_ACQUISITION', ...SALES_COMMON] },
   SA: { label: 'SA', short: 'SA', realm: 'SA', platform: 'sales-app-access', features: SALES_COMMON },

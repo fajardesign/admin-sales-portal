@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160" role="img" aria-label="Foto selfie contoh">
+<rect width="160" height="160" fill="#efe9d6"/>
+<path d="M22 160 Q24 118 80 116 Q136 118 138 160 Z" fill="#8a6d1f"/>
+<rect x="70" y="98" width="20" height="22" rx="6" fill="#b98261"/>
+<ellipse cx="80" cy="74" rx="30" ry="36" fill="#b98261"/><path d="M50 70 Q50 34 80 34 Q112 34 110 72 Q104 50 80 50 Q60 50 50 70 Z" fill="#5a3a22"/>
+<circle cx="69" cy="76" r="3" fill="#2a1d16"/><circle cx="91" cy="76" r="3" fill="#2a1d16"/>
+<path d="M70 92 Q80 99 90 92" stroke="#7a3b2e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</svg>

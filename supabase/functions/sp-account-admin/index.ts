@@ -4,7 +4,8 @@
 //   { action: 'list' }                                  → { users: AppUser[] }
 //   { action: 'upsert', users: AppUser[], passwords? }  → { users: AppUser[] }   (passwords: { [id]: string })
 // Setiap app_user punya satu akun Supabase Auth (email = email app_user). Status selain ACTIVE → akun Auth diblokir (ban),
-// jadi hanya akun Active yang bisa login di aplikasi mobile. Saat akun dinonaktifkan atau tautan reset dikirim, semua sesi diakhiri.
+// jadi hanya akun Active yang bisa login di aplikasi mobile. Saat akun dinonaktifkan, tautan reset dikirim, atau email/nomor telepon
+// diubah, semua sesi diakhiri.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const cors = {
@@ -97,11 +98,12 @@ Deno.serve(async (req) => {
           const { error } = await admin.from('app_user').update({ auth_user_id: authId }).eq('id', row.id);
           if (error) throw error;
         }
-        // ACC-05 Nonaktifkan & ACC-07 Reset Password: sesi aktif pengguna berakhir.
+        // ACC-05 Nonaktifkan, ACC-07 Reset Password, ACC-08/09 Ubah email/nomor telepon (PRD Scope 1 FR-AM-008): sesi aktif berakhir.
         const disabledNow = prev && prev.status !== 'DISABLED' && row.status === 'DISABLED';
+        const identityChanged = prev && (prev.email !== row.email || prev.phone !== row.phone);
         const ts = (v: unknown) => (v ? Date.parse(String(v)) : null);
         const resetSent = prev && row.reset_sent_at && ts(row.reset_sent_at) !== ts(prev.reset_sent_at);
-        if (disabledNow || resetSent) {
+        if (disabledNow || resetSent || identityChanged) {
           const { error } = await admin.rpc('sp_end_sessions', { uid: authId });
           if (error) throw error;
         }

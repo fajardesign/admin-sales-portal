@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSessionTimeout } from './lib/useSessionTimeout.js';
 import { navigate, useHashRoute } from './lib/router.js';
 import { DEMO } from './lib/env.js';
 import { featureForPath, homeFor } from './lib/nav.js';
@@ -53,11 +54,20 @@ export default function App() {
   const [session, setSessionState] = useState(loadSession);
   const setSession = (s) => { setSessionState(s); store.set(SESSION_KEY, s ? JSON.stringify(s) : null); };
 
-  const logout = () => { setSession(null); navigate('/login'); };
+  const [notice, setNotice] = useState(null);
+  const logout = () => { setSession(null); setNotice(null); navigate('/login'); };
+  // Idle 30 menit / maks. 12 jam: sesi berakhir, kembali ke login, lalu ke halaman yang sama setelah masuk lagi.
+  useSessionTimeout(!!session && !preset, session?.loginAt, () => {
+    store.set(RETURN_KEY, `${path}${query.toString() ? `?${query}` : ''}`);
+    setSession(null);
+    setNotice('Sesi Anda berakhir karena tidak ada aktivitas. Silakan masuk lagi.');
+    navigate('/login');
+  });
   const feature = featureForPath(path);
   // Setelah login kembali ke halaman yang tadi dibuka (bila diizinkan).
   const onLoggedIn = (s) => {
-    setSession(s);
+    setNotice(null);
+    setSession({ ...s, loginAt: Date.now() });
     const back = store.get(RETURN_KEY);
     store.set(RETURN_KEY, null);
     if (!s.webAccess) navigate('/denied');
@@ -76,7 +86,7 @@ export default function App() {
   const props = { user: session, onLogout: logout, query, path };
   let screen;
   if (path === '/activate') screen = <Activation userId={query.get('user') ? Number(query.get('user')) : null} mode={query.get('mode') ?? 'activate'} onBackToLogin={session ? undefined : () => navigate('/login')} />;
-  else if (!session || redirect) screen = <Login onLoggedIn={onLoggedIn} />;
+  else if (!session || redirect) screen = <Login onLoggedIn={onLoggedIn} notice={notice} />;
   else if (path === '/denied') screen = <AccessDenied session={session} onLogout={logout} />;
   else if (!session.features.includes(feature)) screen = <ForbiddenPage {...props} />;
   else if (path.startsWith('/partner-pipeline/')) screen = <PartnerDetail key={path} {...props} id={decodeURIComponent(path.split('/')[2])} />;

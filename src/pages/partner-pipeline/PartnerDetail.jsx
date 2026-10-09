@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Breadcrumbs, Button, Icon, TabMenuHorizontal } from '@ds/index.js';
+import { Alert, Breadcrumbs, Button, Icon, StatusBadge, TabMenuHorizontal } from '@ds/index.js';
 import { AdminShell } from '../../components/AdminShell.jsx';
 import { PartnerStatusBadge } from '../../components/Badges.jsx';
 import { DocumentViewer } from '../../components/DocumentViewer.jsx';
@@ -7,7 +7,7 @@ import { EmptyState } from '../../components/EmptyState.jsx';
 import { bar } from '../../lib/cells.jsx';
 import { useToast } from '../../components/Toaster.jsx';
 import {
-  ApiError, getPartner, isFinal, onDataChange, retryPicAccount, setDocVerification, verificationGap,
+  ApiError, getPartner, isFinal, onDataChange, setDocVerification, verificationGap,
 } from '../../api/mockApi.js';
 import { formatDateTime } from '../../lib/format.js';
 import { navigate } from '../../lib/router.js';
@@ -47,7 +47,6 @@ export function PartnerDetail({ id, user, onLogout }) {
   const [reason, setReason] = useState(null); // { doc }
   const [viewer, setViewer] = useState(null); // { doc, file }
   const [pksModal, setPksModal] = useState(null); // 'delivery' | 'upload'
-  const [retrying, setRetrying] = useState(false);
   const [editing, setEditing] = useState(preset?.detail?.editing ?? false);
 
   const load = useCallback(() => { getPartner(id).then((np) => { setP(np); setError(false); }, () => setError(true)); }, [id]);
@@ -75,11 +74,6 @@ export function PartnerDetail({ id, user, onLogout }) {
   async function verifyDoc(doc, value, note) {
     try { setP(await setDocVerification(p.id, doc.key, value, note, user)); setReason(null); } catch (e) { if (e instanceof ApiError) toast('error', 'Status tidak dapat diubah.'); }
   }
-  async function retryPic() {
-    setRetrying(true);
-    try { setP(await retryPicAccount(p.id, user)); toast('success', 'Akun PIC berhasil dibuat. Undangan aktivasi telah dikirim.'); } catch { toast('error', 'Gagal membuat akun. Coba lagi.'); }
-    setRetrying(false);
-  }
 
   const uploaded = p.documents.filter((d) => d.file).length;
   return shell(
@@ -89,6 +83,7 @@ export function PartnerDetail({ id, user, onLogout }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-10)', flexWrap: 'wrap' }}>
             <h2 style={{ margin: 0, font: 'var(--title-h5)', color: 'var(--text-strong-950)' }}>{p.partnerName}</h2>
             <PartnerStatusBadge status={p.status} />
+            {p.revisionRound > 0 && <StatusBadge status="information">Revisi ke-{p.revisionRound}</StatusBadge>}
           </div>
           <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>
             {p.registrationNumber} · Diajukan oleh {p.submitter?.name} ({p.submitter?.role}) · {formatDateTime(p.submittedAt)} · {p.stores.length} toko
@@ -123,7 +118,7 @@ export function PartnerDetail({ id, user, onLogout }) {
         { value: 'data', label: 'Data Partner' }, { value: 'stores', label: `Toko (${p.stores.length})` },
         { value: 'docs', label: `Dokumen (${uploaded})` }, { value: 'pks', label: 'PKS (Privy)' }, { value: 'history', label: 'Riwayat Status' },
       ]} />
-      {tab === 'data' && <DataPartnerTab partner={p} onGoStores={() => setTab('stores')} retrying={retrying} onRetryPic={retryPic} />}
+      {tab === 'data' && <DataPartnerTab partner={p} onGoStores={() => setTab('stores')} />}
       {tab === 'stores' && <StoresTab partner={p} />}
       {tab === 'docs' && <DocumentsTab partner={p} onView={(doc, file) => setViewer({ doc, file })}
         onVerify={(doc, v) => (v === 'VALID' ? verifyDoc(doc, 'VALID') : setReason({ doc }))} />}
