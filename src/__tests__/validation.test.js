@@ -77,11 +77,14 @@ describe('absensi & kunjungan (revisi stakeholder 2026-10-08)', () => {
       expect(a.status === 'ON_TIME' ? m <= 600 : m > 600).toBe(true);
     });
   });
-  it('lokasi check in dalam radius 3 km dari kantor terdaftar atau toko', () => {
+  it('jarak check in = jarak dari titik lat/long yang tercatat (kantor OFFICES / lokasi toko), maks. 3 km', () => {
+    const stores = partners.flatMap((p) => p.stores);
     attendance.filter((a) => a.place).forEach((a) => {
+      const ref = a.place.kind === 'OFFICE' ? OFFICES.find((o) => o.name === a.place.name) : stores.find((x) => x.name === a.place.name);
+      expect(a.distanceKm).toBeCloseTo(distanceKm(ref, a), 2);
       expect(a.distanceKm).toBeLessThanOrEqual(3);
-      if (a.place.kind === 'OFFICE') expect(distanceKm(OFFICES.find((o) => o.name === a.place.name), a)).toBeLessThanOrEqual(3);
     });
+    visits.forEach((v) => expect(v.distanceKm).toBeCloseTo(distanceKm(stores.find((x) => x.id === v.storeId), v), 2));
   });
   it('kunjungan mulai 12:00 lokal, radius 3 km, maks. 1 per hari', () => {
     const seen = new Set();
