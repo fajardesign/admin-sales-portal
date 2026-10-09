@@ -6,7 +6,7 @@ import {
   ACCOUNT_STATUS, AREAS, CREATABLE_ROLES, ACTIVATION_TTL_MS, FINAL_STATUSES, PAGE_SIZE, RESET_TTL_MS, PARTNER_STATUS, ROLES, TRANSITIONS,
 } from '../lib/constants.js';
 import {
-  attendance, CURRENT_MONTH, loans, mfp, MONTHS, now, owningTl, partners, schemes, superAdmins, targets, users, visits, wibDate,
+  attendance, CURRENT_MONTH, loans, mfp, MONTHS, now, owningTl, partners, schemes, superAdmins, targets, users, validStoresOf, visits, wibDate,
 } from './db.js';
 import { hydrateUsers, syncUser } from './supabaseSync.js';
 
@@ -663,18 +663,30 @@ const scopeLoans = (areaIds, period, f = {}) => loans.filter((l) => inArea(areaI
 
 const fieldUsers = (areaIds) => users.filter((u) => ['TL', 'SR', 'SA'].includes(u.role) && u.status === 'ACTIVE' && inArea(areaIds, u.areaIds[0]));
 /**
- * Kunjungan = hanya pemenuhan target per minggu, sama dengan Android (keputusan review 2026-10-09).
- * Target satu minggu penuh = hari kerja Senin–Sabtu (6), dikurangi hari libur bila datanya ada (web belum punya data libur);
- * maks. 1 kunjungan dihitung per hari. Contoh: Jumat dengan 3 hari terkunjungi = "Belum lengkap 3/6".
+ * Kunjungan = hanya pemenuhan target per minggu, sama dengan Android (PRD Scope 2 §2.2 + keputusan review 2026-10-09):
+ * target satu minggu = setiap toko yang ditugaskan (SA/SR) atau toko partner milik TL dikunjungi sekali, tanpa jumlah hari tetap;
+ * boleh lebih dari satu toko per hari. Status "Lengkap n/n" / "Belum lengkap n/m" (n = toko yang sudah dikunjungi minggu itu).
  */
-const WEEK_WORKDAYS = 6;
 const mondayOf = (ymd) => { const d = new Date(`${ymd}T12:00:00Z`); return addDays(ymd, -((d.getUTCDay() + 6) % 7)); };
-function visitWeek(uid, start) {
-  const days = new Set(visits.filter((v) => v.userId === uid && v.date >= start && v.date <= addDays(start, 5)).map((v) => v.date));
-  const target = WEEK_WORKDAYS;
-  return { start, visited: Math.min(days.size, target), target, closed: addDays(start, 5) < todayDate(), complete: days.size >= target };
+/** Toko target satu orang, dikelompokkan per partner, dengan status kunjungan minggu yang dimulai `start`. */
+export function visitWeekStores(uid, start) {
+  const u = userById(uid);
+  const end = addDays(start, 5);
+  const seen = new Set(visits.filter((v) => v.userId === uid && v.date >= start && v.date <= end).map((v) => v.storeId));
+  const groups = new Map();
+  validStoresOf(u).forEach(({ p, s }) => {
+    const g = groups.get(p.id) ?? { partnerId: p.id, partnerName: p.partnerName, stores: [] };
+    g.stores.push({ id: s.id, name: s.name, visited: seen.has(s.id) });
+    groups.set(p.id, g);
+  });
+  return [...groups.values()].map((g) => ({ ...g, visited: g.stores.every((x) => x.visited) }));
 }
-/** "Lengkap 6/6" / "Belum lengkap 3/6". */
+function visitWeek(uid, start) {
+  const stores = visitWeekStores(uid, start).flatMap((g) => g.stores);
+  const visited = stores.filter((x) => x.visited).length;
+  return { start, visited, target: stores.length, closed: addDays(start, 5) < todayDate(), complete: stores.length > 0 && visited >= stores.length };
+}
+/** "Lengkap 5/5" / "Belum lengkap 3/5". */
 export const weekStatusLabel = (w) => `${w.complete ? 'Lengkap' : 'Belum lengkap'} ${w.visited}/${w.target}`;
 /** Minggu kunjungan satu orang yang hari Seninnya ada di periode (minggu masuk periode yang memuat hari Seninnya). */
 export function visitWeeks(uid, period) {
@@ -789,7 +801,8 @@ export async function aplProductivity(areaIds, period, f = {}, { retry = false }
     const area = AREAS.find((a) => a.id === u.areaIds[0]);
     const att = attendance.filter((a) => a.userId === u.id && inP(a.date, period));
     const present = att.filter((a) => a.status !== 'ABSENT');
-    const mins = present.map((a) => { const t = new Date(new Date(a.clockInAt).getTime() + area.utcOffset * 3600e3); return t.getUTCHours() * 60 + t.getUTCMinutes(); });
+    // Jam check in dibaca pada zona perangkat yang tercatat di tiap check in (WIB/WITA/WIT).
+    const mins = present.map((a) => { const t = new Date(new Date(a.clockInAt).getTime() + (a.utcOffset ?? area.utcOffset) * 3600e3); return t.getUTCHours() * 60 + t.getUTCMinutes(); });
     const avg = mins.length ? Math.round(mins.reduce((a, b) => a + b, 0) / mins.length) : null;
     const weeks = visitWeeks(u.id, period).filter((w) => w.closed);
     return {
@@ -797,7 +810,7 @@ export async function aplProductivity(areaIds, period, f = {}, { retry = false }
       attendance: {
         days: att.length, present: present.length, onTime: att.filter((a) => a.status === 'ON_TIME').length, late: att.filter((a) => a.status === 'LATE').length,
         checkedOut: att.filter((a) => a.clockOutAt).length, absent: att.filter((a) => a.status === 'ABSENT').length,
-        avgCheckIn: avg == null ? null : `${String(Math.floor(avg / 60)).padStart(2, '0')}:${String(avg % 60).padStart(2, '0')} ${area.tz}`,
+        avgCheckIn: avg == null ? null : `${String(Math.floor(avg / 60)).padStart(2, '0')}:${String(avg % 60).padStart(2, '0')} ${present[0]?.tz ?? area.tz}`,
       },
       visits: { thisWeek: currentVisitWeek(u.id), weeksComplete: weeks.filter((w) => w.complete).length, weeks: weeks.length },
     };
@@ -815,7 +828,7 @@ export async function visitDetail(userId, period) {
     const p = findP(v.partnerId);
     return { ...clone(v), storeName: p.stores.find((x) => x.id === v.storeId).name, partnerName: p.partnerName };
   });
-  return { rows, weeks: visitWeeks(userId, period) };
+  return { rows, weeks: visitWeeks(userId, period), thisWeek: visitWeekStores(userId, mondayOf(todayDate())) };
 }
 
 // ------------------------------------------------------------------ APL B4 Partner
@@ -882,11 +895,15 @@ export function versionStatus(s, v) {
   return v.effectiveFrom > CURRENT_MONTH ? 'SCHEDULED' : 'ARCHIVED';
 }
 /** Tier yang cocok: nilai > from (tier pertama ≥ 0) dan ≤ to (to null = tak terbatas). */
+/**
+ * Tier rentang dari–sampai: batas bawah ikut tier (≥ dari), batas atas tidak (< sampai), tier terakhir tanpa batas atas
+ * (keputusan review 2026-10-09 mengikuti PRD: MFP 10% masuk tier 10–13% = 0,05%).
+ */
 export function tierFor(component, value) {
   const tiers = [...component.tiers].sort((a, b) => a.from - b.from);
-  return tiers.find((t, i) => (i === 0 ? value >= t.from : value > t.from) && (t.to == null || value <= t.to)) ?? tiers[tiers.length - 1];
+  return tiers.find((t) => value >= t.from && (t.to == null || value < t.to)) ?? tiers[tiers.length - 1];
 }
-export const tierLabel = (t) => (t.to == null ? `> ${t.from}%` : t.from === 0 ? `0% s/d ${t.to}%` : `> ${t.from}% s/d ${t.to}%`);
+export const tierLabel = (t) => (t.to == null ? `≥ ${t.from}%` : `${t.from}% s/d < ${t.to}%`);
 const fmtRp = (n) => `Rp\u00A0${Math.round(n).toLocaleString("id-ID")}`;
 const rate = (r) => `${String(r).replace('.', ',')}%`;
 
@@ -928,6 +945,14 @@ export function computeIncentives(areaIds, ym) {
       { label: 'Collection Incentive (MFP)', amount: (paid * tc.rate) / 100, detail: `MFP ${m.toFixed(1).replace('.', ',')}% · tier ${tierLabel(tc)} · tarif ${rate(tc.rate)}` },
     ];
     rows.push({ kind: 'PARTNER', id, name: p.partnerName, role: 'Partner', areaId: p.areaId, target, paidOutAmount: paid, achievement: ach, tier: tierLabel(tv), components, total: components.reduce((a, c) => a + c.amount, 0), version: v.version, status });
+  });
+  // Customer Referral Program (skema CRP): komisi % dari total disbursement pinjaman yang direferensikan nasabah.
+  const crp = new Map();
+  paidIn.filter((l) => l.crpReferrer).forEach((l) => crp.set(l.crpReferrer, [...(crp.get(l.crpReferrer) ?? []), l]));
+  crp.forEach((ls, name) => {
+    const v = versionFor('CRP', ym); const c = v.components[0]; const paid = ls.reduce((a, l) => a + l.amount, 0);
+    const components = [{ label: c.label, amount: (paid * c.rate) / 100, detail: `${rate(c.rate)} × disbursement ${ls.length} pinjaman referensi` }];
+    rows.push({ kind: 'CRP', id: `CRP:${name}`, name, role: 'Customer (CRP)', areaId: ls[0].areaId, target: 0, paidOutAmount: paid, achievement: 0, tier: '-', components, total: components[0].amount, version: v.version, status });
   });
   return rows.sort((a, b) => b.total - a.total);
 }

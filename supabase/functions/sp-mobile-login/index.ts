@@ -22,10 +22,10 @@ const admin = createClient(URL_, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, opt
 
 // Role mapping PRD v3 (okf_repository_design/products/sales_dashboard/roles_matrix.md). Kode role portal REVIEWER = realm ADMIN.
 const SALES_COMMON = ['ATTENDANCE', 'VISIT_EXECUTION', 'LOAN_TRACKING', 'SALES_PERFORMANCE', 'PRODUCTIVITY_PERFORMANCE_CHECK_IN',
-  'PRODUCTIVITY_PERFORMANCE_VISIT_PLAN', 'INCENTIVE_ESTIMATION', 'PARTNER_VIEW'];
+  'PRODUCTIVITY_PERFORMANCE_VISIT', 'INCENTIVE_ESTIMATION', 'PARTNER_VIEW'];
 const ACCESS: Record<string, { realmRole: string; platform: string; features: string[] }> = {
   REVIEWER: { realmRole: 'ADMIN', platform: 'web-access', features: ['DASHBOARD', 'PARTNER_PIPELINE', 'ACCOUNT_CREATION'] },
-  APL: { realmRole: 'APL', platform: 'web-access', features: ['SALES_PERFORMANCE', 'PRODUCTIVITY_PERFORMANCE_CHECK_IN', 'PRODUCTIVITY_PERFORMANCE_VISIT_PLAN', 'INCENTIVE_ESTIMATION', 'PARTNER_VIEW', 'TEAM_VIEW'] },
+  APL: { realmRole: 'APL', platform: 'web-access', features: ['SALES_PERFORMANCE', 'PRODUCTIVITY_PERFORMANCE_CHECK_IN', 'PRODUCTIVITY_PERFORMANCE_VISIT', 'INCENTIVE_ESTIMATION', 'PARTNER_VIEW', 'TEAM_VIEW'] },
   TL: { realmRole: 'TL', platform: 'sales-app-access', features: ['PARTNER_ACQUISITION', 'SALES_ASSIGNMENT', 'VISIT_PLAN_MANAGEMENT', ...SALES_COMMON, 'TEAM_VIEW'] },
   SR: { realmRole: 'SR', platform: 'sales-app-access', features: ['PARTNER_ACQUISITION', ...SALES_COMMON] },
   SA: { realmRole: 'SA', platform: 'sales-app-access', features: SALES_COMMON },

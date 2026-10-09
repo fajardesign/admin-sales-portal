@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { passwordPolicy, validatePksFile, validateReason, validateReferralCode, validateUserForm } from '../lib/validation.js';
-import { formatDateTime, formatDateWIB, formatDuration, formatPhone, formatRp, normalizePhone } from '../lib/format.js';
-import { currentVisitWeek, findByIdentifier, picPhoneTaken, referralTaken, tierFor, tierLabel, verificationGap, visitWeeks, weekStatusLabel } from '../api/mockApi.js';
-import { attendance, distanceKm, partners, users, visits } from '../api/db.js';
-import { AREAS, OFFICES } from '../lib/constants.js';
+import { formatDateTime, formatDateWIB, formatDuration, formatPhone, formatRp, formatTimeLocal, normalizePhone } from '../lib/format.js';
+import { computeIncentives, currentVisitWeek, findByIdentifier, visitWeekStores, picPhoneTaken, referralTaken, tierFor, tierLabel, verificationGap, visitWeeks, weekStatusLabel } from '../api/mockApi.js';
+import { attendance, distanceKm, partners, visits } from '../api/db.js';
+import { OFFICES, TIME_ZONES } from '../lib/constants.js';
 
 const ok = { email: 'budi@amarbank.co.id', phone: '081234567890', fullName: 'Budi Santoso', role: 'REVIEWER', tlLevel: '', areaIds: [], leaderId: '' };
 const leaders = [{ value: '3', label: 'Hasan Basri' }];
@@ -69,11 +69,10 @@ describe('identitas login email atau nomor telepon', () => {
 });
 
 describe('absensi & kunjungan (revisi stakeholder 2026-10-08)', () => {
-  const area = (uid) => AREAS.find((a) => a.id === users.find((u) => u.id === uid).areaIds[0]);
   const localMin = (d, a) => { const t = new Date(new Date(d).getTime() + a.utcOffset * 3600e3); return t.getUTCHours() * 60 + t.getUTCMinutes(); };
   it('Tepat Waktu = check in ≤ 10:00 waktu lokal, Terlambat > 10:00', () => {
     attendance.filter((a) => a.clockInAt).forEach((a) => {
-      const m = localMin(a.clockInAt, area(a.userId));
+      const m = localMin(a.clockInAt, a);
       expect(a.status === 'ON_TIME' ? m <= 600 : m > 600).toBe(true);
     });
   });
@@ -86,25 +85,38 @@ describe('absensi & kunjungan (revisi stakeholder 2026-10-08)', () => {
     });
     visits.forEach((v) => expect(v.distanceKm).toBeCloseTo(distanceKm(stores.find((x) => x.id === v.storeId), v), 2));
   });
-  it('kunjungan mulai 12:00 lokal, radius 3 km, maks. 1 per hari', () => {
+  it('kunjungan mulai 12:00 lokal perangkat, radius 3 km; tiap toko maks. sekali per minggu, boleh >1 toko per hari', () => {
     const seen = new Set();
+    let multiPerDay = false;
+    const perDay = new Map();
     visits.forEach((v) => {
-      expect(localMin(v.checkInAt, area(v.userId))).toBeGreaterThanOrEqual(720);
+      expect(localMin(v.checkInAt, v)).toBeGreaterThanOrEqual(720);
       expect(v.distanceKm).toBeLessThanOrEqual(3);
-      const k = `${v.userId}|${v.date}`;
+      const d = new Date(`${v.date}T12:00:00Z`); const mon = new Date(d - ((d.getUTCDay() + 6) % 7) * 864e5).toISOString().slice(0, 10);
+      const k = `${v.userId}|${v.storeId}|${mon}`;
       expect(seen.has(k)).toBe(false);
       seen.add(k);
+      const dk = `${v.userId}|${v.date}`; perDay.set(dk, (perDay.get(dk) ?? 0) + 1); if (perDay.get(dk) > 1) multiPerDay = true;
     });
+    expect(multiPerDay).toBe(true);
   });
-  it('target mingguan = 6 hari kerja Senin–Sabtu satu minggu penuh, bukan sampai kemarin (review 2026-10-09)', () => {
-    const w = visitWeeks(15, { from: '2026-09-07', to: '2026-09-12' })[0];
-    expect(w).toMatchObject({ start: '2026-09-07', target: 6, closed: true });
-    expect(w.complete).toBe(w.visited >= 6);
-    // Minggu berjalan (jam demo Rabu 07 Okt 2026): target tetap 6, bukan hari yang sudah lewat.
-    const cur = currentVisitWeek(15);
-    expect(cur).toMatchObject({ start: '2026-10-05', target: 6, closed: false, complete: false });
-    expect(weekStatusLabel({ visited: 3, target: 6, complete: false })).toBe('Belum lengkap 3/6');
-    expect(weekStatusLabel({ visited: 6, target: 6, complete: true })).toBe('Lengkap 6/6');
+  it('target mingguan = semua toko yang ditugaskan sekali per minggu, tanpa jumlah hari tetap (review 2026-10-09)', () => {
+    const stores = visitWeekStores(11, '2026-09-07');
+    expect(stores.flatMap((g) => g.stores).length).toBe(3); // SR Siti: 3 toko di 2 partner
+    const w = visitWeeks(11, { from: '2026-09-07', to: '2026-09-12' })[0];
+    expect(w).toMatchObject({ start: '2026-09-07', target: 3, closed: true });
+    expect(w.complete).toBe(w.visited >= 3);
+    const cur = currentVisitWeek(11);
+    expect(cur).toMatchObject({ start: '2026-10-05', target: 3, closed: false });
+    expect(stores.every((g) => g.visited === g.stores.every((x) => x.visited))).toBe(true);
+    expect(weekStatusLabel({ visited: 3, target: 5, complete: false })).toBe('Belum lengkap 3/5');
+    expect(weekStatusLabel({ visited: 5, target: 5, complete: true })).toBe('Lengkap 5/5');
+  });
+  it('zona waktu WIB, WITA, WIT', () => {
+    const t = new Date('2026-10-07T01:30:00Z');
+    expect(formatTimeLocal(t, { tz: 'WIB', utcOffset: 7 })).toBe('08:30 WIB');
+    expect(formatTimeLocal(t, { tz: 'WITA', utcOffset: 8 })).toBe('09:30 WITA');
+    expect(formatTimeLocal(t, { tz: 'WIT', utcOffset: TIME_ZONES.WIT })).toBe('10:30 WIT');
   });
   it('minggu masuk periode yang memuat hari Seninnya', () => {
     const ws = visitWeeks(15, { from: '2026-09-01', to: '2026-09-30' });
@@ -162,20 +174,27 @@ describe('tier insentif (rentang dari–sampai, PRD v3 §E2)', () => {
   const T = (rows) => ({ tiers: rows.map(([from, to, rate]) => ({ from, to, rate })) });
   const sales = T([[0, 55, 0], [55, 70, 0.55], [70, 85, 0.7], [85, 100, 0.85], [100, 120, 0.9], [120, null, 1]]);
   const mfp = T([[0, 10, 0.1], [10, 13, 0.05], [13, null, 0]]);
-  it('pencapaian > dari dan ≤ sampai', () => {
-    expect(tierFor(sales, 121).rate).toBe(1);
-    expect(tierFor(sales, 120).rate).toBe(0.9);
-    expect(tierFor(sales, 55).rate).toBe(0);
+  it('batas bawah ikut tier (≥ dari), batas atas tidak (< sampai) (review 2026-10-09)', () => {
+    expect(tierFor(sales, 120).rate).toBe(1);
+    expect(tierFor(sales, 119.9).rate).toBe(0.9);
+    expect(tierFor(sales, 55).rate).toBe(0.55);
     expect(tierFor(sales, 0).rate).toBe(0);
   });
   it('MFP', () => {
     expect(tierFor(mfp, 9.9).rate).toBe(0.1);
+    expect(tierFor(mfp, 10).rate).toBe(0.05);
     expect(tierFor(mfp, 12).rate).toBe(0.05);
+    expect(tierFor(mfp, 13).rate).toBe(0);
     expect(tierFor(mfp, 13.5).rate).toBe(0);
   });
   it('label tier', () => {
-    expect(tierLabel({ from: 0, to: 55 })).toBe('0% s/d 55%');
-    expect(tierLabel({ from: 85, to: 100 })).toBe('> 85% s/d 100%');
-    expect(tierLabel({ from: 120, to: null })).toBe('> 120%');
+    expect(tierLabel({ from: 0, to: 55 })).toBe('0% s/d < 55%');
+    expect(tierLabel({ from: 85, to: 100 })).toBe('85% s/d < 100%');
+    expect(tierLabel({ from: 120, to: null })).toBe('≥ 120%');
+  });
+  it('skema CRP 3% ikut dihitung dari disbursement pinjaman referensi (review 2026-10-09)', () => {
+    const crp = computeIncentives(null, '2026-09').filter((r) => r.kind === 'CRP');
+    expect(crp.length).toBeGreaterThan(0);
+    crp.forEach((r) => expect(r.total).toBeCloseTo(r.paidOutAmount * 0.03, 2));
   });
 });
