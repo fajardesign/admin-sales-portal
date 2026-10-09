@@ -1,6 +1,6 @@
 // Mock database prototipe S&P Portal: pengguna (app_user), partner + toko + dokumen, pinjaman, target, skema insentif.
 // Data deterministik (PRNG ber-seed) dan hidup di memori; reload halaman = data kembali ke awal.
-import { AREAS, CHECK_IN_RADIUS_KM, DOC_TYPES, OFFICES } from '../lib/constants.js';
+import { AREAS, DOC_TYPES, OFFICES } from '../lib/constants.js';
 
 /** Jam demo dimulai Rabu 07 Okt 2026 10:30 WIB lalu berjalan normal, supaya status Expired & sisa waktu tautan stabil. */
 const BASE = Date.parse('2026-10-07T03:30:00Z');
@@ -358,7 +358,8 @@ export const validStoresOf = (u) => (u.role === 'TL'
 
 /**
  * attendance: absensi harian (Senin–Sabtu) TL, SR, SA aktif (revisi stakeholder 2026-10-08).
- * Check in/out dengan selfie + lokasi dalam radius 3 km dari kantor terdaftar atau toko yang sah.
+ * Check in/out dengan selfie + lokasi dalam radius 3 km dari titik lat/long yang tercatat (review 2026-10-09): kantor = titik kantor
+ * terdaftar (`OFFICES`), toko = lokasi saat pendaftaran/Tambah Toko. distanceKm = jarak dari titik itu.
  * status ON_TIME (check in ≤ 10:00 lokal) | LATE (> 10:00) | ABSENT (tidak check in sampai akhir hari). Hari ini bisa belum check in.
  * place: { kind: 'OFFICE' | 'STORE', name }, distanceKm dari titik referensi.
  */
@@ -381,13 +382,14 @@ users.filter((u) => ['TL', 'SR', 'SA'].includes(u.role) && u.status === 'ACTIVE'
     attendance.push({
       userId: u.id, date: d, status, clockInAt: inAt,
       clockOutAt: today ? null : atLocal(d, area, between(17, 18), between(0, 59)),
-      ...pt, place: { kind: atStore ? 'STORE' : 'OFFICE', name: ref.name }, distanceKm: +Math.min(distanceKm(ref, pt), CHECK_IN_RADIUS_KM).toFixed(2),
+      ...pt, place: { kind: atStore ? 'STORE' : 'OFFICE', name: ref.name }, distanceKm: +distanceKm(ref, pt).toFixed(2),
     });
   });
 });
 
 /**
- * visits: check-in kunjungan (revisi stakeholder 2026-10-08) — tanpa jadwal per jam. Mulai 12:00 lokal, di toko yang sah, radius 3 km,
+ * visits: check-in kunjungan (revisi stakeholder 2026-10-08) — tanpa jadwal per jam. Mulai 12:00 lokal, di toko yang sah, radius 3 km dari
+ * titik lokasi toko yang tercatat (distanceKm),
  * maks. 1 kunjungan dihitung per hari; target mingguan = hari kerja Senin–Sabtu. Hari absen tidak ada kunjungan.
  */
 export const visits = [];

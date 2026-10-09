@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { passwordPolicy, validatePksFile, validateReason, validateReferralCode, validateUserForm } from '../lib/validation.js';
 import { formatDateTime, formatDateWIB, formatDuration, formatPhone, formatRp, normalizePhone } from '../lib/format.js';
-import { findByIdentifier, tierFor, tierLabel, verificationGap, visitWeeks } from '../api/mockApi.js';
-import { attendance, distanceKm, users, visits } from '../api/db.js';
+import { currentVisitWeek, findByIdentifier, picPhoneTaken, referralTaken, tierFor, tierLabel, verificationGap, visitWeeks, weekStatusLabel } from '../api/mockApi.js';
+import { attendance, distanceKm, partners, users, visits } from '../api/db.js';
 import { AREAS, OFFICES } from '../lib/constants.js';
 
 const ok = { email: 'budi@amarbank.co.id', phone: '081234567890', fullName: 'Budi Santoso', role: 'REVIEWER', tlLevel: '', areaIds: [], leaderId: '' };
@@ -77,11 +77,14 @@ describe('absensi & kunjungan (revisi stakeholder 2026-10-08)', () => {
       expect(a.status === 'ON_TIME' ? m <= 600 : m > 600).toBe(true);
     });
   });
-  it('lokasi check in dalam radius 3 km dari kantor terdaftar atau toko', () => {
+  it('jarak check in = jarak dari titik lat/long yang tercatat (kantor OFFICES / lokasi toko), maks. 3 km', () => {
+    const stores = partners.flatMap((p) => p.stores);
     attendance.filter((a) => a.place).forEach((a) => {
+      const ref = a.place.kind === 'OFFICE' ? OFFICES.find((o) => o.name === a.place.name) : stores.find((x) => x.name === a.place.name);
+      expect(a.distanceKm).toBeCloseTo(distanceKm(ref, a), 2);
       expect(a.distanceKm).toBeLessThanOrEqual(3);
-      if (a.place.kind === 'OFFICE') expect(distanceKm(OFFICES.find((o) => o.name === a.place.name), a)).toBeLessThanOrEqual(3);
     });
+    visits.forEach((v) => expect(v.distanceKm).toBeCloseTo(distanceKm(stores.find((x) => x.id === v.storeId), v), 2));
   });
   it('kunjungan mulai 12:00 lokal, radius 3 km, maks. 1 per hari', () => {
     const seen = new Set();
@@ -93,10 +96,39 @@ describe('absensi & kunjungan (revisi stakeholder 2026-10-08)', () => {
       seen.add(k);
     });
   });
-  it('target mingguan = hari kerja Senin–Sabtu', () => {
+  it('target mingguan = 6 hari kerja Senin–Sabtu satu minggu penuh, bukan sampai kemarin (review 2026-10-09)', () => {
     const w = visitWeeks(15, { from: '2026-09-07', to: '2026-09-12' })[0];
-    expect(w.target).toBe(6);
+    expect(w).toMatchObject({ start: '2026-09-07', target: 6, closed: true });
     expect(w.complete).toBe(w.visited >= 6);
+    // Minggu berjalan (jam demo Rabu 07 Okt 2026): target tetap 6, bukan hari yang sudah lewat.
+    const cur = currentVisitWeek(15);
+    expect(cur).toMatchObject({ start: '2026-10-05', target: 6, closed: false, complete: false });
+    expect(weekStatusLabel({ visited: 3, target: 6, complete: false })).toBe('Belum lengkap 3/6');
+    expect(weekStatusLabel({ visited: 6, target: 6, complete: true })).toBe('Lengkap 6/6');
+  });
+  it('minggu masuk periode yang memuat hari Seninnya', () => {
+    const ws = visitWeeks(15, { from: '2026-09-01', to: '2026-09-30' });
+    expect(ws.map((w) => w.start)).toEqual(['2026-09-07', '2026-09-14', '2026-09-21', '2026-09-28']);
+  });
+});
+
+describe('Kode Referral unik per partner (review 2026-10-09)', () => {
+  it('dibandingkan setelah trim tanpa beda huruf besar/kecil; partner sendiri, Rejected, dan Cancelled tidak dihitung', () => {
+    expect(referralTaken(' amr7138 ', 'REG2026-0139')).toBe(true);
+    expect(referralTaken('AMR7138', 'REG2026-0138')).toBe(false);
+    expect(referralTaken('AMR11135')).toBe(false); // REG2026-0135 Rejected
+    expect(referralTaken('AMR10134')).toBe(false); // REG2026-0134 Cancelled
+    expect(referralTaken('KODEBARU1')).toBe(false);
+  });
+});
+
+describe('No. Handphone PIC unik per partner (review 2026-10-09)', () => {
+  const pic = (id) => partners.find((p) => p.id === id).pic.phone;
+  it('partner lain yang belum Active ikut dihitung; partner sendiri, Rejected, dan Cancelled tidak', () => {
+    expect(picPhoneTaken(`0${pic('REG2026-0148')}`, 'REG2026-0139')).toBe(true);
+    expect(picPhoneTaken(`+62 ${pic('REG2026-0139')}`, 'REG2026-0139')).toBe(false);
+    expect(picPhoneTaken(pic('REG2026-0135'))).toBe(false); // Rejected
+    expect(picPhoneTaken(pic('REG2026-0134'))).toBe(false); // Cancelled
   });
 });
 
