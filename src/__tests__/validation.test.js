@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { passwordPolicy, validatePksFile, validateReason, validateReferralCode, validateUserForm } from '../lib/validation.js';
 import { formatDateTime, formatDateWIB, formatDuration, formatPhone, formatRp, normalizePhone } from '../lib/format.js';
-import { currentVisitWeek, findByIdentifier, referralTaken, tierFor, tierLabel, verificationGap, visitWeeks, weekStatusLabel } from '../api/mockApi.js';
-import { attendance, distanceKm, users, visits } from '../api/db.js';
+import { currentVisitWeek, findByIdentifier, picPhoneTaken, referralTaken, tierFor, tierLabel, verificationGap, visitWeeks, weekStatusLabel } from '../api/mockApi.js';
+import { attendance, distanceKm, partners, users, visits } from '../api/db.js';
 import { AREAS, OFFICES } from '../lib/constants.js';
 
 const ok = { email: 'budi@amarbank.co.id', phone: '081234567890', fullName: 'Budi Santoso', role: 'REVIEWER', tlLevel: '', areaIds: [], leaderId: '' };
@@ -116,6 +116,16 @@ describe('Kode Referral unik per partner (review 2026-10-09)', () => {
     expect(referralTaken('AMR11135')).toBe(false); // REG2026-0135 Rejected
     expect(referralTaken('AMR10134')).toBe(false); // REG2026-0134 Cancelled
     expect(referralTaken('KODEBARU1')).toBe(false);
+  });
+});
+
+describe('No. Handphone PIC unik per partner (review 2026-10-09)', () => {
+  const pic = (id) => partners.find((p) => p.id === id).pic.phone;
+  it('partner lain yang belum Active ikut dihitung; partner sendiri, Rejected, dan Cancelled tidak', () => {
+    expect(picPhoneTaken(`0${pic('REG2026-0148')}`, 'REG2026-0139')).toBe(true);
+    expect(picPhoneTaken(`+62 ${pic('REG2026-0139')}`, 'REG2026-0139')).toBe(false);
+    expect(picPhoneTaken(pic('REG2026-0135'))).toBe(false); // Rejected
+    expect(picPhoneTaken(pic('REG2026-0134'))).toBe(false); // Cancelled
   });
 });
 

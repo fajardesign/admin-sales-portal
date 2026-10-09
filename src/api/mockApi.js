@@ -46,6 +46,15 @@ export function findByIdentifier(identifier) {
 }
 const phoneTaken = (phone, exceptId) => allAccounts().some((x) => x.phone === phone && x.id !== exceptId);
 
+/**
+ * No. Handphone PIC unik per partner (keputusan review 2026-10-09; sama dengan Android `picPhoneTaken`): dibanding nomor PIC
+ * partner lain kecuali Rejected/Cancelled, termasuk partner yang belum Active (belum punya akun login PIC).
+ */
+export function picPhoneTaken(phone, exceptPartnerId) {
+  const n = normalizePhone(phone);
+  return !!n && partners.some((p) => p.id !== exceptPartnerId && !['REJECTED', 'CANCELLED'].includes(p.status) && normalizePhone(p.pic.phone) === n);
+}
+
 export const userById = (id) => users.find((u) => u.id === id) ?? superAdmins.find((u) => u.id === id);
 /** Status akun Keycloak dengan Expired terhitung (Pending + tautan aktivasi 3x24 jam lewat). */
 export function accountStatus(u) {
@@ -382,7 +391,7 @@ export async function createUser(form, session) {
   const phone = normalizePhone(form.phone);
   if (!CREATABLE_ROLES.includes(form.role)) throw new ApiError('INVALID');
   if ([...users, ...superAdmins].some((u) => u.email === email)) throw new ApiError('DUPLICATE', 'email');
-  if (phoneTaken(phone)) throw new ApiError('DUPLICATE', 'phone');
+  if (phoneTaken(phone) || picPhoneTaken(phone)) throw new ApiError('DUPLICATE', 'phone');
   if (saveOutcome === 'kcFail') throw new ApiError('KEYCLOAK_FAILED');
   const inviteSent = saveOutcome !== 'emailFail';
   const u = {
@@ -499,7 +508,7 @@ export async function changePhone(id, newPhone, reason, session) {
   const u = userById(id);
   const phone = normalizePhone(newPhone);
   if (accountStatus(u) === 'DISABLED') throw new ApiError('CONFLICT');
-  if (phoneTaken(phone, id)) throw new ApiError('DUPLICATE', 'phone');
+  if (phoneTaken(phone, id) || picPhoneTaken(phone, u.partnerId)) throw new ApiError('DUPLICATE', 'phone');
   const old = u.phone;
   u.phone = phone;
   if (u.role === 'PARTNER') {
@@ -539,7 +548,7 @@ export async function updatePartnerData(pid, changes, reason, session) {
   const referralChange = changes.find((c) => c.field === 'referralCode');
   if (referralChange && referralTaken(referralChange.value, p.id)) throw new ApiError('DUPLICATE', 'referralCode');
   const phoneChange = changes.find((c) => c.field === 'picPhone');
-  if (phoneChange && phoneTaken(phoneChange.value, account?.id)) throw new ApiError('DUPLICATE', 'picPhone');
+  if (phoneChange && (phoneTaken(phoneChange.value, account?.id) || picPhoneTaken(phoneChange.value, p.id))) throw new ApiError('DUPLICATE', 'picPhone');
   changes.forEach((c) => {
     let obj; let key;
     if (c.storeId) { obj = p.stores.find((s) => s.id === c.storeId); key = c.field; } else [obj, key] = EDITABLE[c.field](p);

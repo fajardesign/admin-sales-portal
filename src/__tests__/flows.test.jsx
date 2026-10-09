@@ -3,7 +3,7 @@ import { cleanup, render, screen, waitFor, within } from '@testing-library/react
 import userEvent from '@testing-library/user-event';
 import App from '../App.jsx';
 import { DEFAULT_SCENARIO, setScenario } from '../dev/scenario.js';
-import { DEMO_PASSWORD, users } from '../api/db.js';
+import { DEMO_PASSWORD, partners, users } from '../api/db.js';
 import { simulateResubmit } from '../api/mockApi.js';
 
 const T = { timeout: 4000 };
@@ -251,6 +251,19 @@ describe('W3 Ubah Data Partner (US-P09)', () => {
     await user.type(screen.getByPlaceholderText(/Partner pindah alamat/), 'Kode referral salah input');
     await user.click(screen.getByRole('button', { name: 'Simpan Perubahan' }));
     expect(await screen.findByText('Kode referral sudah dipakai partner lain', {}, T)).toBeTruthy();
+  });
+
+  it('No. Handphone PIC unik per partner, termasuk partner yang belum Active', async () => {
+    const user = await start('rina.saraswati');
+    go('/partner-pipeline/REG2026-0139');
+    await user.click(await screen.findByRole('button', { name: 'Ubah Data Partner' }, T));
+    const other = partners.find((x) => x.id === 'REG2026-0148'); // Under Review, belum punya akun PIC
+    const phone = screen.getByDisplayValue(partners.find((x) => x.id === 'REG2026-0139').pic.phone);
+    await user.clear(phone);
+    await user.type(phone, `0${other.pic.phone}`);
+    await user.type(screen.getByPlaceholderText(/Partner pindah alamat/), 'Nomor PIC berubah');
+    await user.click(screen.getByRole('button', { name: 'Simpan Perubahan' }));
+    expect(await screen.findByText('Nomor telepon sudah terdaftar', {}, T)).toBeTruthy();
   });
 });
 
