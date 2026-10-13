@@ -27,6 +27,8 @@ export const PRESETS = {
   'add-user': { name: 'W2b | Add User', route: '/account-management', session: 'rina.saraswati', users: { adding: true } },
   'add-user-tl': { name: 'W2b | Add User | TL', route: '/account-management', session: 'rina.saraswati', users: { adding: true }, addUser: { form: { email: 'gilang.ramadhan@amarbank.co.id', phone: '81277776666', fullName: 'Gilang Ramadhan', role: 'TL', tlLevel: 'JUNIOR', areaIds: [2], leaderId: '4' } } },
   'add-user-no-leader': { name: 'W2b | Add User | Error | No Leader', route: '/account-management', session: 'rina.saraswati', users: { adding: true }, addUser: { form: { role: 'TL', areaIds: [6] } } },
+  'disable-tl': { name: 'W2c | Disable User | TL Replacement Leader', route: '/account-management', session: 'rina.saraswati', users: { disableId: 6 } },
+  'disable-sa': { name: 'W2c | Disable User | SA Store Release', route: '/account-management', session: 'rina.saraswati', users: { disableId: 15 } },
   'activate': { name: 'KC1 | Account Activation', route: '/activate?user=10' },
   'activate-expired': { name: 'KC1 | Account Activation | Expired', route: '/activate?user=14' },
   'apl': { name: 'B1 | APL Dashboard', route: '/apl', session: 'lestari.wulandari' },
