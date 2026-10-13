@@ -346,7 +346,9 @@ function enrichUser(u) {
     accountStatus: accountStatus(u),
     leader: leader ? { id: leader.id, name: leader.fullName, role: leader.role } : null,
     partner: partner ? { id: partner.id, name: partner.partnerName } : null,
-    subordinates: users.filter((x) => x.supervisorId === u.id && x.status !== 'DISABLED').map((x) => ({ id: x.id, name: x.fullName, role: x.role })),
+    subordinates: users.filter((x) => x.supervisorId === u.id && x.status !== 'DISABLED').map((x) => ({ id: x.id, name: x.fullName, role: x.role, status: accountStatus(x) })),
+    ownedPartners: u.role === 'TL' ? partners.filter((p) => owningTl(p) === u.id).length : 0,
+    assignedStores: ['SA', 'SR'].includes(u.role) ? partners.reduce((a, p) => a + p.stores.filter((s) => s.assigned.includes(u.id)).length, 0) : 0,
   };
 }
 
@@ -429,13 +431,67 @@ export async function resendInvite(id, session) {
   return enrichUser(u);
 }
 
-/** Nonaktifkan akun (final). Admin tidak bisa menonaktifkan akunnya sendiri. */
-export async function disableUser(id, reason, session) {
+/**
+ * Calon leader pengganti saat menonaktifkan leader (keputusan PO 2026-10-12/13):
+ * TL → TL lain di area yang sama; APL → APL lain mana pun (area APL lama ikut pindah). Status Active atau Pending.
+ */
+export function replacementLeaderOptions(id) {
+  const u = userById(id);
+  if (!u || !['TL', 'APL'].includes(u.role)) return [];
+  return users.filter((x) => x.id !== u.id && x.role === u.role && x.status !== 'DISABLED' && (u.role === 'APL' || x.areaIds[0] === u.areaIds[0]))
+    .map((x) => ({ value: String(x.id), label: `${x.fullName}${accountStatus(x) !== 'ACTIVE' ? ` (${ACCOUNT_STATUS[accountStatus(x)].label})` : ''}` }));
+}
+
+/**
+ * Nonaktifkan akun (final). Admin tidak bisa menonaktifkan akunnya sendiri.
+ * opts.replacements = { [idBawahan]: idLeaderBaru }, opts.defaultLeaderId = pengganti utama (wajib bila masih punya bawahan).
+ * Akibat (jawaban feedback DD poin 5 & 7, keputusan PO 2026-10-12):
+ *  - Bawahan pindah ke leader pengganti; partner milik TL lama pindah ke pengganti utama; area APL lama pindah ke APL pengganti.
+ *  - SA/SR: semua penugasan toko dilepas otomatis (dicatat "Sistem" di Riwayat partner).
+ */
+export async function disableUser(id, reason, session, opts = {}) {
   await wait(500);
   const u = userById(id);
   if (u.id === session.userId || u.status === 'DISABLED') throw new ApiError('CONFLICT');
-  Object.assign(u, { status: 'DISABLED', disabledAt: now(), disabledBy: actorOf(session), disabledReason: reason });
+  const actor = actorOf(session);
+  const subs = users.filter((x) => x.supervisorId === u.id && x.status !== 'DISABLED');
+  const valid = new Set(replacementLeaderOptions(id).map((o) => Number(o.value)));
+  const pick = (sid) => Number(opts.replacements?.[sid] ?? opts.defaultLeaderId);
+  if (subs.some((x) => !valid.has(pick(x.id)))) throw new ApiError('LEADER_REQUIRED');
+  const main = opts.defaultLeaderId != null ? userById(Number(opts.defaultLeaderId)) : null;
+  const needsMain = subs.length > 0 || (u.role === 'TL' && partners.some((p) => owningTl(p) === u.id));
+  if (needsMain && (!main || !valid.has(main.id))) throw new ApiError('LEADER_REQUIRED');
+
+  subs.forEach((x) => {
+    const to = userById(pick(x.id));
+    x.supervisorId = to.id;
+    x.log.push({ at: now(), text: `Atasan diganti dari ${u.fullName} ke ${to.fullName} oleh ${actor} (atasan sebelumnya dinonaktifkan)` });
+    syncUser(x);
+  });
+  if (u.role === 'TL' && main) {
+    partners.filter((p) => owningTl(p) === u.id).forEach((p) => {
+      p.ownerTlId = main.id;
+      log(p, { from: null, to: null, by: actor, reason: `Kepemilikan partner pindah dari ${u.fullName} ke ${main.fullName} (TL lama dinonaktifkan)` });
+    });
+  }
+  if (u.role === 'APL' && main) {
+    main.areaIds = [...new Set([...main.areaIds, ...u.areaIds])];
+    main.log.push({ at: now(), text: `Area ${u.areaIds.map((a) => AREAS.find((x) => x.id === a)?.name).join(', ')} pindah dari ${u.fullName} oleh ${actor}` });
+    syncUser(main);
+  }
+  let released = 0;
+  if (['SA', 'SR'].includes(u.role)) {
+    partners.forEach((p) => p.stores.forEach((s) => {
+      if (!s.assigned.includes(u.id)) return;
+      s.assigned = s.assigned.filter((x) => x !== u.id);
+      released += 1;
+      log(p, { from: null, to: null, by: 'Sistem', reason: `${u.fullName} dilepas dari ${s.name} (akun dinonaktifkan)` });
+    }));
+  }
+  Object.assign(u, { status: 'DISABLED', disabledAt: now(), disabledBy: actor, disabledReason: reason });
   u.log.push({ at: now(), text: `Akun dinonaktifkan: ${reason}` });
+  if (subs.length) u.log.push({ at: now(), text: `${subs.length} bawahan dipindahkan ke leader pengganti` });
+  if (released) u.log.push({ at: now(), text: `${released} toko dilepas dari penugasan` });
   syncUser(u);
   return enrichUser(u);
 }

@@ -7,7 +7,7 @@ import { ListCard, ListPager } from '../../components/ListCard.jsx';
 import { StatusRail } from '../../components/StatusRail.jsx';
 import { AccountStatusBadge } from '../../components/Badges.jsx';
 import { SearchField } from '../../components/FilterBar.jsx';
-import { listUsers } from '../../api/mockApi.js';
+import { getUser, listUsers } from '../../api/mockApi.js';
 import { now } from '../../api/db.js';
 import { useScenario } from '../../dev/scenario.js';
 import { preset } from '../../dev/presets.js';
@@ -37,6 +37,8 @@ function AccountManagementView({ user, onLogout, query }) {
   const [version, setVersion] = useState(0);
   const [resend, setResend] = useState(null);
   const [disable, setDisable] = useState(null);
+  // Preset capture: buka modal Nonaktifkan untuk pengguna tertentu (mis. TL dengan bawahan).
+  useEffect(() => { if (preset?.users?.disableId) getUser(preset.users.disableId).then(setDisable); }, []);
   const [resetPw, setResetPw] = useState(null);
   const [emailEdit, setEmailEdit] = useState(null);
   const [phoneEdit, setPhoneEdit] = useState(null);

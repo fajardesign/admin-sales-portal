@@ -69,6 +69,8 @@ export const users = [
     disabledAt: ago(24 * 7), disabledBy: 'Rina Saraswati (Admin)', disabledReason: 'Resign per 30 Sep 2026',
     log: [{ at: ago(24 * 100), text: 'Akun dibuat, tautan aktivasi dikirim ke rizky.ramadhan@amarbank.co.id' }, { at: ago(24 * 99), text: 'Password dibuat, akun aktif' }, { at: ago(24 * 7), text: 'Akun dinonaktifkan: Resign per 30 Sep 2026' }],
   }),
+  // TL kedua di Area 1 (Makassar) agar alur ganti leader saat menonaktifkan TL bisa dicoba (keputusan 2026-10-13).
+  user(22, 'Bagus Wicaksono', 'TL', { tlLevel: 'JUNIOR', areaIds: [1], supervisorId: 3, createdAt: ago(24 * 40) }),
 ];
 
 /** Super Admin dibuat manual di Keycloak dan tidak tercatat di app_user (enum role PRD tidak memuat SUPER_ADMIN). */
@@ -284,8 +286,12 @@ function daysFrom(from) {
   return out;
 }
 
-/** TL pemilik partner: TL yang mengajukan, atau TL atasan SR yang mengajukan (PRD v3 §C). */
+/**
+ * TL pemilik partner (keputusan PO 2026-10-12, OQ-C05/OQ-19): TL pengaju, atau TL atasan SR pengaju saat pengajuan.
+ * Disimpan di `p.ownerTlId` (bisa pindah ke TL pengganti saat TL lama dinonaktifkan); bila belum diisi, dihitung dari pengaju.
+ */
 export function owningTl(p) {
+  if (p.ownerTlId != null) return p.ownerTlId;
   const sub = users.find((u) => u.id === p.submittedBy);
   return sub?.role === 'TL' ? sub.id : sub?.supervisorId ?? null;
 }
@@ -293,6 +299,9 @@ export function owningTl(p) {
 const FIRST = ['Ahmad', 'Siti', 'Budi', 'Dewi', 'Rizal', 'Nur', 'Agus', 'Rina', 'Hendra', 'Yuni', 'Fajar', 'Lia', 'Dodi', 'Maya', 'Joko', 'Intan', 'Wahyu', 'Ratna', 'Bayu', 'Sari'];
 const LAST = ['Saputra', 'Wijaya', 'Lestari', 'Hidayat', 'Pratama', 'Kusuma', 'Siregar', 'Nasution', 'Santoso', 'Rahayu', 'Gunawan', 'Halim', 'Utami', 'Purnomo', 'Sitompul'];
 const REJECT = ['Skor kredit tidak memenuhi syarat', 'Data penghasilan tidak sesuai', 'Dokumen identitas tidak valid', 'Pengajuan ganda'];
+
+// Pemilik partner disimpan saat data dibuat (sumber kebenaran untuk Partner Saya, penugasan, dan cakupan data TL).
+partners.forEach((p) => { p.ownerTlId = owningTl(p); });
 
 /**
  * loans: aplikasi pinjaman hasil sinkronisasi CRM (read-only). status CRM disederhanakan:
