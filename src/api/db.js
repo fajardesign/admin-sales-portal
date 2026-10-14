@@ -296,6 +296,34 @@ export function owningTl(p) {
   return sub?.role === 'TL' ? sub.id : sub?.supervisorId ?? null;
 }
 
+// Riwayat pemegang (perbaikan 2026-10-14): masa lalu tetap milik orang pada tanggalnya.
+// `s.assignLog` [{ at, userId, action: 'ASSIGN' | 'RELEASE' }] dan `p.ownerLog` [{ at, from, to }], terlama dulu;
+// data contoh tanpa riwayat = pemegang sekarang sejak awal.
+/** SA/SR pemegang toko pada waktu `at`: pemegang sekarang dengan setiap Tugaskan/Lepas setelah `at` dibatalkan. */
+export function holdersAt(s, at) {
+  const held = new Set(s.assigned);
+  [...(s.assignLog ?? [])].reverse().forEach((e) => {
+    if (+e.at <= +at) return;
+    if (e.action === 'ASSIGN') held.delete(e.userId); else held.add(e.userId);
+  });
+  return held;
+}
+/** TL pemilik partner pada waktu `at`. */
+export function ownerAt(p, at) {
+  const later = (p.ownerLog ?? []).find((e) => +e.at > +at);
+  return later ? later.from : owningTl(p);
+}
+/** Partner Active dan toko sudah ada pada waktu `at`. */
+const activeAt = (p, s, at) => +(s.addedAt ?? p.submittedAt) <= +at && p.history.filter((h) => h.to && +h.at <= +at).at(-1)?.to === 'ACTIVE';
+/**
+ * Toko target kunjungan satu minggu (keputusan 2026-10-14): dipegang pada hari Senin (akhir hari) dan masih dipegang
+ * di akhir minggu (atau sekarang). Ditugaskan di tengah minggu → mulai minggu berikutnya; dilepas di tengah minggu → keluar
+ * dari minggu itu; minggu yang sudah lewat tidak berubah. TL: toko partner miliknya pada waktu itu.
+ */
+export const weekStoresOf = (u, monday, until) => partners.flatMap((p) => p.stores
+  .filter((s) => [monday, until].every((t) => activeAt(p, s, t) && (u.role === 'TL' ? ownerAt(p, t) === u.id : holdersAt(s, t).has(u.id))))
+  .map((s) => ({ p, s })));
+
 const FIRST = ['Ahmad', 'Siti', 'Budi', 'Dewi', 'Rizal', 'Nur', 'Agus', 'Rina', 'Hendra', 'Yuni', 'Fajar', 'Lia', 'Dodi', 'Maya', 'Joko', 'Intan', 'Wahyu', 'Ratna', 'Bayu', 'Sari'];
 const LAST = ['Saputra', 'Wijaya', 'Lestari', 'Hidayat', 'Pratama', 'Kusuma', 'Siregar', 'Nasution', 'Santoso', 'Rahayu', 'Gunawan', 'Halim', 'Utami', 'Purnomo', 'Sitompul'];
 const REJECT = ['Skor kredit tidak memenuhi syarat', 'Data penghasilan tidak sesuai', 'Dokumen identitas tidak valid', 'Pengajuan ganda'];
