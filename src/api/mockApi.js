@@ -6,7 +6,7 @@ import {
   ACCOUNT_STATUS, AREAS, CREATABLE_ROLES, ACTIVATION_TTL_MS, FINAL_STATUSES, PAGE_SIZE, RESET_TTL_MS, PARTNER_STATUS, ROLES, TRANSITIONS,
 } from '../lib/constants.js';
 import {
-  attendance, CURRENT_MONTH, loans, mfp, MONTHS, now, owningTl, partners, schemes, superAdmins, targets, users, validStoresOf, visits, wibDate,
+  attendance, CURRENT_MONTH, loans, mfp, MONTHS, now, owningTl, partners, schemes, superAdmins, targets, users, visits, wibDate, weekStoresOf,
 } from './db.js';
 import { hydrateUsers, syncUser } from './supabaseSync.js';
 
@@ -256,7 +256,10 @@ export async function changeStatus(pid, to, opts, session) {
     createPicAccount(p, actor);
   }
   if (to === 'INACTIVE') {
-    p.stores.forEach((s) => { s.status = 'INACTIVE'; s.assigned = []; });
+    p.stores.forEach((s) => {
+      s.assignLog = [...(s.assignLog ?? []), ...s.assigned.map((userId) => ({ at: now(), userId, action: 'RELEASE' }))];
+      s.status = 'INACTIVE'; s.assigned = [];
+    });
     const u = users.find((x) => x.partnerId === p.id);
     if (u && u.status !== 'DISABLED') {
       Object.assign(u, { status: 'DISABLED', disabledAt: now(), disabledBy: 'Sistem (partner Inactive)', disabledReason: 'Partner dinonaktifkan di Partner Pipeline' });
@@ -470,6 +473,7 @@ export async function disableUser(id, reason, session, opts = {}) {
   });
   if (u.role === 'TL' && main) {
     partners.filter((p) => owningTl(p) === u.id).forEach((p) => {
+      p.ownerLog = [...(p.ownerLog ?? []), { at: now(), from: u.id, to: main.id }];
       p.ownerTlId = main.id;
       log(p, { from: null, to: null, by: actor, reason: `Kepemilikan partner pindah dari ${u.fullName} ke ${main.fullName} (TL lama dinonaktifkan)` });
     });
@@ -484,6 +488,7 @@ export async function disableUser(id, reason, session, opts = {}) {
     partners.forEach((p) => p.stores.forEach((s) => {
       if (!s.assigned.includes(u.id)) return;
       s.assigned = s.assigned.filter((x) => x !== u.id);
+      s.assignLog = [...(s.assignLog ?? []), { at: now(), userId: u.id, action: 'RELEASE' }];
       released += 1;
       log(p, { from: null, to: null, by: 'Sistem', reason: `${u.fullName} dilepas dari ${s.name} (akun dinonaktifkan)` });
     }));
@@ -728,9 +733,12 @@ const mondayOf = (ymd) => { const d = new Date(`${ymd}T12:00:00Z`); return addDa
 export function visitWeekStores(uid, start) {
   const u = userById(uid);
   const end = addDays(start, 5);
+  // Toko minggu itu, bukan toko hari ini (keputusan 2026-10-14): dipegang hari Senin dan masih dipegang di akhir minggu.
+  const off = AREAS.find((a) => a.id === u.areaIds[0])?.utcOffset ?? 7;
+  const endOf = (ymd) => new Date(Date.parse(`${addDays(ymd, 1)}T00:00:00Z`) - off * 3600e3 - 1);
   const seen = new Set(visits.filter((v) => v.userId === uid && v.date >= start && v.date <= end).map((v) => v.storeId));
   const groups = new Map();
-  validStoresOf(u).forEach(({ p, s }) => {
+  weekStoresOf(u, endOf(start), new Date(Math.min(+endOf(end), +now()))).forEach(({ p, s }) => {
     const g = groups.get(p.id) ?? { partnerId: p.id, partnerName: p.partnerName, stores: [] };
     g.stores.push({ id: s.id, name: s.name, visited: seen.has(s.id) });
     groups.set(p.id, g);
