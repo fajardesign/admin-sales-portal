@@ -130,7 +130,7 @@ export const ACCOUNT_STATUS = {
 };
 
 /** Label Status Akun Login PIC di Partner Detail (PRD §2B). */
-export const PIC_ACCOUNT_LABEL = { NONE: 'Belum dibuat', PENDING: 'Undangan terkirim', EXPIRED: 'Undangan terkirim', ACTIVE: 'Aktif', DISABLED: 'Dinonaktifkan', FAILED: 'Akun PIC gagal dibuat' };
+export const PIC_ACCOUNT_LABEL = { NONE: 'Belum dibuat', PENDING: 'Undangan terkirim', EXPIRED: 'Undangan terkirim', ACTIVE: 'Aktif', DISABLED: 'Dinonaktifkan' };
 
 export const PAGE_SIZE = 20;
 /** Tautan aktivasi berlaku 3x24 jam (revisi stakeholder 2026-10-08); tautan reset password tetap 24 jam. */
