@@ -2,7 +2,7 @@
 // Semua data di src/api/db.js (memori). Fungsi async dengan jeda kecil agar state loading terlihat.
 import { getScenario } from '../dev/scenario.js';
 import { formatPhone, normalizePhone } from '../lib/format.js';
-import { validateReferralCode } from '../lib/validation.js';
+import { validateQrFile, validateReferralCode } from '../lib/validation.js';
 import {
   ACCOUNT_STATUS, AREAS, CREATABLE_ROLES, ACTIVATION_TTL_MS, FINAL_STATUSES, PAGE_SIZE, PKS_VIA, RESET_TTL_MS, PARTNER_STATUS, ROLES, TRANSITIONS,
 } from '../lib/constants.js';
@@ -216,7 +216,7 @@ export async function requestRevision(pid, items, general, session) {
 }
 
 /**
- * US-P03…P08 — ubah status. opts: { reason, via: 'PRIVY_ID'|'EMAIL_PIC', privyRef, file }.
+ * US-P03…P08 — ubah status. opts: { reason, via: 'PRIVY_ID'|'EMAIL_PIC', file }.
  * Efek samping sesuai PRD: Verified mengunci data; Waiting PKS mencatat pengiriman; Active membuat kode merchant/toko + akun PIC;
  * Inactive menonaktifkan toko, melepas penugasan SA/SR, dan menonaktifkan akun PIC.
  */
@@ -236,11 +236,11 @@ export async function changeStatus(pid, to, opts, session) {
     // PRD Scope 1 v2 FR-009 (C3): hanya log, portal tidak memanggil Privy. Kanal wajib dipilih: Privy ID (bila diisi) atau Email PIC.
     const target = pksTarget(p, opts.via);
     if (!target) throw new ApiError('CONFLICT');
-    Object.assign(p.pks, { status: 'WAITING_SIGNATURE', sentAt: now(), sentBy: actor, sentVia: opts.via, target, privyRef: opts.privyRef?.trim() || null });
-    reason = `PKS dikirim via ${PKS_VIA[opts.via]} ${target}${p.pks.privyRef ? ` (ref. ${p.pks.privyRef})` : ''}`;
+    Object.assign(p.pks, { status: 'WAITING_SIGNATURE', sentAt: now(), sentBy: actor, sentVia: opts.via, target });
+    reason = `PKS dikirim via ${PKS_VIA[opts.via]} ${target}`;
   }
   if (to === 'ACTIVE') {
-    // PRD Scope 1 v2 FR-010 / AC-028: semua toko wajib punya Kode Referral sebelum aktivasi (dicek ulang di backend).
+    // PRD Scope 1 v1.1 FR-010 / AC-028: semua toko wajib punya Kode Referral dan QR sebelum aktivasi (dicek ulang di backend).
     if (storesWithoutReferral(p).length) throw new ApiError('REFERRAL_MISSING');
     // PRD Scope 1 FR-010 / AC-016: akun PIC dibuat lebih dulu; bila bentrok atau gagal, status tetap Waiting PKS dan
     // tidak ada kode merchant/toko yang tersisa. Email/HP PIC yang sudah dipakai pengguna lain memblokir aktivasi (OQ-03).
@@ -306,12 +306,21 @@ export async function updatePksDelivery(pid, { via }, session) {
   return enrich(p);
 }
 
-/** Active — unggah PKS bertanda tangan bila belum diunggah saat aktivasi. */
-export async function uploadPks(pid, file, session) {
+/**
+ * Active — unggah dokumen PKS bila belum ada, atau ganti (PRD Scope 1 v1.1 FR-024, mis. adendum). Mengganti wajib alasan
+ * (maks. 255); file lama disimpan di `pks.versions` (file, diunggah oleh/pada, diganti oleh/pada, alasan).
+ * Error: CONFLICT (bukan Active) | REASON_REQUIRED.
+ */
+export async function uploadPks(pid, file, session, reason = '') {
   await wait(500);
   const p = findP(pid);
-  p.pks.file = { name: file.name, by: actorOf(session), at: now() };
-  log(p, { from: null, to: null, by: actorOf(session), reason: 'Dokumen PKS diunggah' });
+  if (p.status !== 'ACTIVE') throw new ApiError('CONFLICT');
+  const actor = actorOf(session);
+  const prev = p.pks.file;
+  if (prev && !reason.trim()) throw new ApiError('REASON_REQUIRED');
+  if (prev) p.pks.versions = [{ ...prev, replacedBy: actor, replacedAt: now(), reason: reason.trim() }, ...(p.pks.versions ?? [])];
+  p.pks.file = { name: file.name, by: actor, at: now() };
+  log(p, { from: null, to: null, by: actor, reason: prev ? `Dokumen PKS diganti (${prev.name} → ${file.name}): ${reason.trim()}` : 'Dokumen PKS diunggah' });
   return enrich(p);
 }
 
@@ -468,7 +477,10 @@ export function handoverPlan(id, mode = 'disable') {
     : users.filter((x) => x.id !== u.id && x.role === u.role && accountStatus(x) === 'ACTIVE' && subs.some((sb) => x.areaIds.includes(sb.areaId)));
   const stores = subsOf(id).filter((x) => ['SA', 'SR'].includes(x.role)).flatMap((x) => partners.flatMap((p) => p.stores
     .filter((s) => s.assigned.includes(x.id)).map((s) => ({ subId: x.id, storeId: s.id, storeName: s.name, partnerName: p.partnerName, tlId: s.tlId }))));
-  return { mode, role: u.role, subs, mainOptions: pool.map(optionOf), ownedStores: mode === 'disable' ? owned.length : 0, stores };
+  // FR-AM-014: APL hanya bisa dinonaktifkan bila setiap areanya juga dipegang APL Active lain (masa tumpang tindih).
+  const aplAreaGaps = u.role === 'APL' && mode === 'disable'
+    ? u.areaIds.filter((a) => !users.some((x) => x.id !== u.id && x.role === 'APL' && accountStatus(x) === 'ACTIVE' && x.areaIds.includes(a))) : [];
+  return { mode, role: u.role, subs, mainOptions: pool.map(optionOf), ownedStores: mode === 'disable' ? owned.length : 0, stores, aplAreaGaps };
 }
 
 /**
@@ -521,14 +533,15 @@ function applyHandover(u, mode, leaderOf, mainId, reason, actor) {
 /**
  * FR-AM-009 — Nonaktifkan akun (final), dengan serah terima leader. Admin tidak bisa menonaktifkan akunnya sendiri.
  * opts.replacements = { [idBawahan]: idLeaderBaru } untuk setiap bawahan; opts.defaultLeaderId = "Leader pengganti untuk semua"
- * (TL: penerima toko milik TL). SA/SR: semua penugasan toko dilepas (Sistem). APL tidak memindahkan area (OQ-AM-12: buat APL
- * baru lebih dulu, dua APL boleh memegang area yang sama selama serah terima).
+ * (TL: penerima toko milik TL). SA/SR: semua penugasan toko dilepas (Sistem). APL (FR-AM-014): ditolak (APL_AREA) selama ada
+ * area yang tidak dipegang APL Active lain; area tidak dipindah, TL bawahan mendapat APL baru lewat pemilih.
  */
 export async function disableUser(id, reason, session, opts = {}) {
   await wait(500);
   const u = userById(id);
   if (u.id === session.userId || u.status === 'DISABLED') throw new ApiError('CONFLICT');
   const actor = actorOf(session);
+  if (handoverPlan(id).aplAreaGaps.length) throw new ApiError('APL_AREA');
   const leaderOf = Object.fromEntries(subsOf(id).map((x) => [x.id, opts.replacements?.[x.id] ?? opts.defaultLeaderId]));
   const r = applyHandover(u, 'disable', leaderOf, opts.defaultLeaderId, reason, actor);
   let released = r.released;
@@ -701,11 +714,13 @@ export function referralTaken(code, exceptStoreId) {
     .some((p) => p.stores.some((s) => s.id !== exceptStoreId && s.referralCode === c));
 }
 /**
- * Admin mengisi/mengubah Kode Referral satu toko. Alasan wajib bila mengubah kode yang sudah ada saat partner Active.
- * Toko "Menunggu kode referral" (toko baru setelah Active, OQ-25 opsi 1) langsung aktif setelah kodenya diisi.
- * Error: FORBIDDEN (bukan Admin) | CONFLICT (status di luar jendela) | FORMAT | DUPLICATE | REASON_REQUIRED.
+ * Admin mengisi/mengubah Kode Referral + QR satu toko (PRD Scope 1 v1.1 FR-019). `qr` = { name, size, type, url } file baru
+ * atau null (pakai QR yang ada). QR wajib; kode berubah → QR baru wajib. Alasan wajib bila mengubah kode yang sudah ada saat
+ * partner Active. Toko "Menunggu kode referral" (Permintaan tambah toko, FR-023) langsung aktif setelah disimpan, tanpa TL
+ * ("Belum ada TL" untuk APL area itu, C6).
+ * Error: FORBIDDEN | CONFLICT | FORMAT | DUPLICATE | QR_REQUIRED | QR_NEW_REQUIRED | QR_TYPE | QR_SIZE | REASON_REQUIRED.
  */
-export async function setStoreReferral(pid, storeId, code, reason, session) {
+export async function setStoreReferral(pid, storeId, code, qr, reason, session) {
   await wait(400);
   if (session.role !== 'REVIEWER') throw new ApiError('FORBIDDEN');
   const p = findP(pid); const s = p?.stores.find((x) => x.id === storeId);
@@ -714,20 +729,28 @@ export async function setStoreReferral(pid, storeId, code, reason, session) {
   if (validateReferralCode(c)) throw new ApiError('FORMAT');
   if (referralTaken(c, s.id)) throw new ApiError('DUPLICATE');
   const old = s.referralCode;
-  if (old === c) return enrich(p);
-  if (p.status === 'ACTIVE' && old && !(reason || '').trim()) throw new ApiError('REASON_REQUIRED');
+  const codeChanged = old !== c;
+  if (qr) {
+    const e = validateQrFile(qr);
+    if (e) throw new ApiError(e.includes('PNG') ? 'QR_TYPE' : 'QR_SIZE');
+  } else if (!s.referralQr) throw new ApiError('QR_REQUIRED');
+  else if (old && codeChanged) throw new ApiError('QR_NEW_REQUIRED');
+  if (!codeChanged && !qr) return enrich(p);
+  if (p.status === 'ACTIVE' && old && codeChanged && !(reason || '').trim()) throw new ApiError('REASON_REQUIRED');
   s.referralCode = c;
-  log(p, { from: null, to: null, by: actorOf(session), reason: `Kode referral ${s.name}: ${old ?? '-'} → ${c}${(reason || '').trim() ? ` (${reason.trim()})` : ''}` });
+  if (qr) s.referralQr = { name: qr.name, url: qr.url, by: actorOf(session), at: now() };
+  const what = codeChanged ? `${old ?? '-'} → ${c}` : c;
+  log(p, { from: null, to: null, by: actorOf(session), reason: `Kode referral ${s.name}: ${what}${qr ? `, QR ${qr.name}` : ''}${(reason || '').trim() ? ` (${reason.trim()})` : ''}` });
   if (s.status === 'WAITING_REFERRAL') {
     s.status = 'ACTIVE';
     s.code = `TK${p.registrationNumber.slice(-4)}-${String(p.stores.indexOf(s) + 1).padStart(2, '0')}`;
     s.activatedAt = now();
-    log(p, { from: null, to: null, by: 'Sistem', reason: `${s.name} aktif setelah kode referral diisi` });
+    log(p, { from: null, to: null, by: 'Sistem', reason: `${s.name} aktif setelah kode referral dan QR diisi; menunggu penugasan TL oleh APL` });
   }
   return enrich(p);
 }
-/** Toko partner yang belum punya Kode Referral (gerbang aktivasi FR-010, AC-028). */
-export const storesWithoutReferral = (p) => p.stores.filter((s) => !s.referralCode);
+/** Toko partner yang belum punya Kode Referral atau QR (gerbang aktivasi FR-010, AC-028). */
+export const storesWithoutReferral = (p) => p.stores.filter((s) => !s.referralCode || !s.referralQr);
 
 /**
  * Toko Aktif (keputusan 2026-10-16/17): sudut pandang toko untuk partner Active — toko aktif dan toko baru yang menunggu kode
@@ -751,7 +774,7 @@ export async function activeStores(f = {}, { retry = false } = {}) {
     && (f.ref === 'belum' ? !s.referralCode : f.ref === 'sudah' ? !!s.referralCode : true))
     .sort((x, y) => (y.s.status === 'WAITING_REFERRAL') - (x.s.status === 'WAITING_REFERRAL') || x.p.partnerName.localeCompare(y.p.partnerName) || x.s.id.localeCompare(y.s.id))
     .map(({ p, s }) => ({
-      id: s.id, name: s.name, code: s.code, primary: s.primary, status: s.status, referralCode: s.referralCode, areaId: p.areaId,
+      id: s.id, name: s.name, code: s.code, primary: s.primary, status: s.status, referralCode: s.referralCode, referralQr: s.referralQr ?? null, areaId: p.areaId,
       partnerId: p.id, partnerName: p.partnerName, partnerStatus: p.status,
       tl: userById(s.tlId)?.fullName ?? null, sales: s.assigned.map((id) => userById(id)).filter(Boolean).map((u) => `${u.fullName} (${u.role})`),
     }));

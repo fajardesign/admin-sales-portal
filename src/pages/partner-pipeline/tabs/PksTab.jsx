@@ -15,7 +15,7 @@ export function PksTab({ partner: p, onEditDelivery, onUpload, onViewFile }) {
     <SectionCard title="PKS (Privy)"
       actions={<>
         {p.status === 'WAITING_PKS' && <Button size="xs" variant="stroke" tone="neutral" leftIcon={<Icon name="EditLine" />} onClick={onEditDelivery}>Ubah Data Pengiriman PKS</Button>}
-        {p.status === 'ACTIVE' && !k.file && <Button size="xs" variant="stroke" tone="neutral" leftIcon={<Icon name="UploadLine" />} onClick={onUpload}>Unggah Dokumen PKS (opsional)</Button>}
+        {p.status === 'ACTIVE' && <Button size="xs" variant="stroke" tone="neutral" leftIcon={<Icon name="UploadLine" />} onClick={onUpload}>{k.file ? 'Ganti Dokumen PKS' : 'Unggah Dokumen PKS'}</Button>}
       </>}>
       <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>PKS dikirim dan ditandatangani di Privy web. Portal ini hanya mencatat log pengiriman dan konfirmasi tanda tangan.</span>
       <KeyValueGrid items={[
@@ -23,11 +23,22 @@ export function PksTab({ partner: p, onEditDelivery, onUpload, onViewFile }) {
         { label: 'Email PKS (Email PIC)', value: p.pic.email },
         { label: 'Dikirim via', value: k.sentVia ? `${PKS_VIA[k.sentVia]} · ${k.target}` : null },
         { label: 'Tanggal PKS dikirim', value: formatDateTime(k.sentAt), hint: k.sentBy ? `Dicatat oleh ${k.sentBy}` : undefined },
-        ...(k.privyRef ? [{ label: 'Referensi dokumen Privy', value: k.privyRef }] : []),
         { label: 'Status PKS', value: PKS_STATUS[k.status] },
         { label: 'Dikonfirmasi oleh / pada', value: k.confirmedBy ? `${k.confirmedBy} · ${formatDateTime(k.confirmedAt)}` : null },
         { label: 'Dokumen PKS', value: k.file ? <LinkButton onClick={onViewFile} leftIcon={<Icon name="FileTextLine" size={16} />}>{k.file.name}</LinkButton> : null, hint: k.file ? `Diunggah ${k.file.by} · ${formatDateTime(k.file.at)}` : undefined },
       ]} />
+      {(k.versions ?? []).length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
+          <span style={{ font: 'var(--label-sm)', color: 'var(--text-strong-950)' }}>Versi sebelumnya</span>
+          {k.versions.map((v) => (
+            <span key={`${v.name}-${+new Date(v.replacedAt)}`} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', padding: 'var(--space-10) var(--space-12)', borderRadius: 'var(--rounded-10)', boxShadow: 'var(--shadow-stroke)' }}>
+              <span style={{ font: 'var(--label-sm)', color: 'var(--text-strong-950)' }}>{v.name}</span>
+              <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>Diunggah {v.by} · {formatDateTime(v.at)} · Diganti {v.replacedBy} · {formatDateTime(v.replacedAt)}</span>
+              <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>Alasan: {v.reason}</span>
+            </span>
+          ))}
+        </div>
+      )}
       {hint && <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>{hint}</span>}
     </SectionCard>
   );

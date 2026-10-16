@@ -35,7 +35,7 @@ describe('Nonaktifkan dan Pindahkan Bawahan (UI)', () => {
     const dialog = await screen.findByRole('dialog', {}, T);
     expect(within(dialog).getByText('Masih menjadi atasan 3 pengguna. Pilih atasan baru sebelum menonaktifkan.')).toBeTruthy();
     expect(within(dialog).getAllByRole('button', { name: 'Bagus Wicaksono' })).toHaveLength(4); // utama + 3 bawahan
-    expect(within(dialog).getByText(`${storesOfTl(6).length} toko milik Andi Pratama pindah ke Bagus Wicaksono.`)).toBeTruthy();
+    expect(within(dialog).getByText(`${storesOfTl(6).length} toko yang dipegang Andi Pratama pindah ke Bagus Wicaksono. SA/SR yang atasannya bukan Bagus Wicaksono dilepas dari toko tersebut.`)).toBeTruthy();
     const confirm = within(dialog).getByRole('button', { name: 'Nonaktifkan' });
     expect(confirm.disabled).toBe(true); // Alasan belum diisi
     await user.type(within(dialog).getByPlaceholderText('Contoh: Resign per 31 Okt 2026'), 'Resign');
@@ -104,11 +104,11 @@ describe('Serah terima dan TL per toko (API)', () => {
     expect(storesOfTl(6)).toHaveLength(0);
   });
 
-  it('OQ-AM-12: APL hanya bisa dinonaktifkan setelah ada APL Active lain di area yang sama; area tidak dipindah', async () => {
-    expect(handoverPlan(3).mainOptions).toEqual([]);
-    await expect(disableUser(3, 'Mutasi', admin)).rejects.toMatchObject({ code: 'LEADER_REQUIRED' });
+  it('FR-AM-014: APL hanya bisa dinonaktifkan setelah setiap areanya dipegang APL Active lain; area tidak dipindah', async () => {
+    expect(handoverPlan(3).aplAreaGaps).toEqual([1]); // FR-AM-014: area Makassar belum dipegang APL Active lain
+    await expect(disableUser(3, 'Mutasi', admin)).rejects.toMatchObject({ code: 'APL_AREA' });
     const { user: nu } = await createUser({ email: 'dewi.apl@amarbank.co.id', phone: '81299990000', fullName: 'Dewi Anggraini', role: 'APL', areaIds: [1] }, admin);
-    expect(handoverPlan(3).mainOptions).toEqual([]); // masih Pending
+    expect(handoverPlan(3).aplAreaGaps).toEqual([1]); // masih Pending
     await activateAccount(nu.id, 'Rahasia#2026');
     await disableUser(3, 'Mutasi', admin, { defaultLeaderId: String(nu.id) });
     expect(byId(22).supervisorId).toBe(nu.id);

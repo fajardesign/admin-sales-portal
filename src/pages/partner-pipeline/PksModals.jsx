@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { FileUploadArea, FileUploadCard, RadioGroup } from '@ds/index.js';
+import { FileUploadArea, FileUploadCard, RadioGroup, TextArea } from '@ds/index.js';
 import { ActionModal } from '../../components/ActionModal.jsx';
 import { useToast } from '../../components/Toaster.jsx';
 import { updatePksDelivery, uploadPks } from '../../api/mockApi.js';
-import { validatePksFile } from '../../lib/validation.js';
+import { validatePksFile, validateReason } from '../../lib/validation.js';
 
 /**
  * Pilihan kanal PKS (PRD Scope 1 v2 FR-009, C3): Privy ID (nonaktif bila tidak diisi) atau Email PIC. Tidak ada isian email
@@ -41,28 +41,41 @@ export function PksDeliveryModal({ partner, user, onClose, onDone }) {
   );
 }
 
-/** Active — "Unggah Dokumen PKS (opsional)": PDF maks. 5 MB. */
+/**
+ * Active — "Unggah Dokumen PKS" (belum ada) atau "Ganti Dokumen PKS" (PRD Scope 1 v1.1 FR-024): PDF maks. 5 MB; mengganti wajib
+ * alasan, versi lama tetap tersimpan di "Versi sebelumnya".
+ */
 export function PksUploadModal({ partner, user, onClose, onDone }) {
   const toast = useToast();
+  const replacing = !!partner.pks.file;
   const [file, setFile] = useState(null);
+  const [reason, setReason] = useState('');
   const [touched, setTouched] = useState(false);
   const [busy, setBusy] = useState(false);
   const err = !file ? 'Pilih file PDF PKS.' : validatePksFile(file);
+  const reasonErr = replacing ? validateReason(reason) : undefined;
   async function save() {
     setTouched(true);
-    if (err) return;
+    if (err || reasonErr) return;
     setBusy(true);
-    const p = await uploadPks(partner.id, file, user);
-    toast('success', 'Dokumen PKS diunggah.');
-    onDone(p);
+    try {
+      const p = await uploadPks(partner.id, file, user, reason);
+      toast('success', replacing ? 'Dokumen PKS diganti.' : 'Dokumen PKS diunggah.');
+      onDone(p);
+    } catch {
+      setBusy(false);
+      toast('error', 'Gagal menyimpan dokumen PKS. Coba lagi.');
+    }
   }
   return (
-    <ActionModal open onClose={onClose} title="Unggah Dokumen PKS" description={`${partner.partnerName} · ${partner.registrationNumber}`} icon="UploadLine"
-      confirmLabel="Unggah" busy={busy} onConfirm={save}>
+    <ActionModal open onClose={onClose} title={replacing ? 'Ganti Dokumen PKS' : 'Unggah Dokumen PKS'} description={`${partner.partnerName} · ${partner.registrationNumber}`} icon="UploadLine"
+      confirmLabel={replacing ? 'Ganti' : 'Unggah'} busy={busy} onConfirm={save}>
+      {replacing && <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>Dokumen saat ini: {partner.pks.file.name}. Versi lama tetap tersimpan.</span>}
       {file
         ? <FileUploadCard name={file.name} size={`${(file.size / 1024 / 1024).toFixed(2)} MB`} state={err ? 'error' : 'success'} onRemove={() => setFile(null)} />
         : <FileUploadArea title="Pilih file PDF PKS" description="PDF yang sudah ditandatangani, diunduh dari Privy web. Maks. 5 MB." buttonLabel="Pilih File" onFiles={(fs) => setFile(fs[0] ?? null)} />}
       {touched && err && <span role="alert" style={{ font: 'var(--paragraph-xs)', color: 'var(--state-error-base)' }}>{err}</span>}
+      {replacing && <TextArea label="Alasan penggantian" required maxLength={255} rows={2} value={reason} onChange={setReason} placeholder="Contoh: Adendum PKS perubahan rekening" error={touched ? reasonErr : undefined} />}
     </ActionModal>
   );
 }

@@ -58,8 +58,8 @@ function BerandaView({ user, onLogout, query }) {
         <>
           {/* Notifikasi Kode Referral (keputusan 2026-10-16, OQ-25): toko baru partner Active menunggu kode */}
           {d?.referral.waiting > 0 && (
-            <Alert status="warning" size="sm" title={`${d.referral.waiting} toko baru menunggu kode referral`} actionLabel="Isi kode referral" onAction={() => navigate('/toko-aktif?ref=belum')}>
-              Toko baru aktif setelah kode referralnya diisi.
+            <Alert status="warning" size="sm" title={`${d.referral.waiting} permintaan tambah toko menunggu kode referral`} actionLabel="Isi kode referral" onAction={() => navigate('/toko-aktif?ref=belum')}>
+              Toko baru aktif setelah kode referral dan QR diisi.
             </Alert>
           )}
           <SectionCard title="Perlu tindakan Anda">
@@ -68,7 +68,7 @@ function BerandaView({ user, onLogout, query }) {
               <StatCard icon="SendPlaneLine" color="teal" label="PKS perlu dikirim" value={val(d?.verified.count)} hint="Status Verified" onClick={() => pl('VERIFIED')} />
               <StatCard icon="FileTextLine" color="purple" label="Menunggu tanda tangan PKS" value={val(d?.waitingPks.count)} hint={d?.waitingPks.oldestSent ? `Terlama dikirim ${ageLabel(d.waitingPks.oldestSent)} lalu` : 'Tidak ada'} onClick={() => pl('WAITING_PKS')} />
               <StatCard icon="ErrorWarningFill" color="red" label="Tautan aktivasi kedaluwarsa" value={val(d?.expiredUsers.length)} hint="Akun Expired" onClick={() => am('expired')} />
-              <StatCard icon="Hashtag" color="orange" label="Toko menunggu kode referral" value={val(d?.referral.waiting)} hint="Toko baru partner aktif" onClick={() => navigate('/toko-aktif?ref=belum')} />
+              <StatCard icon="Hashtag" color="orange" label="Permintaan tambah toko" value={val(d?.referral.waiting)} hint="Isi kode referral untuk mengaktifkan" onClick={() => navigate('/toko-aktif?ref=belum')} />
             </StatGrid>
           </SectionCard>
           <SectionCard title="Menunggu pihak lain">

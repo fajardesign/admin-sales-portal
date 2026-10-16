@@ -42,13 +42,13 @@ describe('alasan & file PKS', () => {
 });
 
 describe('revisi stakeholder 2026-10-08', () => {
-  it('kode referral per toko: diawali OF, huruf/angka, maks. 20 (PRD Scope 1 v2 FR-019)', () => {
-    const fmt = 'Kode referral harus diawali OF dan hanya berisi huruf dan angka, maks. 20 karakter.';
+  it('kode referral per toko: huruf/angka, maks. 20, tanpa awalan wajib (PRD Scope 1 v1.1 FR-019)', () => {
+    const fmt = 'Kode referral hanya berisi huruf dan angka, maks. 20 karakter.';
     expect(validateReferralCode('')).toBe('Kode referral wajib diisi');
-    expect(validateReferralCode('SAS001')).toBe(fmt);
-    expect(validateReferralCode('OF-SAS01')).toBe(fmt);
-    expect(validateReferralCode(`OF${'A'.repeat(19)}`)).toBe(fmt);
-    expect(validateReferralCode(' ofsas001 ')).toBeUndefined();
+    expect(validateReferralCode('PAR-CEL01')).toBe(fmt);
+    expect(validateReferralCode('A'.repeat(21))).toBe(fmt);
+    expect(validateReferralCode(' parcel01 ')).toBeUndefined();
+    expect(validateReferralCode('T1225009')).toBeUndefined();
   });
   it('sisa waktu tautan 3x24 jam ditampilkan dalam hari', () => {
     expect(formatDuration(72 * 3600e3)).toBe('3 hari');

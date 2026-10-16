@@ -10,7 +10,7 @@ import { useScenario } from '../../dev/scenario.js';
 import { nowrap } from '../../lib/cells.jsx';
 import { STORE_STATUS, areaName } from '../../lib/constants.js';
 import { navigate, withQuery } from '../../lib/router.js';
-import { ReferralCodeField } from './ReferralCodeField.jsx';
+import { QrThumb, ReferralCodeField } from './ReferralCodeField.jsx';
 
 const STORE_BADGE = { WAITING_REFERRAL: 'pending', ACTIVE: 'completed' };
 const REF_OPTIONS = [{ value: '', label: 'Semua kode referral' }, { value: 'belum', label: 'Belum diisi' }, { value: 'sudah', label: 'Sudah diisi' }];
@@ -46,7 +46,8 @@ function ActiveStoresView({ user, onLogout, query }) {
     { key: 'tl', header: 'TL', render: (r) => nowrap(r.tl ?? '-') },
     { key: 'sales', header: 'SA/SR', render: (r) => (r.status === 'WAITING_REFERRAL' ? '-' : r.sales.join(', ') || 'Belum ditugaskan') },
     { key: 'status', header: 'Status', render: (r) => ({ misc: true, children: <StatusBadge status={STORE_BADGE[r.status]}>{STORE_STATUS[r.status]}</StatusBadge> }) },
-    { key: 'ref', header: 'Kode Referral', render: (r) => ({ misc: true, children: <ReferralCodeField key={`${r.id}-${r.referralCode}`} partnerId={r.partnerId} partnerStatus={r.partnerStatus} store={r} user={user} onSaved={() => setV((x) => x + 1)} /> }) },
+    { key: 'ref', header: 'Kode Referral', render: (r) => ({ misc: true, children: <ReferralCodeField key={`${r.id}-${r.referralCode}`} partnerId={r.partnerId} partnerStatus={r.partnerStatus} store={r} user={user} showQr={false} onSaved={() => setV((x) => x + 1)} /> }) },
+    { key: 'qr', header: 'QR', render: (r) => ({ misc: true, children: r.referralCode ? <QrThumb qr={r.referralQr} /> : <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>-</span> }) },
   ];
 
   return (
@@ -59,7 +60,7 @@ function ActiveStoresView({ user, onLogout, query }) {
       {sm?.waiting > 0 && (
         <Alert status="warning" size="sm" title={`${sm.waiting} toko menunggu kode referral`}
           actionLabel={q.ref === 'belum' ? 'Tampilkan semua toko' : 'Lihat toko'} onAction={() => set({ ref: q.ref === 'belum' ? '' : 'belum' })}>
-          Toko baru aktif setelah kode referralnya diisi.
+          Toko baru aktif setelah kode referral dan QR diisi.
         </Alert>
       )}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-12)', flexWrap: 'wrap' }}>

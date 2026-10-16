@@ -1,6 +1,7 @@
 // Mock database prototipe S&P Portal: pengguna (app_user), partner + toko + dokumen, pinjaman, target, skema insentif.
 // Data deterministik (PRNG ber-seed) dan hidup di memori; reload halaman = data kembali ke awal.
 import { AREAS, DOC_TYPES, OFFICES } from '../lib/constants.js';
+import { qrPlaceholder } from '../lib/qr.js';
 
 /** Jam demo dimulai Rabu 07 Okt 2026 10:30 WIB lalu berjalan normal, supaya status Expired & sisa waktu tautan stabil. */
 const BASE = Date.parse('2026-10-07T03:30:00Z');
@@ -156,7 +157,7 @@ function partner(n, name, entity, areaId, status, submitterId, cfg = {}) {
     areaId, submittedBy: submitterId, submittedAt,
     verifiedAt: null, verifiedBy: null, activatedAt: null, statusUpdatedAt: submittedAt,
     status, privyId: cfg.privyId ?? null,
-    pks: { sentVia: null, target: null, privyRef: null, sentAt: null, status: 'NOT_SENT', confirmedBy: null, confirmedAt: null, file: null },
+    pks: { sentVia: null, target: null, versions: [], sentAt: null, status: 'NOT_SENT', confirmedBy: null, confirmedAt: null, file: null },
     merchantCode: null, picAccountFailed: false,
     revisedSections: [], fieldChanges: [], changeLog: [], revisionRequest: null,
     revisionRound: 0, // bertambah 1 setiap TL/SR mengirim ulang perbaikan (PRD Scope 1 FR-007, AC-010)
@@ -251,7 +252,10 @@ advance(p133, [['INACTIVE', 24 * 150, 'Partner berhenti bekerja sama per Oktober
 // Kode Referral per toko (PRD Scope 1 v2 FR-019): wajib sebelum Active, jadi toko partner Active/Inactive sudah punya kode;
 // partner Rejected juga punya (kodenya boleh dipakai ulang). Partner lain belum diisi Admin.
 const refCode = (p, i) => `OF${AREAS.find((a) => a.id === p.areaId).code}${p.registrationNumber.slice(-3)}${i + 1}`;
-[p139, p138, p137, p136, p132, p131, p133, p135].forEach((p) => p.stores.forEach((s, i) => { s.referralCode = refCode(p, i); }));
+[p139, p138, p137, p136, p132, p131, p133, p135].forEach((p) => p.stores.forEach((s, i) => {
+  s.referralCode = refCode(p, i);
+  s.referralQr = { name: `qr_${s.referralCode.toLowerCase()}.png`, url: qrPlaceholder(s.referralCode), by: R, at: p.verifiedAt ?? p.submittedAt };
+}));
 
 // Akun PIC untuk partner Active/Inactive (PRD §3E)
 let uid = 100;
@@ -519,6 +523,6 @@ export const RECIPIENT_LABEL = { SA: 'SA', SR: 'SR', TL_SENIOR: 'TL Senior', TL_
 
 // Dibuat paling akhir agar urutan angka acak data contoh lain tidak bergeser.
 // Toko yang ditambahkan setelah partner Active menunggu Kode Referral (OQ-25, keputusan 2026-10-16: opsi 1) dan baru aktif
-// setelah Admin mengisinya. Ditambahkan TL kedua Area 1 (Bagus Wicaksono): satu partner bisa punya beberapa TL per toko.
-p139.stores.push({ ...store(p139, 3, { branch: 'Antang', addedBy: 22, addedAt: ago(26), tlId: 22 }), status: 'WAITING_REFERRAL' });
+// setelah Admin mengisi kode + QR, lalu menunggu penugasan TL oleh APL (PRD Scope 1 v1.1 C6/C7: toko baru tanpa kursi).
+p139.stores.push({ ...store(p139, 3, { branch: 'Antang', addedBy: 22, addedAt: ago(26) }), status: 'WAITING_REFERRAL', tlId: null });
 p139.businessLocationCount = 4;
