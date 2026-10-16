@@ -117,11 +117,11 @@ export const FEATURE_LABEL = {
   INCENTIVE_ESTIMATION: 'Estimasi insentif', PARTNER_VIEW: 'Lihat partner', TEAM_VIEW: 'Lihat tim', PARTNER_ACQUISITION: 'Pendaftaran partner',
   SALES_ASSIGNMENT: 'Penugasan SA/SR', VISIT_PLAN_MANAGEMENT: 'Atur kunjungan', ATTENDANCE: 'Absensi', VISIT_EXECUTION: 'Kunjungan',
   LOAN_TRACKING: 'Pantau pinjaman', PARTNER_SALES_DASHBOARD: 'Penjualan partner', PARTNER_COMMISSION: 'Komisi partner', PARTNER_PROFILE: 'Profil partner',
-  TRANSACTION_INQUIRY: 'Cek transaksi', DOCUMENT_REPOSITORY: 'Dokumen', INCENTIVE_SCHEME: 'Skema insentif',
+  TRANSACTION_INQUIRY: 'Cek transaksi', DOCUMENT_REPOSITORY: 'Dokumen', INCENTIVE_SCHEME: 'Skema insentif', TL_ASSIGNMENT: 'Mapping TL',
 };
 export const ROLES = {
   REVIEWER: { label: 'Admin (Reviewer)', short: 'Admin', realm: 'ADMIN', platform: 'web-access', features: ['DASHBOARD', 'PARTNER_PIPELINE', 'ACCOUNT_CREATION'] },
-  APL: { label: 'APL', short: 'APL', realm: 'APL', platform: 'web-access', features: ['SALES_PERFORMANCE', 'PRODUCTIVITY_PERFORMANCE_CHECK_IN', 'PRODUCTIVITY_PERFORMANCE_VISIT', 'INCENTIVE_ESTIMATION', 'PARTNER_VIEW', 'TEAM_VIEW'] },
+  APL: { label: 'APL', short: 'APL', realm: 'APL', platform: 'web-access', features: ['SALES_PERFORMANCE', 'PRODUCTIVITY_PERFORMANCE_CHECK_IN', 'PRODUCTIVITY_PERFORMANCE_VISIT', 'INCENTIVE_ESTIMATION', 'PARTNER_VIEW', 'TEAM_VIEW', 'TL_ASSIGNMENT'] },
   TL: { label: 'TL', short: 'TL', realm: 'TL', platform: 'sales-app-access', features: ['PARTNER_ACQUISITION', 'SALES_ASSIGNMENT', 'VISIT_PLAN_MANAGEMENT', ...SALES_COMMON, 'TEAM_VIEW'] },
   SR: { label: 'SR', short: 'SR', realm: 'SR', platform: 'sales-app-access', features: ['PARTNER_ACQUISITION', ...SALES_COMMON] },
   SA: { label: 'SA', short: 'SA', realm: 'SA', platform: 'sales-app-access', features: SALES_COMMON },

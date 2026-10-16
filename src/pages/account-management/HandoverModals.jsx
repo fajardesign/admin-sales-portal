@@ -3,7 +3,7 @@ import { Alert, CheckboxLabel, Select, TextArea } from '@ds/index.js';
 import { ActionModal } from '../../components/ActionModal.jsx';
 import { useToast } from '../../components/Toaster.jsx';
 import { disableUser, handoverPlan, moveSubordinates, releasesAfter } from '../../api/mockApi.js';
-import { ROLES } from '../../lib/constants.js';
+import { ROLES, areaName } from '../../lib/constants.js';
 import { validateReason } from '../../lib/validation.js';
 
 const STATUS_SUFFIX = { PENDING: ' · Pending', EXPIRED: ' · Expired' };
@@ -65,7 +65,7 @@ function HandoverFields({ target, mode, h }) {
           })}
         </div>
       )}
-      {h.needsMain && mainName && <Alert status="information" size="sm" title={`${plan.ownedStores} toko milik ${target.fullName} pindah ke ${mainName}.`} />}
+      {h.needsMain && mainName && <Alert status="information" size="sm" title={`${plan.ownedStores} toko yang dipegang ${target.fullName} pindah ke ${mainName}. SA/SR yang atasannya bukan ${mainName} dilepas dari toko tersebut.`} />}
       {h.releases.length > 0 && (
         <Alert status="warning" size="sm" title={`${h.releases.length} penugasan toko dilepas`}>
           {h.releases.map((r) => `${plan.subs.find((x) => x.id === r.subId)?.name} · ${r.storeName} (${r.partnerName})`).join('; ')}
@@ -87,6 +87,7 @@ export function DisableModal({ target, user, onClose, onDone }) {
   const [busy, setBusy] = useState(false);
   const h = useHandover(target, 'disable');
   const withHandover = h.plan.subs.length > 0 || h.needsMain;
+  const gaps = h.plan.aplAreaGaps.map(areaName);
   const err = validateReason(reason);
   async function confirm() {
     setTouched(true);
@@ -103,11 +104,12 @@ export function DisableModal({ target, user, onClose, onDone }) {
   }
   return (
     <ActionModal open onClose={onClose} title={`Nonaktifkan ${target.fullName}?`} description={`${ROLES[target.role].label} · ${target.email}`} icon="ForbidFill" status="error"
-      confirmLabel="Nonaktifkan" confirmTone="error" busy={busy} onConfirm={confirm} confirmDisabled={!h.ready || !reason.trim()} width={withHandover ? 600 : 480}>
+      confirmLabel="Nonaktifkan" confirmTone="error" busy={busy} onConfirm={confirm} confirmDisabled={!h.ready || !reason.trim() || gaps.length > 0} width={withHandover ? 600 : 480}>
       <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>
         Akun dinonaktifkan, sesi yang aktif berakhir, dan pengguna tidak bisa login lagi. Status ini tidak dapat dikembalikan dari portal.
       </span>
-      {withHandover && <HandoverFields target={target} mode="disable" h={h} />}
+      {gaps.length > 0 && <Alert status="error" size="sm" title={`Buat APL baru untuk area ${gaps.join(', ')} sebelum menonaktifkan APL ini.`} />}
+      {withHandover && gaps.length === 0 && <HandoverFields target={target} mode="disable" h={h} />}
       {target.assignedStores > 0 && <Alert status="warning" size="sm" title={`${target.assignedStores} toko akan dilepas dari penugasan.`} />}
       <TextArea label="Alasan" required maxLength={255} rows={3} value={reason} onChange={setReason} placeholder="Contoh: Resign per 31 Okt 2026" error={touched ? err : undefined} />
     </ActionModal>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, CheckboxLabel, FileUploadArea, FileUploadCard, LinkButton, TextArea, TextInput } from '@ds/index.js';
+import { Alert, CheckboxLabel, FileUploadArea, FileUploadCard, LinkButton, TextArea } from '@ds/index.js';
 import { ActionModal } from '../../components/ActionModal.jsx';
 import { ApiError, changeStatus } from '../../api/mockApi.js';
 import { useToast } from '../../components/Toaster.jsx';
@@ -9,11 +9,11 @@ import { PksChannelPicker } from './PksModals.jsx';
 import { ACTIONS } from './actions.js';
 
 
-/** Dampak Nonaktifkan (PRD Scope 1 FR-013, SCR-05): jumlah toko aktif, SA/SR yang ditugaskan, akun PIC. */
+/** Dampak Nonaktifkan (PRD Scope 1 FR-013, v1.1 C6): toko aktif, penugasan TL dan SA/SR yang dilepas, akun PIC. */
 function impactText(p) {
   const stores = p.stores.filter((s) => s.status === 'ACTIVE');
-  const people = new Set(stores.flatMap((s) => s.assigned)).size;
-  return `${stores.length} toko akan nonaktif, ${people} SA/SR dilepas, dan akun PIC dinonaktifkan.`;
+  const seats = stores.reduce((a, s) => a + (s.tlId != null ? 1 : 0) + s.assigned.length, 0);
+  return `${stores.length} toko akan nonaktif, ${seats} penugasan TL/SA/SR dilepas, dan akun PIC dinonaktifkan.`;
 }
 
 /** W3d · Konfirmasi "Ubah status menjadi {status}?" dengan isian sesuai aksi. */
@@ -22,14 +22,13 @@ export function StatusActionModal({ partner, to, user, onClose, onDone, onGoStor
   const a = ACTIONS[to];
   const [reason, setReason] = useState('');
   const [via, setVia] = useState(null); // PKS Dikirim: kanal wajib dipilih Admin (PRD Scope 1 v2 FR-009)
-  const [privyRef, setPrivyRef] = useState('');
   const [signedChecked, setSignedChecked] = useState(false);
   const [file, setFile] = useState(null);
   const [touched, setTouched] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState(null);
-  // PRD Scope 1 v2 FR-010 / AC-028: aktivasi ditolak bila ada toko tanpa Kode Referral.
-  const missingRef = to === 'ACTIVE' ? partner.stores.filter((s) => !s.referralCode) : []; // galat aktivasi ditampilkan di modal, modal tetap terbuka (PRD Scope 1 §11)
+  // PRD Scope 1 v1.1 FR-010 / AC-028: aktivasi ditolak bila ada toko tanpa Kode Referral atau QR.
+  const missingRef = to === 'ACTIVE' ? partner.stores.filter((s) => !s.referralCode || !s.referralQr) : []; // galat aktivasi ditampilkan di modal, modal tetap terbuka (PRD Scope 1 §11)
 
   const errs = {
     reason: a.reason ? validateReason(reason) : undefined,
@@ -45,13 +44,13 @@ export function StatusActionModal({ partner, to, user, onClose, onDone, onGoStor
     setBusy(true);
     setFailure(null);
     try {
-      const p = await changeStatus(partner.id, to, { reason: reason.trim(), via, privyRef, file }, user);
+      const p = await changeStatus(partner.id, to, { reason: reason.trim(), via, file }, user);
       toast('success', to === 'WAITING_PKS' ? 'Status diperbarui: Waiting PKS.' : 'Status berhasil diperbarui.');
       onDone(p);
     } catch (e) {
       setBusy(false);
       if (e instanceof ApiError && e.code === 'PIC_FAILED') setFailure('Aktivasi gagal: akun PIC tidak dapat dibuat.');
-      else if (e instanceof ApiError && e.code === 'REFERRAL_MISSING') setFailure('Kode referral wajib diisi untuk semua toko sebelum aktivasi.');
+      else if (e instanceof ApiError && e.code === 'REFERRAL_MISSING') setFailure('Kode referral dan QR wajib ada di semua toko sebelum aktivasi. Isi di tab Toko.');
       else if (e instanceof ApiError && e.code === 'PIC_CONFLICT') setFailure('Email atau nomor HP PIC sudah digunakan pengguna lain.');
       else toast('error', e instanceof ApiError && e.code === 'CONFLICT' ? 'Status tidak dapat diubah.' : 'Gagal memperbarui status. Coba lagi.');
     }
@@ -66,18 +65,17 @@ export function StatusActionModal({ partner, to, user, onClose, onDone, onGoStor
       {to === 'INACTIVE' && <Alert status="error" size="sm" title={impactText(partner)} />}
       {to === 'CANCELLED' && partner.status === 'WAITING_PKS' && <Alert status="warning" size="sm" title="Batalkan juga dokumen PKS di Privy." />}
       {missingRef.length > 0 && (
-        <Alert status="error" size="sm" title="Kode referral wajib diisi untuk semua toko sebelum aktivasi.">
+        <Alert status="error" size="sm" title="Kode referral dan QR wajib ada di semua toko sebelum aktivasi. Isi di tab Toko.">
           <span style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', alignItems: 'flex-start' }}>
-            {missingRef.map((s) => <span key={s.id}>{s.name}: Kode referral wajib diisi</span>)}
+            {missingRef.map((s) => <span key={s.id}>{s.name}: {!s.referralCode ? 'kode referral' : 'QR'} belum ada</span>)}
             {onGoStores && <LinkButton size="sm" onClick={onGoStores}>Buka tab Toko</LinkButton>}
           </span>
         </Alert>
       )}
-      {failure && failure !== 'Kode referral wajib diisi untuk semua toko sebelum aktivasi.' && <Alert status="error" size="sm" title={failure} />}
+      {failure && failure !== 'Kode referral dan QR wajib ada di semua toko sebelum aktivasi. Isi di tab Toko.' && <Alert status="error" size="sm" title={failure} />}
       {to === 'WAITING_PKS' && (
         <>
           <PksChannelPicker partner={partner} value={via} onChange={setVia} />
-          <TextInput label="Referensi dokumen Privy (opsional)" value={privyRef} onChange={(e) => setPrivyRef(e.target.value)} placeholder="Contoh: nomor dokumen di Privy" />
         </>
       )}
       {to === 'ACTIVE' && (

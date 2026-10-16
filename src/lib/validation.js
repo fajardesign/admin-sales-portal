@@ -50,19 +50,26 @@ export function validateReason(v) {
   return undefined;
 }
 
-export const REFERRAL_FORMAT_MSG = 'Kode referral harus diawali OF dan hanya berisi huruf dan angka, maks. 20 karakter.';
+export const REFERRAL_FORMAT_MSG = 'Kode referral hanya berisi huruf dan angka, maks. 20 karakter.';
 /**
- * Kode Referral per toko (PRD Scope 1 v2 FR-019, OQ-24): diawali "OF", lalu huruf besar dan angka, maks. 20 karakter. Input
- * di-trim dan disimpan huruf besar, jadi "ofsas001" valid (→ "OFSAS001").
+ * Kode Referral per toko (PRD Scope 1 v1.1 FR-019, OQ-24 direvisi 2026-10-16): huruf besar dan angka, maks. 20 karakter, tanpa
+ * awalan wajib (contoh T1225009, PARCEL01). Input di-trim dan disimpan huruf besar, jadi "parcel01" valid (→ "PARCEL01").
  */
 export function validateReferralCode(v) {
   const t = (v || '').trim().toUpperCase();
   if (!t) return 'Kode referral wajib diisi';
-  if (t.length > 20 || !/^OF[A-Z0-9]*$/.test(t)) return REFERRAL_FORMAT_MSG;
+  if (t.length > 20 || !/^[A-Z0-9]+$/.test(t)) return REFERRAL_FORMAT_MSG;
   return undefined;
 }
 
-/** File PKS: PDF, maks. 5 MB (opsional). */
+/** QR Kode Referral: PNG atau JPG, maks. 2 MB (FR-019). */
+export function validateQrFile(file) {
+  if (!file) return undefined;
+  if (!/\.(png|jpe?g)$/i.test(file.name) && !['image/png', 'image/jpeg'].includes(file.type)) return 'Format file harus PNG atau JPG.';
+  if (file.size > 2 * 1024 * 1024) return 'Ukuran file maksimal 2 MB.';
+  return undefined;
+}
+
 export function validatePksFile(file) {
   if (!file) return undefined;
   if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') return 'Format file harus PDF.';

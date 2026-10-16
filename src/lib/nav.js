@@ -9,6 +9,7 @@ const NAV = [
     { label: 'Kinerja Penjualan', value: '/apl/kinerja', icon: 'BarChartLine', feature: 'SALES_PERFORMANCE' },
     { label: 'Produktivitas', value: '/apl/produktivitas', icon: 'TimeLine', feature: 'PRODUCTIVITY_PERFORMANCE_CHECK_IN' },
     { label: 'Partner', value: '/apl/partner', icon: 'Building2Line', feature: 'PARTNER_VIEW' },
+    { label: 'Mapping TL', value: '/apl/mapping-tl', icon: 'UserAddLine', feature: 'TL_ASSIGNMENT' },
     { label: 'Tim', value: '/apl/tim', icon: 'TeamLine', feature: 'TEAM_VIEW' },
     { label: 'Insentif', value: '/apl/insentif', icon: 'HandCoinLine', feature: 'INCENTIVE_ESTIMATION' },
     { label: 'Skema Insentif', value: '/skema-insentif', icon: 'CoinsLine', feature: 'INCENTIVE_SCHEME' },

@@ -6,16 +6,13 @@ import userEvent from '@testing-library/user-event';
 import App from '../App.jsx';
 import { DEFAULT_SCENARIO, setScenario } from '../dev/scenario.js';
 import { DEMO_PASSWORD, partners, users } from '../api/db.js';
-import { activateAccount, createUser, disableUser, handoverPlan, moveSubordinates, remapStoreTl } from '../api/mockApi.js';
+import { activateAccount, createUser, disableUser, handoverPlan, moveSubordinates } from '../api/mockApi.js';
 
 const T = { timeout: 4000 };
 const admin = { userId: 1, name: 'Rina Saraswati', role: 'REVIEWER' };
-const hasan = { userId: 3, name: 'Hasan Basri', role: 'APL' };
-const lestari = { userId: 4, name: 'Lestari Wulandari', role: 'APL' };
 const byId = (id) => users.find((u) => u.id === id);
 const storesOfTl = (id) => partners.filter((p) => !['REJECTED', 'CANCELLED', 'INACTIVE'].includes(p.status)).flatMap((p) => p.stores.filter((s) => s.tlId === id));
 const heldBy = (id) => partners.flatMap((p) => p.stores.filter((s) => s.assigned.includes(id)));
-const store = (id) => partners.flatMap((p) => p.stores).find((s) => s.id === id);
 
 beforeEach(() => { setScenario(DEFAULT_SCENARIO); sessionStorage.clear(); window.location.hash = '/login'; });
 afterEach(cleanup);
@@ -35,7 +32,7 @@ describe('Nonaktifkan dan Pindahkan Bawahan (UI)', () => {
     const dialog = await screen.findByRole('dialog', {}, T);
     expect(within(dialog).getByText('Masih menjadi atasan 3 pengguna. Pilih atasan baru sebelum menonaktifkan.')).toBeTruthy();
     expect(within(dialog).getAllByRole('button', { name: 'Bagus Wicaksono' })).toHaveLength(4); // utama + 3 bawahan
-    expect(within(dialog).getByText(`${storesOfTl(6).length} toko milik Andi Pratama pindah ke Bagus Wicaksono.`)).toBeTruthy();
+    expect(within(dialog).getByText(`${storesOfTl(6).length} toko yang dipegang Andi Pratama pindah ke Bagus Wicaksono. SA/SR yang atasannya bukan Bagus Wicaksono dilepas dari toko tersebut.`)).toBeTruthy();
     const confirm = within(dialog).getByRole('button', { name: 'Nonaktifkan' });
     expect(confirm.disabled).toBe(true); // Alasan belum diisi
     await user.type(within(dialog).getByPlaceholderText('Contoh: Resign per 31 Okt 2026'), 'Resign');
@@ -84,17 +81,6 @@ describe('Serah terima dan TL per toko (API)', () => {
     expect(byId(11).supervisorId).toBe(6);
   });
 
-  it('APL ganti TL toko hanya tanggal 1–3; SA/SR yang bukan bawahan TL baru dilepas', async () => {
-    const s = store('REG2026-0139-1'); // Makassar, TL Andi, dipegang SA Eko (bawahan Andi)
-    await expect(remapStoreTl(s.id, '22', 'x', hasan)).rejects.toMatchObject({ code: 'WINDOW_CLOSED' });
-    setScenario({ ...DEFAULT_SCENARIO, remapWindow: 'open' });
-    await expect(remapStoreTl(s.id, '22', 'x', lestari)).rejects.toMatchObject({ code: 'CONFLICT' }); // di luar area APL
-    await remapStoreTl(s.id, '22', 'Penyesuaian wilayah', hasan);
-    expect(s.tlId).toBe(22);
-    expect(s.assigned).toEqual([]); // Eko bukan bawahan Bagus
-    expect(s.tlLog.at(-1)).toMatchObject({ from: 6, to: 22 });
-  });
-
   it('AC-AM-011: TL dinonaktifkan — bawahan dan semua toko pindah ke pengganti utama', async () => {
     const andiStores = storesOfTl(6).map((s) => s.id);
     await disableUser(6, 'Resign', admin, { defaultLeaderId: '22' });
@@ -104,11 +90,11 @@ describe('Serah terima dan TL per toko (API)', () => {
     expect(storesOfTl(6)).toHaveLength(0);
   });
 
-  it('OQ-AM-12: APL hanya bisa dinonaktifkan setelah ada APL Active lain di area yang sama; area tidak dipindah', async () => {
-    expect(handoverPlan(3).mainOptions).toEqual([]);
-    await expect(disableUser(3, 'Mutasi', admin)).rejects.toMatchObject({ code: 'LEADER_REQUIRED' });
+  it('FR-AM-014: APL hanya bisa dinonaktifkan setelah setiap areanya dipegang APL Active lain; area tidak dipindah', async () => {
+    expect(handoverPlan(3).aplAreaGaps).toEqual([1]); // FR-AM-014: area Makassar belum dipegang APL Active lain
+    await expect(disableUser(3, 'Mutasi', admin)).rejects.toMatchObject({ code: 'APL_AREA' });
     const { user: nu } = await createUser({ email: 'dewi.apl@amarbank.co.id', phone: '81299990000', fullName: 'Dewi Anggraini', role: 'APL', areaIds: [1] }, admin);
-    expect(handoverPlan(3).mainOptions).toEqual([]); // masih Pending
+    expect(handoverPlan(3).aplAreaGaps).toEqual([1]); // masih Pending
     await activateAccount(nu.id, 'Rahasia#2026');
     await disableUser(3, 'Mutasi', admin, { defaultLeaderId: String(nu.id) });
     expect(byId(22).supervisorId).toBe(nu.id);

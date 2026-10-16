@@ -2,12 +2,12 @@
 // Semua data di src/api/db.js (memori). Fungsi async dengan jeda kecil agar state loading terlihat.
 import { getScenario } from '../dev/scenario.js';
 import { formatPhone, normalizePhone } from '../lib/format.js';
-import { validateReferralCode } from '../lib/validation.js';
+import { validateQrFile, validateReferralCode } from '../lib/validation.js';
 import {
   ACCOUNT_STATUS, AREAS, CREATABLE_ROLES, ACTIVATION_TTL_MS, FINAL_STATUSES, PAGE_SIZE, PKS_VIA, RESET_TTL_MS, PARTNER_STATUS, ROLES, TRANSITIONS,
 } from '../lib/constants.js';
 import {
-  attendance, CURRENT_MONTH, loans, mfp, MONTHS, now, partners, partnerTls, schemes, superAdmins, targets, users, visits, wibDate, weekStoresOf,
+  attendance, CURRENT_MONTH, defaultTlOf, loans, mfp, MONTHS, now, partners, partnerTls, schemes, superAdmins, targets, users, visits, wibDate, weekStoresOf,
 } from './db.js';
 import { hydrateUsers, syncUser } from './supabaseSync.js';
 
@@ -216,7 +216,7 @@ export async function requestRevision(pid, items, general, session) {
 }
 
 /**
- * US-P03…P08 — ubah status. opts: { reason, via: 'PRIVY_ID'|'EMAIL_PIC', privyRef, file }.
+ * US-P03…P08 — ubah status. opts: { reason, via: 'PRIVY_ID'|'EMAIL_PIC', file }.
  * Efek samping sesuai PRD: Verified mengunci data; Waiting PKS mencatat pengiriman; Active membuat kode merchant/toko + akun PIC;
  * Inactive menonaktifkan toko, melepas penugasan SA/SR, dan menonaktifkan akun PIC.
  */
@@ -236,11 +236,11 @@ export async function changeStatus(pid, to, opts, session) {
     // PRD Scope 1 v2 FR-009 (C3): hanya log, portal tidak memanggil Privy. Kanal wajib dipilih: Privy ID (bila diisi) atau Email PIC.
     const target = pksTarget(p, opts.via);
     if (!target) throw new ApiError('CONFLICT');
-    Object.assign(p.pks, { status: 'WAITING_SIGNATURE', sentAt: now(), sentBy: actor, sentVia: opts.via, target, privyRef: opts.privyRef?.trim() || null });
-    reason = `PKS dikirim via ${PKS_VIA[opts.via]} ${target}${p.pks.privyRef ? ` (ref. ${p.pks.privyRef})` : ''}`;
+    Object.assign(p.pks, { status: 'WAITING_SIGNATURE', sentAt: now(), sentBy: actor, sentVia: opts.via, target });
+    reason = `PKS dikirim via ${PKS_VIA[opts.via]} ${target}`;
   }
   if (to === 'ACTIVE') {
-    // PRD Scope 1 v2 FR-010 / AC-028: semua toko wajib punya Kode Referral sebelum aktivasi (dicek ulang di backend).
+    // PRD Scope 1 v1.1 FR-010 / AC-028: semua toko wajib punya Kode Referral dan QR sebelum aktivasi (dicek ulang di backend).
     if (storesWithoutReferral(p).length) throw new ApiError('REFERRAL_MISSING');
     // PRD Scope 1 FR-010 / AC-016: akun PIC dibuat lebih dulu; bila bentrok atau gagal, status tetap Waiting PKS dan
     // tidak ada kode merchant/toko yang tersisa. Email/HP PIC yang sudah dipakai pengguna lain memblokir aktivasi (OQ-03).
@@ -258,14 +258,19 @@ export async function changeStatus(pid, to, opts, session) {
     if (opts.file) p.pks.file = { name: opts.file.name, by: actor, at: now() };
     p.merchantCode = `MRC-${p.registrationNumber.slice(-4)}`;
     p.stores.forEach((s, i) => { s.status = 'ACTIVE'; s.code = `TK${p.registrationNumber.slice(-4)}-${String(i + 1).padStart(2, '0')}`; });
+    // C6 FR-010: kursi TL = TL pengaju / atasan SR pengaju bila Active (sumber "aktivasi"), selain itu "Belum ada TL";
+    // kursi SA/SR kosong (SR pengaju tidak otomatis memegang toko).
+    const tl = userById(defaultTlOf(p.submittedBy));
+    p.stores.forEach((s) => {
+      s.assigned = []; s.tlId = null;
+      if (tl && tl.role === 'TL' && accountStatus(tl) === 'ACTIVE') setTlSeat(p, s, tl.id, 'Sistem', 'aktivasi');
+    });
     reason = `PKS ditandatangani (dicek di Privy web)${opts.file ? ', dokumen PKS diunggah' : ''}; partner diaktifkan`;
     createPicAccount(p, actor);
   }
   if (to === 'INACTIVE') {
-    p.stores.forEach((s) => {
-      s.assignLog = [...(s.assignLog ?? []), ...s.assigned.map((userId) => ({ at: now(), userId, action: 'RELEASE' }))];
-      s.status = 'INACTIVE'; s.assigned = [];
-    });
+    // C6 FR-013: semua kursi (TL dan SA/SR) di semua toko dilepas, sumber "partner nonaktif".
+    p.stores.forEach((s) => { releaseTlSeat(p, s, 'Sistem', 'partner nonaktif'); s.status = 'INACTIVE'; });
     const u = users.find((x) => x.partnerId === p.id);
     if (u && u.status !== 'DISABLED') {
       Object.assign(u, { status: 'DISABLED', disabledAt: now(), disabledBy: 'Sistem (partner Inactive)', disabledReason: 'Partner dinonaktifkan di Partner Pipeline' });
@@ -306,12 +311,21 @@ export async function updatePksDelivery(pid, { via }, session) {
   return enrich(p);
 }
 
-/** Active — unggah PKS bertanda tangan bila belum diunggah saat aktivasi. */
-export async function uploadPks(pid, file, session) {
+/**
+ * Active — unggah dokumen PKS bila belum ada, atau ganti (PRD Scope 1 v1.1 FR-024, mis. adendum). Mengganti wajib alasan
+ * (maks. 255); file lama disimpan di `pks.versions` (file, diunggah oleh/pada, diganti oleh/pada, alasan).
+ * Error: CONFLICT (bukan Active) | REASON_REQUIRED.
+ */
+export async function uploadPks(pid, file, session, reason = '') {
   await wait(500);
   const p = findP(pid);
-  p.pks.file = { name: file.name, by: actorOf(session), at: now() };
-  log(p, { from: null, to: null, by: actorOf(session), reason: 'Dokumen PKS diunggah' });
+  if (p.status !== 'ACTIVE') throw new ApiError('CONFLICT');
+  const actor = actorOf(session);
+  const prev = p.pks.file;
+  if (prev && !reason.trim()) throw new ApiError('REASON_REQUIRED');
+  if (prev) p.pks.versions = [{ ...prev, replacedBy: actor, replacedAt: now(), reason: reason.trim() }, ...(p.pks.versions ?? [])];
+  p.pks.file = { name: file.name, by: actor, at: now() };
+  log(p, { from: null, to: null, by: actor, reason: prev ? `Dokumen PKS diganti (${prev.name} → ${file.name}): ${reason.trim()}` : 'Dokumen PKS diunggah' });
   return enrich(p);
 }
 
@@ -468,7 +482,10 @@ export function handoverPlan(id, mode = 'disable') {
     : users.filter((x) => x.id !== u.id && x.role === u.role && accountStatus(x) === 'ACTIVE' && subs.some((sb) => x.areaIds.includes(sb.areaId)));
   const stores = subsOf(id).filter((x) => ['SA', 'SR'].includes(x.role)).flatMap((x) => partners.flatMap((p) => p.stores
     .filter((s) => s.assigned.includes(x.id)).map((s) => ({ subId: x.id, storeId: s.id, storeName: s.name, partnerName: p.partnerName, tlId: s.tlId }))));
-  return { mode, role: u.role, subs, mainOptions: pool.map(optionOf), ownedStores: mode === 'disable' ? owned.length : 0, stores };
+  // FR-AM-014: APL hanya bisa dinonaktifkan bila setiap areanya juga dipegang APL Active lain (masa tumpang tindih).
+  const aplAreaGaps = u.role === 'APL' && mode === 'disable'
+    ? u.areaIds.filter((a) => !users.some((x) => x.id !== u.id && x.role === 'APL' && accountStatus(x) === 'ACTIVE' && x.areaIds.includes(a))) : [];
+  return { mode, role: u.role, subs, mainOptions: pool.map(optionOf), ownedStores: mode === 'disable' ? owned.length : 0, stores, aplAreaGaps };
 }
 
 /**
@@ -484,11 +501,29 @@ export function releasesAfter(plan, fromId, leaderOf, mainId) {
   });
 }
 
-/** Lepas SA/SR dari satu toko oleh Sistem, dengan sumbernya (FR-MP-007). */
-function systemRelease(p, s, uid, source) {
+/** Lepas SA/SR dari satu toko, dengan pelaku dan sumbernya (FR-MP-007; default oleh Sistem). */
+function systemRelease(p, s, uid, source, by = 'Sistem') {
   s.assigned = s.assigned.filter((x) => x !== uid);
-  s.assignLog = [...(s.assignLog ?? []), { at: now(), userId: uid, action: 'RELEASE' }];
-  log(p, { from: null, to: null, by: 'Sistem', reason: `${userById(uid).fullName} dilepas dari ${s.name} (${source})` });
+  s.assignLog = [...(s.assignLog ?? []), { at: now(), userId: uid, action: 'RELEASE', by, source }];
+  log(p, { from: null, to: null, by, reason: `${userById(uid).fullName} dilepas dari ${s.name} (${source})` });
+}
+
+/** Isi kursi TL toko (C6), dicatat di riwayat toko dan Riwayat Status partner. */
+function setTlSeat(p, s, tlId, by, source) {
+  const from = s.tlId;
+  s.tlLog = [...(s.tlLog ?? []), { at: now(), from, to: tlId, by, source }];
+  s.tlId = tlId;
+  log(p, { from: null, to: null, by, reason: `${userById(tlId).fullName} ditugaskan sebagai TL ${s.name} (${source})` });
+}
+
+/** Lepas kursi TL toko beserta kursi SA/SR di bawahnya (C6, daftar pemicu pelepasan kursi). */
+function releaseTlSeat(p, s, by, source) {
+  [...s.assigned].forEach((x) => systemRelease(p, s, x, source, by));
+  if (s.tlId == null) return;
+  const tl = userById(s.tlId);
+  s.tlLog = [...(s.tlLog ?? []), { at: now(), from: s.tlId, to: null, by, source }];
+  s.tlId = null;
+  log(p, { from: null, to: null, by, reason: `${tl?.fullName ?? 'TL'} dilepas dari ${s.name} (${source})` });
 }
 
 /** Validasi & terapkan serah terima: atasan bawahan, toko TL lama (disable), lalu pelepasan penugasan (FR-AM-013). */
@@ -509,7 +544,7 @@ function applyHandover(u, mode, leaderOf, mainId, reason, actor) {
   });
   if (mode === 'disable' && u.role === 'TL' && main) {
     activeStoresOfTl(u.id).forEach(({ p, s }) => {
-      s.tlLog = [...(s.tlLog ?? []), { at: now(), from: u.id, to: main.id }];
+      s.tlLog = [...(s.tlLog ?? []), { at: now(), from: u.id, to: main.id, by: actor, source: 'TL dinonaktifkan' }];
       s.tlId = main.id;
       log(p, { from: null, to: null, by: actor, reason: `TL toko ${s.name} pindah dari ${u.fullName} ke ${main.fullName} (TL lama dinonaktifkan)` });
     });
@@ -521,14 +556,15 @@ function applyHandover(u, mode, leaderOf, mainId, reason, actor) {
 /**
  * FR-AM-009 — Nonaktifkan akun (final), dengan serah terima leader. Admin tidak bisa menonaktifkan akunnya sendiri.
  * opts.replacements = { [idBawahan]: idLeaderBaru } untuk setiap bawahan; opts.defaultLeaderId = "Leader pengganti untuk semua"
- * (TL: penerima toko milik TL). SA/SR: semua penugasan toko dilepas (Sistem). APL tidak memindahkan area (OQ-AM-12: buat APL
- * baru lebih dulu, dua APL boleh memegang area yang sama selama serah terima).
+ * (TL: penerima toko milik TL). SA/SR: semua penugasan toko dilepas (Sistem). APL (FR-AM-014): ditolak (APL_AREA) selama ada
+ * area yang tidak dipegang APL Active lain; area tidak dipindah, TL bawahan mendapat APL baru lewat pemilih.
  */
 export async function disableUser(id, reason, session, opts = {}) {
   await wait(500);
   const u = userById(id);
   if (u.id === session.userId || u.status === 'DISABLED') throw new ApiError('CONFLICT');
   const actor = actorOf(session);
+  if (handoverPlan(id).aplAreaGaps.length) throw new ApiError('APL_AREA');
   const leaderOf = Object.fromEntries(subsOf(id).map((x) => [x.id, opts.replacements?.[x.id] ?? opts.defaultLeaderId]));
   const r = applyHandover(u, 'disable', leaderOf, opts.defaultLeaderId, reason, actor);
   let released = r.released;
@@ -560,35 +596,94 @@ export async function moveSubordinates(tlId, moves, reason, session) {
   return enrichUser(u);
 }
 
-/** APL boleh memetakan ulang TL toko hanya tanggal 1–3 setiap bulan (keputusan 2026-10-16); DevToolbar bisa membukanya. */
-export const tlRemapWindowOpen = () => getScenario().remapWindow === 'open' || Number(todayDate().slice(8)) <= 3;
-/** Calon TL baru untuk toko: TL Active di area partner, selain TL toko sekarang. */
-export function storeTlOptions(storeId) {
-  const p = partners.find((x) => x.stores.some((s) => s.id === storeId)); const s = p.stores.find((x) => x.id === storeId);
-  return users.filter((x) => x.role === 'TL' && accountStatus(x) === 'ACTIVE' && x.areaIds.includes(p.areaId) && x.id !== s.tlId).map(optionOf);
-}
-/** Nama SA/SR yang akan dilepas dari toko bila TL toko diganti ke `tlId` (bukan bawahan TL baru). */
-export function storeRemapReleases(storeId, tlId) {
-  const s = partners.flatMap((p) => p.stores).find((x) => x.id === storeId);
-  return tlId ? s.assigned.filter((x) => userById(x).supervisorId !== Number(tlId)).map((x) => userById(x).fullName) : [];
-}
+// ------------------------------------------------------------------ 1.7 APL Mapping TL (PRD Scope 1 v1.1)
+const aplHolds = (session, areaId) => { const u = userById(session.userId); return u?.role === 'APL' && accountStatus(u) === 'ACTIVE' && u.areaIds.includes(areaId); };
+const storeOf = (storeId) => { const p = partners.find((x) => x.stores.some((s) => s.id === storeId)); return p ? { p, s: p.stores.find((s) => s.id === storeId) } : {}; };
+const tlSince = (p, s) => [...(s.tlLog ?? [])].reverse().find((e) => e.to === s.tlId)?.at ?? p.activatedAt;
+
 /**
- * APL — ganti TL satu toko (keputusan 2026-10-16). SA/SR yang memegang toko dilepas bila bukan bawahan TL baru (FR-AM-013).
- * Error: WINDOW_CLOSED (di luar tanggal 1–3) | CONFLICT (toko/TL tidak valid atau di luar area APL).
+ * FR-002/FR-003: toko Active partner Active di area APL, dikelompokkan per partner (partner yang punya toko tanpa TL di atas).
+ * f.tl: '' semua | 'none' belum ada TL | id TL; f.q: partner, toko, atau kode. Ringkasan dihitung dari area terpilih tanpa filter.
  */
-export async function remapStoreTl(storeId, tlId, reason, session) {
+export async function tlMapping(apl, areaIds, f = {}, { retry = false } = {}) {
+  const empty = await listGate(retry);
+  const all = partners.filter((p) => p.status === 'ACTIVE' && areaIds.includes(p.areaId))
+    .flatMap((p) => p.stores.filter((s) => s.status === 'ACTIVE').map((s) => ({ p, s })));
+  const tls = users.filter((u) => u.role === 'TL' && u.supervisorId === apl.userId && areaIds.includes(u.areaIds[0]) && accountStatus(u) !== 'DISABLED');
+  const activeTls = tls.filter((u) => accountStatus(u) === 'ACTIVE');
+  const summary = {
+    tlUnder: activeTls.length,
+    tlByArea: areaIds.map((a) => ({ areaId: a, count: activeTls.filter((u) => u.areaIds[0] === a).length })).filter((x) => x.count),
+    tlInactive: tls.length - activeTls.length,
+    stores: all.length,
+    noTl: all.filter(({ s }) => s.tlId == null).length,
+    noSales: all.filter(({ s }) => s.tlId != null && s.assigned.length === 0).length,
+  };
+  const term = (f.q ?? '').trim().toLowerCase();
+  const rows = all.filter(({ p, s }) => (f.tl === 'none' ? s.tlId == null : f.tl ? s.tlId === Number(f.tl) : true)
+    && (!term || [p.partnerName, s.name, s.referralCode ?? ''].some((v) => v.toLowerCase().includes(term))));
+  const groups = new Map();
+  rows.forEach(({ p, s }) => {
+    const g = groups.get(p.id) ?? { id: p.id, name: p.partnerName, areaId: p.areaId, storeCount: p.stores.filter((x) => x.status === 'ACTIVE').length, tlCount: partnerTls(p).length, stores: [] };
+    g.stores.push({
+      id: s.id, name: s.name, code: s.code, primary: s.primary, referralCode: s.referralCode, areaId: p.areaId, partnerName: p.partnerName,
+      tlId: s.tlId, tl: userById(s.tlId)?.fullName ?? null, tlSince: s.tlId != null ? tlSince(p, s) : null,
+      sales: s.assigned.map((id) => userById(id)).filter(Boolean).map((u) => `${u.fullName} (${u.role})`),
+    });
+    groups.set(p.id, g);
+  });
+  const list = [...groups.values()].sort((a, b) => (b.stores.some((x) => x.tlId == null) - a.stores.some((x) => x.tlId == null)) || a.name.localeCompare(b.name));
+  const tlOptions = activeTls.map((u) => ({ value: String(u.id), label: u.fullName }));
+  return { rows: empty ? [] : list, summary, tlOptions };
+}
+
+/** FR-004: calon TL untuk toko terpilih — TL Active di area partner; null area = toko dari lebih dari satu area. */
+export function tlCandidates(storeIds) {
+  const areas = [...new Set(storeIds.map((id) => storeOf(id).p?.areaId))];
+  if (areas.length !== 1) return { areaId: null, options: [] };
+  return { areaId: areas[0], options: users.filter((u) => u.role === 'TL' && accountStatus(u) === 'ACTIVE' && u.areaIds.includes(areas[0])).map(optionOf) };
+}
+
+/**
+ * FR-004 Tugaskan TL ke satu atau banyak toko (satu area). Server memeriksa ulang: APL memegang area, TL Active di area itu,
+ * toko masih tanpa TL. Error: FORBIDDEN | MIXED_AREA | TL_INVALID | STALE (field = nama toko yang sudah punya TL).
+ */
+export async function assignTl(storeIds, tlId, session) {
   await wait(400);
-  if (!tlRemapWindowOpen()) throw new ApiError('WINDOW_CLOSED');
-  const p = partners.find((x) => x.stores.some((s) => s.id === storeId));
-  const apl = userById(session.userId);
-  if (!p || p.status !== 'ACTIVE' || !apl.areaIds.includes(p.areaId) || !storeTlOptions(storeId).some((o) => o.value === String(tlId))) throw new ApiError('CONFLICT');
-  const s = p.stores.find((x) => x.id === storeId); const from = userById(s.tlId); const to = userById(Number(tlId));
-  const actor = actorOf(session);
-  s.tlLog = [...(s.tlLog ?? []), { at: now(), from: s.tlId, to: to.id }];
-  s.tlId = to.id;
-  log(p, { from: null, to: null, by: actor, reason: `TL toko ${s.name} diganti dari ${from?.fullName ?? '-'} ke ${to.fullName}: ${reason}` });
-  s.assigned.filter((x) => userById(x).supervisorId !== to.id).forEach((x) => systemRelease(p, s, x, `bukan bawahan ${to.fullName}`));
-  return aplPartnerRow(p, null);
+  if (!storeIds.length) throw new ApiError('CONFLICT');
+  const { areaId, options } = tlCandidates(storeIds);
+  if (areaId == null) throw new ApiError('MIXED_AREA');
+  if (!aplHolds(session, areaId)) throw new ApiError('FORBIDDEN');
+  if (!options.some((o) => o.value === String(tlId))) throw new ApiError('TL_INVALID');
+  const taken = storeIds.map(storeOf).find(({ p, s }) => !s || p.status !== 'ACTIVE' || s.status !== 'ACTIVE' || s.tlId != null);
+  if (taken) throw new ApiError('STALE', taken.s?.name ?? '-');
+  const by = actorOf(session);
+  storeIds.map(storeOf).forEach(({ p, s }) => setTlSeat(p, s, Number(tlId), by, 'APL'));
+  return { count: storeIds.length, tl: userById(Number(tlId)).fullName };
+}
+
+/** FR-005 Lepas TL: kursi TL dilepas (sumber "dilepas APL") dan SA/SR di toko itu ikut dilepas (sumber "TL dilepas"). */
+export async function releaseTl(storeId, session) {
+  await wait(400);
+  const { p, s } = storeOf(storeId);
+  if (!s || !aplHolds(session, p.areaId)) throw new ApiError('FORBIDDEN');
+  if (s.tlId == null) throw new ApiError('STALE', s.name);
+  const by = actorOf(session);
+  [...s.assigned].forEach((x) => systemRelease(p, s, x, 'TL dilepas', by));
+  releaseTlSeat(p, s, by, 'dilepas APL');
+  return { store: s.name };
+}
+
+/** FR-007 Riwayat TL satu toko: penugasan & pelepasan TL dan SA/SR, terbaru di atas. */
+export function storeTlHistory(storeId) {
+  const { s } = storeOf(storeId);
+  if (!s) return [];
+  const name = (id) => userById(id)?.fullName ?? '-';
+  const tl = (s.tlLog ?? []).map((e) => ({ at: e.at, by: e.by ?? 'Sistem', source: e.source ?? '-',
+    text: e.to != null ? `TL ${name(e.to)} ditugaskan${e.from != null ? ` (sebelumnya ${name(e.from)})` : ''}` : `TL ${name(e.from)} dilepas` }));
+  const sales = (s.assignLog ?? []).map((e) => ({ at: e.at, by: e.by ?? 'Sistem', source: e.source ?? '-',
+    text: `${name(e.userId)} ${e.action === 'ASSIGN' ? 'ditugaskan' : 'dilepas'} sebagai SA/SR` }));
+  return [...tl, ...sales].sort((a, b) => b.at - a.at);
 }
 
 // ------------------------------------------------------------------ Aktivasi (KC1)
@@ -701,11 +796,13 @@ export function referralTaken(code, exceptStoreId) {
     .some((p) => p.stores.some((s) => s.id !== exceptStoreId && s.referralCode === c));
 }
 /**
- * Admin mengisi/mengubah Kode Referral satu toko. Alasan wajib bila mengubah kode yang sudah ada saat partner Active.
- * Toko "Menunggu kode referral" (toko baru setelah Active, OQ-25 opsi 1) langsung aktif setelah kodenya diisi.
- * Error: FORBIDDEN (bukan Admin) | CONFLICT (status di luar jendela) | FORMAT | DUPLICATE | REASON_REQUIRED.
+ * Admin mengisi/mengubah Kode Referral + QR satu toko (PRD Scope 1 v1.1 FR-019). `qr` = { name, size, type, url } file baru
+ * atau null (pakai QR yang ada). QR wajib; kode berubah → QR baru wajib. Alasan wajib bila mengubah kode yang sudah ada saat
+ * partner Active. Toko "Menunggu kode referral" (Permintaan tambah toko, FR-023) langsung aktif setelah disimpan, tanpa TL
+ * ("Belum ada TL" untuk APL area itu, C6).
+ * Error: FORBIDDEN | CONFLICT | FORMAT | DUPLICATE | QR_REQUIRED | QR_NEW_REQUIRED | QR_TYPE | QR_SIZE | REASON_REQUIRED.
  */
-export async function setStoreReferral(pid, storeId, code, reason, session) {
+export async function setStoreReferral(pid, storeId, code, qr, reason, session) {
   await wait(400);
   if (session.role !== 'REVIEWER') throw new ApiError('FORBIDDEN');
   const p = findP(pid); const s = p?.stores.find((x) => x.id === storeId);
@@ -714,20 +811,53 @@ export async function setStoreReferral(pid, storeId, code, reason, session) {
   if (validateReferralCode(c)) throw new ApiError('FORMAT');
   if (referralTaken(c, s.id)) throw new ApiError('DUPLICATE');
   const old = s.referralCode;
-  if (old === c) return enrich(p);
-  if (p.status === 'ACTIVE' && old && !(reason || '').trim()) throw new ApiError('REASON_REQUIRED');
+  const codeChanged = old !== c;
+  if (qr) {
+    const e = validateQrFile(qr);
+    if (e) throw new ApiError(e.includes('PNG') ? 'QR_TYPE' : 'QR_SIZE');
+  } else if (!s.referralQr) throw new ApiError('QR_REQUIRED');
+  else if (old && codeChanged) throw new ApiError('QR_NEW_REQUIRED');
+  if (!codeChanged && !qr) return enrich(p);
+  if (p.status === 'ACTIVE' && old && codeChanged && !(reason || '').trim()) throw new ApiError('REASON_REQUIRED');
   s.referralCode = c;
-  log(p, { from: null, to: null, by: actorOf(session), reason: `Kode referral ${s.name}: ${old ?? '-'} → ${c}${(reason || '').trim() ? ` (${reason.trim()})` : ''}` });
+  if (qr) s.referralQr = { name: qr.name, url: qr.url, by: actorOf(session), at: now() };
+  const what = codeChanged ? `${old ?? '-'} → ${c}` : c;
+  log(p, { from: null, to: null, by: actorOf(session), reason: `Kode referral ${s.name}: ${what}${qr ? `, QR ${qr.name}` : ''}${(reason || '').trim() ? ` (${reason.trim()})` : ''}` });
   if (s.status === 'WAITING_REFERRAL') {
     s.status = 'ACTIVE';
     s.code = `TK${p.registrationNumber.slice(-4)}-${String(p.stores.indexOf(s) + 1).padStart(2, '0')}`;
     s.activatedAt = now();
-    log(p, { from: null, to: null, by: 'Sistem', reason: `${s.name} aktif setelah kode referral diisi` });
+    log(p, { from: null, to: null, by: 'Sistem', reason: `${s.name} aktif setelah kode referral dan QR diisi; menunggu penugasan TL oleh APL` });
   }
   return enrich(p);
 }
-/** Toko partner yang belum punya Kode Referral (gerbang aktivasi FR-010, AC-028). */
-export const storesWithoutReferral = (p) => p.stores.filter((s) => !s.referralCode);
+/** Dampak Ubah Area Partner (FR-021): jumlah toko yang punya kursi terisi dan jumlah kursi TL/SA/SR yang akan dilepas. */
+export function areaChangeImpact(pid) {
+  const p = findP(pid);
+  const seated = p.stores.filter((s) => s.tlId != null || s.assigned.length);
+  return { stores: seated.length, seats: seated.reduce((a, s) => a + (s.tlId != null ? 1 : 0) + s.assigned.length, 0) };
+}
+/**
+ * FR-021 Ubah Area Partner (Admin, Under Review s.d. Active, alasan wajib): area berlaku untuk semua toko; semua kursi dilepas
+ * (sumber "ubah area") dan toko tampil sebagai "Belum ada TL" di Mapping TL area baru.
+ * Error: FORBIDDEN | CONFLICT (status / area sama / area tidak dikenal) | REASON_REQUIRED.
+ */
+export async function changePartnerArea(pid, areaId, reason, session) {
+  await wait(400);
+  if (session.role !== 'REVIEWER') throw new ApiError('FORBIDDEN');
+  const p = findP(pid); const to = Number(areaId);
+  if (!p || !REFERRAL_EDITABLE.includes(p.status) || to === p.areaId || !AREAS.some((a) => a.id === to)) throw new ApiError('CONFLICT');
+  if (!(reason || '').trim()) throw new ApiError('REASON_REQUIRED');
+  const actor = actorOf(session);
+  p.stores.forEach((s) => releaseTlSeat(p, s, actor, 'ubah area'));
+  const from = p.areaId;
+  p.areaId = to;
+  log(p, { from: null, to: null, by: actor, reason: `Area partner diubah dari ${AREAS.find((a) => a.id === from).name} ke ${AREAS.find((a) => a.id === to).name}: ${reason.trim()}` });
+  return enrich(p);
+}
+
+/** Toko partner yang belum punya Kode Referral atau QR (gerbang aktivasi FR-010, AC-028). */
+export const storesWithoutReferral = (p) => p.stores.filter((s) => !s.referralCode || !s.referralQr);
 
 /**
  * Toko Aktif (keputusan 2026-10-16/17): sudut pandang toko untuk partner Active — toko aktif dan toko baru yang menunggu kode
@@ -751,7 +881,7 @@ export async function activeStores(f = {}, { retry = false } = {}) {
     && (f.ref === 'belum' ? !s.referralCode : f.ref === 'sudah' ? !!s.referralCode : true))
     .sort((x, y) => (y.s.status === 'WAITING_REFERRAL') - (x.s.status === 'WAITING_REFERRAL') || x.p.partnerName.localeCompare(y.p.partnerName) || x.s.id.localeCompare(y.s.id))
     .map(({ p, s }) => ({
-      id: s.id, name: s.name, code: s.code, primary: s.primary, status: s.status, referralCode: s.referralCode, areaId: p.areaId,
+      id: s.id, name: s.name, code: s.code, primary: s.primary, status: s.status, referralCode: s.referralCode, referralQr: s.referralQr ?? null, areaId: p.areaId,
       partnerId: p.id, partnerName: p.partnerName, partnerStatus: p.status,
       tl: userById(s.tlId)?.fullName ?? null, sales: s.assigned.map((id) => userById(id)).filter(Boolean).map((u) => `${u.fullName} (${u.role})`),
     }));
@@ -949,6 +1079,8 @@ export async function aplDashboard(areaIds, period, { retry = false } = {}) {
     productivity: { cur: productivity(ids, period), prev: productivity(ids, prev) },
     weeks, top: tls.slice(0, 5), bottom: [...tls].reverse().slice(0, 5),
     partnerCount: ps.length, storeCount: ps.reduce((a, p) => a + p.stores.filter((s) => s.status === 'ACTIVE').length, 0),
+    // 1.7 FR-008: toko aktif di area tanpa TL
+    noTlCount: ps.reduce((a, p) => a + p.stores.filter((s) => s.status === 'ACTIVE' && s.tlId == null).length, 0),
     team: { TL: team.filter((u) => u.role === 'TL').length, SR: team.filter((u) => u.role === 'SR').length, SA: team.filter((u) => u.role === 'SA').length },
   };
 }

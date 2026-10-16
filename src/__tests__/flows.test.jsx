@@ -184,11 +184,13 @@ describe('W3 Partner Pipeline', () => {
     // PRD Scope 1 v2 AC-028: aktivasi ditolak selama ada toko tanpa Kode Referral; isi dari tab Toko lalu aktifkan.
     await user.click(screen.getByRole('button', { name: 'Konfirmasi PKS Ditandatangani & Aktifkan' }));
     let dlg = await screen.findByRole('dialog', {}, T);
-    expect(within(dlg).getByText('Kode referral wajib diisi untuk semua toko sebelum aktivasi.')).toBeTruthy();
+    expect(within(dlg).getByText('Kode referral dan QR wajib ada di semua toko sebelum aktivasi. Isi di tab Toko.')).toBeTruthy();
     await user.click(within(dlg).getByRole('button', { name: 'Buka tab Toko' }));
-    await user.click(await screen.findByRole('button', { name: 'Isi kode' }, T));
-    await user.type(screen.getByPlaceholderText('Masukkan kode referral'), 'ofsas148');
-    await user.click(screen.getByRole('button', { name: 'Simpan' }));
+    await user.click(await screen.findByRole('button', { name: 'Isi kode & QR' }, T));
+    const ref = await screen.findByRole('dialog', {}, T);
+    await user.type(within(ref).getByPlaceholderText('Masukkan kode referral'), 'ofsas148');
+    await user.upload(ref.querySelector('input[type="file"]'), new File(['qr'], 'qr.png', { type: 'image/png' }));
+    await user.click(within(ref).getByRole('button', { name: 'Simpan' }));
     expect(await screen.findByText('OFSAS148', {}, T)).toBeTruthy();
 
     await user.click(screen.getByRole('button', { name: 'Konfirmasi PKS Ditandatangani & Aktifkan' }));
@@ -245,7 +247,7 @@ describe('W3 Partner Pipeline', () => {
     const user = await start('rina.saraswati');
     go('/partner-pipeline/REG2026-0139');
     await user.click(await screen.findByRole('button', { name: 'Nonaktifkan' }, T));
-    expect(await screen.findByText('3 toko akan nonaktif, 2 SA/SR dilepas, dan akun PIC dinonaktifkan.', {}, T)).toBeTruthy();
+    expect(await screen.findByText('3 toko akan nonaktif, 6 penugasan TL/SA/SR dilepas, dan akun PIC dinonaktifkan.', {}, T)).toBeTruthy(); // 3 kursi TL + 3 kursi SA/SR (C6)
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Batal' }));
     go('/partner-pipeline/REG2026-0140');
     await user.click(await screen.findByRole('button', { name: 'Batalkan' }, T));
@@ -254,7 +256,7 @@ describe('W3 Partner Pipeline', () => {
 
   it('aktivasi gagal: akun PIC tidak dapat dibuat, status tetap Waiting PKS tanpa kode (FR-010, AC-016)', async () => {
     setScenario({ ...DEFAULT_SCENARIO, picAccount: 'fail' });
-    await setStoreReferral('REG2026-0140', 'REG2026-0140-1', 'OFSBY1401', '', { role: 'REVIEWER', name: 'Rina Saraswati' });
+    await setStoreReferral('REG2026-0140', 'REG2026-0140-1', 'OFSBY1401', { name: 'qr.png', size: 10, type: 'image/png', url: 'data:' }, '', { role: 'REVIEWER', name: 'Rina Saraswati' });
     const user = await start('rina.saraswati');
     go('/partner-pipeline/REG2026-0140');
     await user.click(await screen.findByRole('button', { name: 'Konfirmasi PKS Ditandatangani & Aktifkan' }, T));

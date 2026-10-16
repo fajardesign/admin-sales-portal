@@ -10,10 +10,9 @@ export const SCENARIO_OPTIONS = {
   saveOutcome: ['success', 'emailFail', 'kcFail'],
   picAccount: ['ok', 'fail'],
   activationState: ['valid', 'expired', 'already'],
-  remapWindow: ['auto', 'open'],
 };
-export const SCENARIO_LABELS = { tableState: 'Tabel', service: 'Layanan login', saveOutcome: 'Simpan pengguna', picAccount: 'Akun PIC', activationState: 'Tautan contoh', remapWindow: 'Ganti TL toko (tgl 1–3)' };
-export const DEFAULT_SCENARIO = { tableState: 'data', service: 'ok', saveOutcome: 'success', picAccount: 'ok', activationState: 'valid', remapWindow: 'auto' };
+export const SCENARIO_LABELS = { tableState: 'Tabel', service: 'Layanan login', saveOutcome: 'Simpan pengguna', picAccount: 'Akun PIC', activationState: 'Tautan contoh' };
+export const DEFAULT_SCENARIO = { tableState: 'data', service: 'ok', saveOutcome: 'success', picAccount: 'ok', activationState: 'valid' };
 
 let state = { ...DEFAULT_SCENARIO };
 const subs = new Set();
