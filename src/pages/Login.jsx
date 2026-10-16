@@ -5,6 +5,7 @@ import { ApiError, login } from '../api/mockApi.js';
 import { DEMO_PASSWORD, users } from '../api/db.js';
 import { DEMO } from '../lib/env.js';
 import { preset } from '../dev/presets.js';
+import { VersionTag } from '../components/VersionTag.jsx';
 
 /** Pesan error login (PRD §1 tabel cek; identitas = email atau nomor telepon, revisi stakeholder 2026-10-08). */
 const LOGIN_ERRORS = {
@@ -70,7 +71,7 @@ export function Login({ onLoggedIn, notice }) {
 
   return (
     <AuthLayout label="Sales & Partner Portal"
-      footer={<><span>© 2026 Amar Bank</span></>}>
+      footer={<><span>© 2026 Amar Bank</span><VersionTag /></>}>
       <form onSubmit={submit} style={{ display: 'contents' }}>
         <AuthCard>
           <AuthHero icon="User6Line" title="Masuk ke S&P Portal" description="Masukkan email atau nomor telepon dan password Anda." />

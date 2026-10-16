@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # perlu tag prd-v1.1
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -30,6 +32,22 @@ jobs:
           # Pages adalah demo prototipe: tampilkan DevToolbar + catatan demo.
           VITE_DEMO: 'true'
           VITE_BASE: /admin-sales-portal/
+          VITE_PRD_VERSION: '2.0'
+      # PRD 1.1 beku di tag prd-v1.1, tayang di /v1.1/ (keputusan 2026-10-17). Dilewati bila tag belum ada.
+      - name: Build PRD 1.1 (tag prd-v1.1)
+        run: |
+          if git rev-parse -q --verify refs/tags/prd-v1.1 >/dev/null; then
+            git worktree add "$RUNNER_TEMP/prd-v1.1" prd-v1.1
+            cd "$RUNNER_TEMP/prd-v1.1"
+            npm ci
+            npx vite build --outDir "$GITHUB_WORKSPACE/dist/v1.1" --emptyOutDir
+          else
+            echo "Tag prd-v1.1 belum ada; hanya versi utama yang dibangun."
+          fi
+        env:
+          VITE_DEMO: 'true'
+          VITE_BASE: /admin-sales-portal/v1.1/
+          VITE_PRD_VERSION: '1.1'
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
