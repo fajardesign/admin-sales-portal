@@ -109,6 +109,16 @@ export const DOC_TYPES = [
  * Menu dan API mengikuti feature access roles; login web butuh platform "web-access".
  */
 const SALES_COMMON = ['ATTENDANCE', 'VISIT_EXECUTION', 'LOAN_TRACKING', 'SALES_PERFORMANCE', 'PRODUCTIVITY_PERFORMANCE_CHECK_IN', 'PRODUCTIVITY_PERFORMANCE_VISIT', 'INCENTIVE_ESTIMATION', 'PARTNER_VIEW'];
+/** Label akses untuk layar (tanpa istilah teknis, keputusan 2026-10-17). */
+export const PLATFORM_LABEL = { 'web-access': 'Portal web', 'sales-app-access': 'Aplikasi Android', 'partner-web-access': 'Partner Dashboard' };
+export const FEATURE_LABEL = {
+  DASHBOARD: 'Beranda', PARTNER_PIPELINE: 'Partner Pipeline & Toko Aktif', ACCOUNT_CREATION: 'Manajemen Akun',
+  SALES_PERFORMANCE: 'Kinerja penjualan', PRODUCTIVITY_PERFORMANCE_CHECK_IN: 'Produktivitas absensi', PRODUCTIVITY_PERFORMANCE_VISIT: 'Produktivitas kunjungan',
+  INCENTIVE_ESTIMATION: 'Estimasi insentif', PARTNER_VIEW: 'Lihat partner', TEAM_VIEW: 'Lihat tim', PARTNER_ACQUISITION: 'Pendaftaran partner',
+  SALES_ASSIGNMENT: 'Penugasan SA/SR', VISIT_PLAN_MANAGEMENT: 'Atur kunjungan', ATTENDANCE: 'Absensi', VISIT_EXECUTION: 'Kunjungan',
+  LOAN_TRACKING: 'Pantau pinjaman', PARTNER_SALES_DASHBOARD: 'Penjualan partner', PARTNER_COMMISSION: 'Komisi partner', PARTNER_PROFILE: 'Profil partner',
+  TRANSACTION_INQUIRY: 'Cek transaksi', DOCUMENT_REPOSITORY: 'Dokumen', INCENTIVE_SCHEME: 'Skema insentif',
+};
 export const ROLES = {
   REVIEWER: { label: 'Admin (Reviewer)', short: 'Admin', realm: 'ADMIN', platform: 'web-access', features: ['DASHBOARD', 'PARTNER_PIPELINE', 'ACCOUNT_CREATION'] },
   APL: { label: 'APL', short: 'APL', realm: 'APL', platform: 'web-access', features: ['SALES_PERFORMANCE', 'PRODUCTIVITY_PERFORMANCE_CHECK_IN', 'PRODUCTIVITY_PERFORMANCE_VISIT', 'INCENTIVE_ESTIMATION', 'PARTNER_VIEW', 'TEAM_VIEW'] },
