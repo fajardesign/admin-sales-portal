@@ -30,7 +30,7 @@ export const PRESETS = {
   'disable-tl': { name: 'W2c | Disable User | TL Replacement Leader', route: '/account-management', session: 'rina.saraswati', users: { disableId: 6 } },
   'disable-sa': { name: 'W2c | Disable User | SA Store Release', route: '/account-management', session: 'rina.saraswati', users: { disableId: 15 } },
   'move-subordinates': { name: 'W2c | Move Subordinates | TL', route: '/account-management', session: 'rina.saraswati', users: { moveId: 6 } },
-  'referral-codes': { name: 'W3e | Referral Codes | Needs Action', route: '/kode-referral', session: 'rina.saraswati' },
+  'referral-codes': { name: 'W3f | Referral Codes | Needs Action', route: '/kode-referral', session: 'rina.saraswati' },
   'detail-referral': { name: 'W3b | Partner Detail | Stores | Referral', route: '/partner-pipeline/REG2026-0139', session: 'rina.saraswati', detail: { tab: 'stores' } },
   'apl-partners-remap': { name: 'B4 | APL Partners | Remap TL', route: '/apl/partner', session: 'hasan.basri', scenario: { remapWindow: 'open' } },
   'activate': { name: 'KC1 | Account Activation', route: '/activate?user=10' },
