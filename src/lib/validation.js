@@ -50,12 +50,15 @@ export function validateReason(v) {
   return undefined;
 }
 
-/** Kode Referral partner: wajib, huruf dan angka saja, maks. 20 karakter (revisi stakeholder 2026-10-08). */
+export const REFERRAL_FORMAT_MSG = 'Kode referral harus diawali OF dan hanya berisi huruf dan angka, maks. 20 karakter.';
+/**
+ * Kode Referral per toko (PRD Scope 1 v2 FR-019, OQ-24): diawali "OF", lalu huruf besar dan angka, maks. 20 karakter. Input
+ * di-trim dan disimpan huruf besar, jadi "ofsas001" valid (→ "OFSAS001").
+ */
 export function validateReferralCode(v) {
-  const t = (v || '').trim();
-  if (!t) return MSG.required;
-  if (t.length > 20) return 'Maksimal 20 karakter';
-  if (!/^[A-Za-z0-9]+$/.test(t)) return MSG.invalid;
+  const t = (v || '').trim().toUpperCase();
+  if (!t) return 'Kode referral wajib diisi';
+  if (t.length > 20 || !/^OF[A-Z0-9]*$/.test(t)) return REFERRAL_FORMAT_MSG;
   return undefined;
 }
 

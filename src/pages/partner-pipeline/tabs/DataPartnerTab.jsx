@@ -1,4 +1,4 @@
-import { Alert, Icon, LinkButton } from '@ds/index.js';
+import { Icon, LinkButton } from '@ds/index.js';
 import { KeyValueGrid, RevisedBadge, SectionCard } from '../../../components/KeyValueGrid.jsx';
 import { PartnerStatusBadge } from '../../../components/Badges.jsx';
 import { actorLabel } from '../../../api/mockApi.js';
@@ -13,7 +13,6 @@ export function DataPartnerTab({ partner: p, onGoStores }) {
     const c = field && changed(field);
     return { label, value, revised: !!c, hint: c ? `Sebelumnya: ${c.old}` : undefined, ...extra };
   };
-  const mismatch = ![p.partnerName, p.pic.name].some((n) => n.trim().toLowerCase() === p.bank.accountName.trim().toLowerCase());
   const editable = p.status === 'UNDER_REVIEW';
   const pa = p.picAccount;
 
@@ -23,7 +22,7 @@ export function DataPartnerTab({ partner: p, onGoStores }) {
         <KeyValueGrid items={[
           fv('No. Registrasi', p.registrationNumber), fv('Nama Partner', p.partnerName), fv('Jenis Badan Usaha', ENTITY[p.businessEntityType]),
           fv('Alamat Partner (sesuai legalitas)', p.address, 'address', { full: true }),
-          fv('Provinsi', p.province), fv('Kabupaten/Kota', p.city), fv('Kecamatan', p.district), fv('Kelurahan', p.village), fv('RT / RW', `${p.rt} / ${p.rw}`), fv('Kode Referral', p.referralCode, 'referralCode'),
+          fv('Provinsi', p.province), fv('Kabupaten/Kota', p.city), fv('Kecamatan', p.district), fv('Kelurahan', p.village), fv('RT / RW', `${p.rt} / ${p.rw}`),
         ]} />
       </SectionCard>
 
@@ -43,7 +42,6 @@ export function DataPartnerTab({ partner: p, onGoStores }) {
       </SectionCard>
 
       <SectionCard title="Data Rekening" badge={sec('bank') && <RevisedBadge />}>
-        {mismatch && <Alert status="warning" size="sm" title="Nama rekening berbeda dengan nama partner/PIC" />}
         <KeyValueGrid items={[
           fv('Bank', BANKS[p.bank.code]), fv('Cabang', p.bank.branch), fv('No. Rekening', p.bank.accountNumber, 'accountNumber'), fv('Nama Rekening', p.bank.accountName),
         ]} />
@@ -59,6 +57,8 @@ export function DataPartnerTab({ partner: p, onGoStores }) {
           fv('Status', <PartnerStatusBadge status={p.status} />), fv('Diajukan oleh', actorLabel(p.submittedBy)), fv('Area', areaName(p.areaId)),
           fv('Tanggal Diajukan', formatDateTime(p.submittedAt)), fv('Tanggal Verifikasi', formatDateTime(p.verifiedAt)), fv('Tanggal Aktif', formatDateTime(p.activatedAt)),
           fv('Terakhir Diperbarui', formatDateTime(p.statusUpdatedAt)), fv('Kode Merchant', p.merchantCode),
+          // PRD Scope 1 v2 C5 (FR-004): persetujuan "Konfirmasi dan Persetujuan Pendaftaran Toko" saat pengajuan pertama.
+          fv('Persetujuan Pendaftaran Toko', p.consent ? `Disetujui ${formatDateTime(p.consent.at)} · versi ${p.consent.version}` : 'Tidak ada'),
         ]} />
       </SectionCard>
     </div>

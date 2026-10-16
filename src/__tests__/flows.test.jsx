@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import App from '../App.jsx';
 import { DEFAULT_SCENARIO, setScenario } from '../dev/scenario.js';
 import { DEMO_PASSWORD, partners, users } from '../api/db.js';
-import { simulateResubmit } from '../api/mockApi.js';
+import { setStoreReferral, simulateResubmit } from '../api/mockApi.js';
 
 const T = { timeout: 4000 };
 const go = (path) => { window.location.hash = path; };
@@ -146,7 +146,7 @@ describe('W3 Partner Pipeline', () => {
     await waitFor(() => expect(screen.queryByText('Sinar Jaya Ponsel')).toBeNull());
     const search = screen.getByPlaceholderText('Cari nama partner, no. registrasi, atau kode referral');
     await user.clear(search);
-    await user.type(search, 'amr6139');
+    await user.type(search, 'ofmks1391'); // Kode Referral toko (PRD Scope 1 v2 FR-003)
     expect(await screen.findByText('Jaya Abadi Cellular', {}, T)).toBeTruthy();
     await waitFor(() => expect(screen.getByRole('tab', { name: /Semua/ }).textContent).toMatch(/1/));
   });
@@ -168,17 +168,33 @@ describe('W3 Partner Pipeline', () => {
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Verifikasi Selesai' }));
     expect(await screen.findByText('Status berhasil diperbarui.', {}, T)).toBeTruthy();
 
+    // PRD Scope 1 v2 AC-013: modal selalu terbuka, Simpan nonaktif sampai kanal dipilih; email PKS = Email PIC.
     await user.click(await screen.findByRole('button', { name: 'PKS Dikirim' }, T));
-    await user.click(within(await screen.findByRole('dialog', {}, T)).getByRole('button', { name: 'PKS Dikirim' }));
+    const pks = await screen.findByRole('dialog', {}, T);
+    expect(within(pks).getByRole('button', { name: 'Simpan' }).disabled).toBe(true);
+    await user.click(within(pks).getByText(/^Email PIC: /));
+    await user.click(within(pks).getByRole('button', { name: 'Simpan' }));
+    expect(await screen.findByText('Status diperbarui: Waiting PKS.', {}, T)).toBeTruthy();
     await waitFor(() => expect(screen.getByRole('button', { name: 'Konfirmasi PKS Ditandatangani & Aktifkan' })).toBeTruthy(), T);
 
+    // PRD Scope 1 v2 AC-028: aktivasi ditolak selama ada toko tanpa Kode Referral; isi dari tab Toko lalu aktifkan.
     await user.click(screen.getByRole('button', { name: 'Konfirmasi PKS Ditandatangani & Aktifkan' }));
-    const dlg = await screen.findByRole('dialog', {}, T);
+    let dlg = await screen.findByRole('dialog', {}, T);
+    expect(within(dlg).getByText('Kode referral wajib diisi untuk semua toko sebelum aktivasi.')).toBeTruthy();
+    await user.click(within(dlg).getByRole('button', { name: 'Buka tab Toko' }));
+    await user.click(await screen.findByRole('button', { name: 'Isi kode' }, T));
+    await user.type(screen.getByPlaceholderText('Masukkan kode dari AppsFlyer'), 'ofsas148');
+    await user.click(screen.getByRole('button', { name: 'Simpan' }));
+    expect(await screen.findByText('OFSAS148', {}, T)).toBeTruthy();
+
+    await user.click(screen.getByRole('button', { name: 'Konfirmasi PKS Ditandatangani & Aktifkan' }));
+    dlg = await screen.findByRole('dialog', {}, T);
     const confirm = within(dlg).getByRole('button', { name: 'Konfirmasi PKS Ditandatangani & Aktifkan' });
     expect(confirm.disabled).toBe(true);
     await user.click(within(dlg).getByText(/Saya sudah memastikan di Privy web/));
     await user.click(confirm);
     await waitFor(() => expect(screen.getByRole('button', { name: 'Nonaktifkan' })).toBeTruthy(), T);
+    await user.click(screen.getByRole('tab', { name: 'Data Partner' }));
     expect(screen.getAllByText('Undangan terkirim').length).toBeGreaterThan(0);
 
     go('/account-management?role=PARTNER');
@@ -234,6 +250,7 @@ describe('W3 Partner Pipeline', () => {
 
   it('aktivasi gagal: akun PIC tidak dapat dibuat, status tetap Waiting PKS tanpa kode (FR-010, AC-016)', async () => {
     setScenario({ ...DEFAULT_SCENARIO, picAccount: 'fail' });
+    await setStoreReferral('REG2026-0140', 'REG2026-0140-1', 'OFSBY1401', '', { role: 'REVIEWER', name: 'Rina Saraswati' });
     const user = await start('rina.saraswati');
     go('/partner-pipeline/REG2026-0140');
     await user.click(await screen.findByRole('button', { name: 'Konfirmasi PKS Ditandatangani & Aktifkan' }, T));
@@ -251,7 +268,7 @@ describe('W3 Partner Pipeline', () => {
     const user = await start('rina.saraswati');
     go('/partner-pipeline?status=active');
     await user.click(await screen.findByText('Jaya Abadi Cellular', {}, T));
-    await screen.findByRole('tab', { name: /Toko \(3\)/ }, T);
+    await screen.findByRole('tab', { name: /Toko \(4\)/ }, T);
     await user.click(screen.getByRole('button', { name: 'Kembali' }));
     await waitFor(() => expect(window.location.hash).toBe('#/partner-pipeline?status=active'));
   });
@@ -273,18 +290,6 @@ describe('W3 Ubah Data Partner (US-P09)', () => {
     expect(await screen.findByText('Data partner berhasil diperbarui.', {}, T)).toBeTruthy();
     await user.click(screen.getByRole('tab', { name: 'Riwayat Status' }));
     expect(await screen.findByText('Nama PIC: Rudi Hartono → Rudi Hartono Saputra', {}, T)).toBeTruthy();
-  });
-
-  it('Kode Referral unik per partner (tanpa beda huruf besar/kecil)', async () => {
-    const user = await start('rina.saraswati');
-    go('/partner-pipeline/REG2026-0139');
-    await user.click(await screen.findByRole('button', { name: 'Ubah Data Partner' }, T));
-    const code = screen.getByDisplayValue('AMR6139');
-    await user.clear(code);
-    await user.type(code, ' amr7138 ');
-    await user.type(screen.getByPlaceholderText(/Partner pindah alamat/), 'Kode referral salah input');
-    await user.click(screen.getByRole('button', { name: 'Simpan Perubahan' }));
-    expect(await screen.findByText('Kode referral sudah dipakai partner lain', {}, T)).toBeTruthy();
   });
 
   it('No. Handphone PIC unik per partner, termasuk partner yang belum Active', async () => {

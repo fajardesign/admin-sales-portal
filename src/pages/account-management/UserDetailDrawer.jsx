@@ -18,7 +18,7 @@ const Section = ({ title, children }) => (
 );
 
 /** W2c · Detail pengguna (PRD §3C): informasi, role & akses, aktivasi, nonaktif, riwayat; aksi footer sesuai status. */
-export function UserDetailDrawer({ userId, user, version, onClose, onResend, onDisable, onReset, onChangeEmail, onChangePhone }) {
+export function UserDetailDrawer({ userId, user, version, onClose, onResend, onDisable, onMove, onReset, onChangeEmail, onChangePhone }) {
   const [u, setU] = useState(null);
   useEffect(() => { getUser(userId).then(setU); }, [userId, version]);
   if (!u) return <Drawer open width={480} onClose={onClose} header={<DrawerHeader title="Detail Pengguna" onClose={onClose} />} />;
@@ -30,7 +30,11 @@ export function UserDetailDrawer({ userId, user, version, onClose, onResend, onD
     <Drawer open width={480} onClose={onClose}
       header={<DrawerHeader size="lg" title={u.fullName} description={`${ROLES[u.role].label} · ${areas}`} badge={<AccountStatusBadge status={st} />} onClose={onClose} />}
       footer={(
-        <DrawerFooter left={st !== 'DISABLED' && u.id !== user.userId && <Button variant="ghost" tone="error" size="sm" onClick={() => onDisable(u)}>Nonaktifkan</Button>}>
+        <DrawerFooter left={<>
+          {st !== 'DISABLED' && u.id !== user.userId && <Button variant="ghost" tone="error" size="sm" onClick={() => onDisable(u)}>Nonaktifkan</Button>}
+          {/* FR-AM-012: hanya TL Active yang masih punya bawahan tidak Disabled */}
+          {u.role === 'TL' && st === 'ACTIVE' && u.subordinates.length > 0 && <Button variant="ghost" tone="neutral" size="sm" onClick={() => onMove(u)}>Pindahkan Bawahan</Button>}
+        </>}>
           {st !== 'DISABLED' && <Button variant="stroke" tone="neutral" size="sm" onClick={() => onChangePhone(u)}>Ubah Nomor Telepon</Button>}
           {st !== 'DISABLED' && <Button variant="stroke" tone="neutral" size="sm" onClick={() => onChangeEmail(u)}>Ubah Email</Button>}
           {st === 'ACTIVE' && <Button size="sm" onClick={() => onReset(u)}>Reset Password</Button>}

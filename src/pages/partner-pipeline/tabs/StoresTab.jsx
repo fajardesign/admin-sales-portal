@@ -4,11 +4,15 @@ import { MapPreview } from '../../../components/MapPreview.jsx';
 import { actorLabel, userById } from '../../../api/mockApi.js';
 import { CHANNEL_OFFLINE, PRODUCT_SOLD, PRODUCT_TYPE, SCALE, STORE_LOCATION, STORE_STATUS, STORE_TYPE } from '../../../lib/constants.js';
 import { formatDateTime, formatRp } from '../../../lib/format.js';
+import { ReferralCodeField } from '../ReferralCodeField.jsx';
 
-const STATUS_BADGE = { PENDING: 'pending', ACTIVE: 'completed', INACTIVE: 'disabled' };
+const STATUS_BADGE = { PENDING: 'pending', WAITING_REFERRAL: 'pending', ACTIVE: 'completed', INACTIVE: 'disabled' };
 
-/** Tab Toko (PRD §2B): satu kartu per toko — Toko Utama dari pengajuan, Toko Tambahan dari mobile. */
-export function StoresTab({ partner: p }) {
+/**
+ * Tab Toko (PRD §2B): satu kartu per toko — Toko Utama dari pengajuan, Toko Tambahan dari mobile. PRD Scope 1 v2: setiap toko
+ * punya Kode Referral sendiri (diisi Admin, FR-019) dan TL sendiri (keputusan 2026-10-16).
+ */
+export function StoresTab({ partner: p, user, onSaved }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-16)' }}>
       {p.stores.map((s, i) => {
@@ -18,7 +22,9 @@ export function StoresTab({ partner: p }) {
             badge={<>{i === 0 && p.revisedSections.includes('store') && <RevisedBadge />}<StatusBadge status={STATUS_BADGE[s.status]} dot>{STORE_STATUS[s.status]}</StatusBadge></>}>
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(240px, 1fr)', gap: 'var(--space-24)' }}>
               <KeyValueGrid items={[
-                { label: 'Kode Toko', value: s.code ?? 'Dibuat saat partner Active' },
+                { label: 'Kode Toko', value: s.code ?? (s.status === 'WAITING_REFERRAL' ? 'Dibuat setelah kode referral diisi' : 'Dibuat saat partner Active') },
+                { label: 'Kode Referral', value: <ReferralCodeField key={`${s.id}-${s.referralCode}`} partnerId={p.id} partnerStatus={p.status} store={s} user={user} required={p.status === 'WAITING_PKS'} onSaved={onSaved} />, full: true },
+                { label: 'TL', value: s.tlId ? userById(s.tlId)?.fullName : '-' },
                 { label: 'Nama Toko', value: s.name, revised: !!changed, hint: changed ? `Sebelumnya: ${changed.old}` : undefined },
                 { label: 'Alamat Toko', value: s.address, full: true },
                 { label: 'Omzet', value: formatRp(s.omzet) },

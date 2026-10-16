@@ -122,6 +122,8 @@ function store(p, i, extra = {}) {
     addedBy: extra.addedBy ?? p.submittedBy,
     addedAt: extra.addedAt ?? p.submittedAt,
     assigned: extra.assigned ?? [],
+    referralCode: extra.referralCode ?? null, // Kode Referral per toko, diisi Admin dari AppsFlyer (PRD Scope 1 v2 FR-019)
+    tlId: extra.tlId ?? null, // TL toko (PRD Scope 1 v2, keputusan 2026-10-16); diisi dari pengaju setelah data contoh dibuat
     status: 'PENDING',
   };
 }
@@ -136,7 +138,6 @@ function partner(n, name, entity, areaId, status, submitterId, cfg = {}) {
   const reg = `REG2026-0${n}`;
   const p = {
     id: reg, registrationNumber: reg, partnerName: name, businessEntityType: entity,
-    referralCode: cfg.referralCode ?? `AMR${submitterId}${n}`,
     address: ADDR[n % ADDR.length], province: area.province, city: area.city, district: area.district, village: area.village,
     rt: String(between(1, 12)).padStart(3, '0'), rw: String(between(1, 9)).padStart(3, '0'),
     businessEmail: cfg.businessEmail ?? `admin@${name.toLowerCase().replace(/^(pt|cv) /, '').replace(/[^a-z]/g, '')}.co.id`,
@@ -155,11 +156,13 @@ function partner(n, name, entity, areaId, status, submitterId, cfg = {}) {
     areaId, submittedBy: submitterId, submittedAt,
     verifiedAt: null, verifiedBy: null, activatedAt: null, statusUpdatedAt: submittedAt,
     status, privyId: cfg.privyId ?? null,
-    pks: { inviteEmail: null, sentVia: null, sentAt: null, status: 'NOT_SENT', confirmedBy: null, confirmedAt: null, file: null },
+    pks: { sentVia: null, target: null, privyRef: null, sentAt: null, status: 'NOT_SENT', confirmedBy: null, confirmedAt: null, file: null },
     merchantCode: null, picAccountFailed: false,
     revisedSections: [], fieldChanges: [], changeLog: [], revisionRequest: null,
     revisionRound: 0, // bertambah 1 setiap TL/SR mengirim ulang perbaikan (PRD Scope 1 FR-007, AC-010)
     history: [{ at: submittedAt, from: null, to: 'UNDER_REVIEW', by: submitterId, reason: 'Pengajuan dikirim dari aplikasi mobile' }],
+    // PRD Scope 1 v2 C5: persetujuan "Konfirmasi dan Persetujuan Pendaftaran Toko" dicentang saat pengajuan pertama (tidak diulang saat revisi).
+    consent: { at: submittedAt, version: '1.0', by: submitterId },
     stores: [],
     documents: [],
   };
@@ -177,7 +180,7 @@ function advance(p, steps) {
     p.history.push({ at, from, to, by: R, reason: reason ?? null });
     p.status = to; p.statusUpdatedAt = at;
     if (to === 'VERIFIED') { p.verifiedAt = at; p.verifiedBy = R; }
-    if (to === 'WAITING_PKS') Object.assign(p.pks, { status: 'WAITING_SIGNATURE', sentAt: at, sentVia: p.privyId ? 'PRIVY_ID' : 'EMAIL', inviteEmail: p.privyId ? null : p.pic.email });
+    if (to === 'WAITING_PKS') Object.assign(p.pks, { status: 'WAITING_SIGNATURE', sentAt: at, sentBy: R, sentVia: p.privyId ? 'PRIVY_ID' : 'EMAIL_PIC', target: p.privyId ?? p.pic.email });
     if (to === 'ACTIVE') {
       p.activatedAt = at;
       Object.assign(p.pks, { status: 'SIGNED', confirmedBy: R, confirmedAt: at });
@@ -236,14 +239,19 @@ p143.revisionRequest = { at: ago(30), by: R, general: null, items: [{ kind: 'DOC
 [p142, p141, p140, p139, p138, p137, p136, p132, p131, p133].forEach(allValid);
 advance(p142, [['VERIFIED', 40, 'Seluruh dokumen wajib valid']]);
 advance(p141, [['VERIFIED', 30, 'Seluruh dokumen wajib valid']]);
-advance(p140, [['VERIFIED', 26, 'Seluruh dokumen wajib valid'], ['WAITING_PKS', 50, 'PKS dikirim di Privy web via Privy ID PRV48802']]);
-const live = [[p139, 'via Privy ID PRV31877'], [p138, `via email ${p138.pic.email}`], [p137, `via email ${p137.pic.email}`], [p136, `via email ${p136.pic.email}`], [p132, `via email ${p132.pic.email}`], [p131, `via email ${p131.pic.email}`], [p133, 'via Privy ID PRV22014']];
-live.forEach(([p, via]) => advance(p, [['VERIFIED', 22, 'Seluruh dokumen wajib valid'], ['WAITING_PKS', 46, `PKS dikirim di Privy web ${via}`], ['ACTIVE', 24 * 6, 'PKS ditandatangani (dicek di Privy web); partner diaktifkan']]));
+advance(p140, [['VERIFIED', 26, 'Seluruh dokumen wajib valid'], ['WAITING_PKS', 50, 'PKS dikirim via Privy ID PRV48802']]);
+const live = [[p139, 'via Privy ID PRV31877'], [p138, `via Email PIC ${p138.pic.email}`], [p137, `via Email PIC ${p137.pic.email}`], [p136, `via Email PIC ${p136.pic.email}`], [p132, `via Email PIC ${p132.pic.email}`], [p131, `via Email PIC ${p131.pic.email}`], [p133, 'via Privy ID PRV22014']];
+live.forEach(([p, via]) => advance(p, [['VERIFIED', 22, 'Seluruh dokumen wajib valid'], ['WAITING_PKS', 46, `PKS dikirim ${via}`], ['ACTIVE', 24 * 6, 'PKS ditandatangani (dicek di Privy web); partner diaktifkan']]));
 // Toko tambahan baru aktif setelah ditambahkan (setelah partner Active).
 p139.pks.file = { name: 'pks_jaya_abadi_signed.pdf', by: R, at: p139.activatedAt };
 advance(p135, [['REJECTED', 30, 'Usaha tidak sesuai kriteria partner (bukan toko gadget)']]);
 advance(p134, [['CANCELLED', 50, 'Partner mengundurkan diri sebelum review selesai']]);
 advance(p133, [['INACTIVE', 24 * 150, 'Partner berhenti bekerja sama per Oktober 2026']]);
+
+// Kode Referral per toko (PRD Scope 1 v2 FR-019): wajib sebelum Active, jadi toko partner Active/Inactive sudah punya kode;
+// partner Rejected juga punya (kodenya boleh dipakai ulang). Partner lain belum diisi Admin.
+const refCode = (p, i) => `OF${AREAS.find((a) => a.id === p.areaId).code}${p.registrationNumber.slice(-3)}${i + 1}`;
+[p139, p138, p137, p136, p132, p131, p133, p135].forEach((p) => p.stores.forEach((s, i) => { s.referralCode = refCode(p, i); }));
 
 // Akun PIC untuk partner Active/Inactive (PRD §3E)
 let uid = 100;
@@ -287,17 +295,20 @@ function daysFrom(from) {
 }
 
 /**
- * TL pemilik partner (keputusan PO 2026-10-12, OQ-C05/OQ-19): TL pengaju, atau TL atasan SR pengaju saat pengajuan.
- * Disimpan di `p.ownerTlId` (bisa pindah ke TL pengganti saat TL lama dinonaktifkan); bila belum diisi, dihitung dari pengaju.
+ * TL toko (PRD Scope 1 v2, keputusan 2026-10-16): TL ditetapkan per toko; partner hanya "payung" yang menghubungkan toko-tokonya
+ * ke satu akun PIC. Satu partner bisa punya beberapa TL (toko berbeda); satu toko hanya satu TL dan satu SA/SR.
+ * Default = TL yang mengajukan partner / menambah toko, atau TL atasan SR pengaju. Berpindah lewat pemetaan ulang APL
+ * (tanggal 1–3 setiap bulan) atau saat TL dinonaktifkan (ke TL pengganti). Riwayat di `s.tlLog` [{ at, from, to }].
  */
-export function owningTl(p) {
-  if (p.ownerTlId != null) return p.ownerTlId;
-  const sub = users.find((u) => u.id === p.submittedBy);
+export function defaultTlOf(submitterId) {
+  const sub = users.find((u) => u.id === submitterId);
   return sub?.role === 'TL' ? sub.id : sub?.supervisorId ?? null;
 }
+/** TL-TL toko sebuah partner (unik, urutan toko). */
+export const partnerTls = (p) => [...new Set(p.stores.map((s) => s.tlId).filter((x) => x != null))];
 
 // Riwayat pemegang (perbaikan 2026-10-14): masa lalu tetap milik orang pada tanggalnya.
-// `s.assignLog` [{ at, userId, action: 'ASSIGN' | 'RELEASE' }] dan `p.ownerLog` [{ at, from, to }], terlama dulu;
+// `s.assignLog` [{ at, userId, action: 'ASSIGN' | 'RELEASE' }] dan `s.tlLog` [{ at, from, to }], terlama dulu;
 // data contoh tanpa riwayat = pemegang sekarang sejak awal.
 /** SA/SR pemegang toko pada waktu `at`: pemegang sekarang dengan setiap Tugaskan/Lepas setelah `at` dibatalkan. */
 export function holdersAt(s, at) {
@@ -308,20 +319,20 @@ export function holdersAt(s, at) {
   });
   return held;
 }
-/** TL pemilik partner pada waktu `at`. */
-export function ownerAt(p, at) {
-  const later = (p.ownerLog ?? []).find((e) => +e.at > +at);
-  return later ? later.from : owningTl(p);
+/** TL toko pada waktu `at`. */
+export function tlAt(s, at) {
+  const later = (s.tlLog ?? []).find((e) => +e.at > +at);
+  return later ? later.from : s.tlId;
 }
 /** Partner Active dan toko sudah ada pada waktu `at`. */
 const activeAt = (p, s, at) => +(s.addedAt ?? p.submittedAt) <= +at && p.history.filter((h) => h.to && +h.at <= +at).at(-1)?.to === 'ACTIVE';
 /**
  * Toko target kunjungan satu minggu (keputusan 2026-10-14): dipegang pada hari Senin (akhir hari) dan masih dipegang
  * di akhir minggu (atau sekarang). Ditugaskan di tengah minggu → mulai minggu berikutnya; dilepas di tengah minggu → keluar
- * dari minggu itu; minggu yang sudah lewat tidak berubah. TL: toko partner miliknya pada waktu itu.
+ * dari minggu itu; minggu yang sudah lewat tidak berubah. TL: toko miliknya pada waktu itu.
  */
 export const weekStoresOf = (u, monday, until) => partners.flatMap((p) => p.stores
-  .filter((s) => [monday, until].every((t) => activeAt(p, s, t) && (u.role === 'TL' ? ownerAt(p, t) === u.id : holdersAt(s, t).has(u.id))))
+  .filter((s) => [monday, until].every((t) => activeAt(p, s, t) && (u.role === 'TL' ? tlAt(s, t) === u.id : holdersAt(s, t).has(u.id))))
   .map((s) => ({ p, s })));
 
 const FIRST = ['Ahmad', 'Siti', 'Budi', 'Dewi', 'Rizal', 'Nur', 'Agus', 'Rina', 'Hendra', 'Yuni', 'Fajar', 'Lia', 'Dodi', 'Maya', 'Joko', 'Intan', 'Wahyu', 'Ratna', 'Bayu', 'Sari'];
@@ -329,7 +340,7 @@ const LAST = ['Saputra', 'Wijaya', 'Lestari', 'Hidayat', 'Pratama', 'Kusuma', 'S
 const REJECT = ['Skor kredit tidak memenuhi syarat', 'Data penghasilan tidak sesuai', 'Dokumen identitas tidak valid', 'Pengajuan ganda'];
 
 // Pemilik partner disimpan saat data dibuat (sumber kebenaran untuk Partner Saya, penugasan, dan cakupan data TL).
-partners.forEach((p) => { p.ownerTlId = owningTl(p); });
+partners.forEach((p) => p.stores.forEach((s) => { s.tlId ??= defaultTlOf(s.addedBy ?? p.submittedBy); }));
 
 /**
  * loans: aplikasi pinjaman hasil sinkronisasi CRM (read-only). status CRM disederhanakan:
@@ -338,8 +349,8 @@ partners.forEach((p) => { p.ownerTlId = owningTl(p); });
 export const loans = [];
 let loanSeq = 4100000;
 partners.filter((p) => p.activatedAt).forEach((p) => {
-  const tlId = owningTl(p);
-  p.stores.forEach((s) => {
+  p.stores.filter((s) => s.status !== 'WAITING_REFERRAL').forEach((s) => {
+    const tlId = s.tlId;
     const start = new Date(Math.max(p.activatedAt, s.addedAt));
     const stop = p.status === 'INACTIVE' ? wibDate(p.statusUpdatedAt) : '9999';
     const rate = 0.9 + rnd() * 1.4; // rata-rata aplikasi per hari kerja
@@ -396,9 +407,9 @@ const atLocal = (ymd, area, h, m = 0) => new Date(Date.parse(`${ymd}T${String(h)
 /** Titik acak di sekitar `c` dalam radius ± `km` (data contoh, selalu di dalam radius check in). */
 const near = (c, km) => ({ lat: +(c.lat + (rnd() - 0.5) * (km / 55.5)).toFixed(6), lng: +(c.lng + (rnd() - 0.5) * (km / 55.5)).toFixed(6) });
 const storesOf = (uid) => partners.flatMap((p) => p.stores.filter((s) => s.assigned.includes(uid) && s.status === 'ACTIVE').map((s) => ({ p, s })));
-/** Toko yang sah untuk check in: toko yang ditugaskan (SA/SR) atau toko partner milik TL. */
+/** Toko yang sah untuk check in: toko yang ditugaskan (SA/SR) atau toko milik TL. */
 export const validStoresOf = (u) => (u.role === 'TL'
-  ? partners.filter((p) => p.status === 'ACTIVE' && owningTl(p) === u.id).flatMap((p) => p.stores.filter((s) => s.status === 'ACTIVE').map((s) => ({ p, s })))
+  ? partners.filter((p) => p.status === 'ACTIVE').flatMap((p) => p.stores.filter((s) => s.status === 'ACTIVE' && s.tlId === u.id).map((s) => ({ p, s })))
   : storesOf(u.id));
 
 /**
@@ -505,3 +516,9 @@ export const schemes = [
   ]),
 ];
 export const RECIPIENT_LABEL = { SA: 'SA', SR: 'SR', TL_SENIOR: 'TL Senior', TL_JUNIOR: 'TL Junior', PARTNER_RETAIL: 'Partner (Offline Retailer)', PARTNER_AFFILIATE: 'Partner (Affiliate)', CRP: 'Customer (CRP)' };
+
+// Dibuat paling akhir agar urutan angka acak data contoh lain tidak bergeser.
+// Toko yang ditambahkan setelah partner Active menunggu Kode Referral (OQ-25, keputusan 2026-10-16: opsi 1) dan baru aktif
+// setelah Admin mengisinya. Ditambahkan TL kedua Area 1 (Bagus Wicaksono): satu partner bisa punya beberapa TL per toko.
+p139.stores.push({ ...store(p139, 3, { branch: 'Antang', addedBy: 22, addedAt: ago(26), tlId: 22 }), status: 'WAITING_REFERRAL' });
+p139.businessLocationCount = 4;
