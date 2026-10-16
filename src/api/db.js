@@ -122,7 +122,7 @@ function store(p, i, extra = {}) {
     addedBy: extra.addedBy ?? p.submittedBy,
     addedAt: extra.addedAt ?? p.submittedAt,
     assigned: extra.assigned ?? [],
-    referralCode: extra.referralCode ?? null, // Kode Referral per toko, diisi Admin dari AppsFlyer (PRD Scope 1 v2 FR-019)
+    referralCode: extra.referralCode ?? null, // Kode Referral per toko, diisi Admin (PRD Scope 1 v2 FR-019)
     tlId: extra.tlId ?? null, // TL toko (PRD Scope 1 v2, keputusan 2026-10-16); diisi dari pengaju setelah data contoh dibuat
     status: 'PENDING',
   };

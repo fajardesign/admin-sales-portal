@@ -105,10 +105,10 @@ export function EditPartnerDrawer({ partner: p, user, onClose, onDone }) {
               {text('picPhone', 'No. Handphone', { inputMode: 'numeric', prefix: <span style={{ padding: '0 var(--space-12)', font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>+62</span>, hint: 'Juga dipakai untuk login akun PIC.', onChange: (e) => { set('picPhone', e.target.value.replace(/\D/g, '').slice(0, 14)); setDup((d) => ({ ...d, picPhone: false })); } })}
               <Select label="Status PIC" required value={f.picStatus} onChange={(v) => set('picStatus', v)} placeholder="Pilih status" options={Object.entries(PIC_STATUS).map(([value, label]) => ({ value, label }))} />
             </div>
-            <TextInput label="Email PIC" disabled value={p.pic.email} hint="Email PIC (dipakai untuk login akun PIC) diubah melalui Account Management › Ubah Email." />
+            <TextInput label="Email PIC" disabled value={p.pic.email} hint="Email PIC (dipakai untuk login akun PIC) diubah melalui Manajemen Akun › Ubah Email." />
             {p.picAccount.userId && (
               <LinkButton size="sm" onClick={() => navigate(`/account-management?q=${encodeURIComponent(p.pic.email)}`)} rightIcon={<Icon name="ArrowRightSLine" size={16} />} style={{ alignSelf: 'flex-start' }}>
-                Buka akun PIC di Account Management
+                Buka akun PIC di Manajemen Akun
               </LinkButton>
             )}
           </>

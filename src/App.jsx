@@ -10,7 +10,7 @@ import { AccessDenied } from './pages/AccessDenied.jsx';
 import { Activation } from './pages/Activation.jsx';
 import { Beranda } from './pages/admin/Beranda.jsx';
 import { PipelineList } from './pages/partner-pipeline/PipelineList.jsx';
-import { ReferralCodes } from './pages/partner-pipeline/ReferralCodes.jsx';
+import { ActiveStores } from './pages/partner-pipeline/ActiveStores.jsx';
 import { PartnerDetail } from './pages/partner-pipeline/PartnerDetail.jsx';
 import { AccountManagement } from './pages/account-management/AccountManagement.jsx';
 import { AplDashboard } from './pages/apl/AplDashboard.jsx';
@@ -28,12 +28,12 @@ import { preset } from './dev/presets.js';
 /**
  * Rute (hash) — akses mengikuti feature access roles (src/lib/nav.js):
  *  /login, /denied, /activate?user=<id>[&mode=reset]
- *  Admin: /beranda, /partner-pipeline[/<reg>], /kode-referral, /account-management
+ *  Admin: /beranda, /toko-aktif, /partner-pipeline[/<reg>], /account-management
  *  APL: /apl, /apl/kinerja, /apl/produktivitas, /apl/partner, /apl/tim, /apl/insentif
  *  Super Admin: /skema-insentif, /hasil-perhitungan
  */
 const PAGES = {
-  '/beranda': Beranda, '/partner-pipeline': PipelineList, '/kode-referral': ReferralCodes, '/account-management': AccountManagement,
+  '/beranda': Beranda, '/partner-pipeline': PipelineList, '/toko-aktif': ActiveStores, '/account-management': AccountManagement,
   '/apl': AplDashboard, '/apl/kinerja': AplSales, '/apl/produktivitas': AplProductivity, '/apl/partner': AplPartners, '/apl/tim': AplTeam, '/apl/insentif': AplIncentive,
   '/skema-insentif': IncentiveSchemes, '/hasil-perhitungan': IncentiveResults,
 };

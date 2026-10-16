@@ -4,7 +4,6 @@ import { AdminShell } from '../../components/AdminShell.jsx';
 import { DataTable } from '../../components/DataTable.jsx';
 import { nowrap } from '../../lib/cells.jsx';
 import { ListCard, ListPager } from '../../components/ListCard.jsx';
-import { StatusRail } from '../../components/StatusRail.jsx';
 import { AccountStatusBadge } from '../../components/Badges.jsx';
 import { SearchField } from '../../components/FilterBar.jsx';
 import { getUser, listUsers } from '../../api/mockApi.js';
@@ -100,15 +99,15 @@ function AccountManagementView({ user, onLogout, query }) {
   const after = () => { setResend(null); setDisable(null); setMove(null); setResetPw(null); setEmailEdit(null); setPhoneEdit(null); refresh(); };
 
   return (
-    <AdminShell active="/account-management" icon="TeamLine" title="Account Management" description="Buat akun login, pantau status aktivasi Keycloak, kirim ulang tautan, dan nonaktifkan akun." user={user} onLogout={onLogout}>
-      <div style={{ display: 'flex', gap: 'var(--space-16)', alignItems: 'flex-start' }}>
-        <StatusRail ariaLabel="Status akun" value={q.status ?? 'semua'} onChange={(v) => set({ status: v === 'semua' ? '' : v })}
-          groups={[{ title: 'Status Keycloak', items: [
-            { value: 'semua', label: 'Semua', count: counts.ALL },
-            ...Object.keys(ACCOUNT_STATUS).map((s) => ({ value: s.toLowerCase(), label: ACCOUNT_STATUS[s].label, count: counts[s] })),
-          ] }]} />
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-12)' }}>
+    <AdminShell active="/account-management" icon="TeamLine" title="Manajemen Akun" description="Buat akun login, pantau status aktivasi, kirim ulang tautan, dan nonaktifkan akun." user={user} onLogout={onLogout}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-12)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-12)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
+            {/* Status akun sebagai filter (keputusan 2026-10-17), jumlah per status ikut pencarian dan filter lain */}
+            <div style={{ width: 200 }}>
+              <Select size="sm" placeholder="Semua status" value={q.status ?? ''} onChange={(v) => set({ status: v })}
+                options={[{ value: '', label: `Semua status (${counts.ALL ?? 0})` }, ...Object.keys(ACCOUNT_STATUS).map((s) => ({ value: s.toLowerCase(), label: `${ACCOUNT_STATUS[s].label} (${counts[s] ?? 0})` }))]} />
+            </div>
             <div style={{ flex: 1, minWidth: 220 }}>
               <SearchField placeholder="Cari nama, email, atau telepon" value={q.q ?? ''} onChange={(v) => set({ q: v })} width="100%" />
             </div>

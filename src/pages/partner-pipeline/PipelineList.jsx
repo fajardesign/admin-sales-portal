@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Select, TextInput } from '@ds/index.js';
+import { Button, Select, TextInput } from '@ds/index.js';
 import { AdminShell } from '../../components/AdminShell.jsx';
 import { DataTable } from '../../components/DataTable.jsx';
 import { nowrap } from '../../lib/cells.jsx';
 import { ListCard, ListPager } from '../../components/ListCard.jsx';
-import { StatusRail } from '../../components/StatusRail.jsx';
 import { PartnerStatusBadge } from '../../components/Badges.jsx';
 import { FilterButton, FilterChips, FilterPanel, SearchField } from '../../components/FilterBar.jsx';
 import { listPartners, submitterOptions } from '../../api/mockApi.js';
@@ -69,20 +68,31 @@ function PipelineListView({ user, onLogout, query }) {
     { key: 'submittedAt', header: 'Tanggal Diajukan', sortKey: 'submittedAt', render: (p) => dateCell(p.submittedAt) },
     { key: 'updated', header: 'Terakhir Diperbarui', sortKey: 'statusUpdatedAt', render: (p) => dateCell(p.statusUpdatedAt) },
     { key: 'status', header: 'Status', render: (p) => ({ misc: true, children: <PartnerStatusBadge status={p.status} /> }) },
+    // Partner Active (keputusan 2026-10-17): "Lihat {n} toko" membuka Toko Aktif tersaring ke partner ini; "Detail Partner" membuka detail.
+    { key: 'actions', header: 'Aksi', render: (p) => (p.status === 'ACTIVE' ? { misc: true, children: (
+      <span role="presentation" onClick={(e) => e.stopPropagation()} style={{ display: 'flex', gap: 'var(--space-8)' }}>
+        <Button size="2xs" onClick={() => navigate(withQuery('/toko-aktif', { partner: p.id }))}>{`Lihat ${p.stores.filter((s) => ['ACTIVE', 'WAITING_REFERRAL'].includes(s.status)).length} toko`}</Button>
+        <Button size="2xs" variant="stroke" tone="neutral" onClick={() => navigate(`/partner-pipeline/${p.registrationNumber}`)}>Detail Partner</Button>
+      </span>
+    ) } : '') },
   ];
+  const opt = (s) => ({ value: statusSlug(s), label: `${PARTNER_STATUS[s].label} (${counts[s] ?? 0})` });
   const onSort = (key) => { const [k, d] = sort.split(':'); set({ sort: `${key}:${k === key && d === 'desc' ? 'asc' : 'desc'}` }); };
 
   return (
     <AdminShell active="/partner-pipeline" icon="Building2Line" title="Partner Pipeline" description="Tinjau pengajuan partner, verifikasi dokumen, catat PKS, dan ubah status partner." user={user} onLogout={onLogout}>
-      <div style={{ display: 'flex', gap: 'var(--space-16)', alignItems: 'flex-start' }}>
-        <StatusRail ariaLabel="Status partner" value={statusParam} onChange={(v) => set({ status: v })}
-          groups={[
-            { items: [{ value: 'semua', label: 'Semua', count: counts.ALL }] },
-            { title: 'Alur review', items: REVIEW_FLOW.map((s) => ({ value: statusSlug(s), label: PARTNER_STATUS[s].label, count: counts[s] })) },
-            { title: 'Status akhir', items: FINAL_STATUSES.map((s) => ({ value: statusSlug(s), label: PARTNER_STATUS[s].label, count: counts[s] })) },
-          ]} />
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-12)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-12)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-12)' }}>
+          {/* Status sebagai filter (keputusan 2026-10-17): Alur review dan Status akhir mengisi status yang sama; filter lain di panel Filter. */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
+            <div style={{ width: 230 }}>
+              <Select size="sm" placeholder="Alur review" value={status && FINAL_STATUSES.includes(status) ? undefined : status ? statusParam : ''}
+                onChange={(v) => set({ status: v || 'semua' })} options={[{ value: '', label: `Semua status (${counts.ALL ?? 0})` }, ...REVIEW_FLOW.map(opt)]} />
+            </div>
+            <div style={{ width: 200 }}>
+              <Select size="sm" placeholder="Status akhir" value={status && FINAL_STATUSES.includes(status) ? statusParam : undefined}
+                onChange={(v) => set({ status: v || 'semua' })} options={[{ value: '', label: `Semua status (${counts.ALL ?? 0})` }, ...FINAL_STATUSES.map(opt)]} />
+            </div>
             <SearchField placeholder="Cari nama partner, no. registrasi, atau kode referral" value={q.q ?? ''} onChange={(v) => set({ q: v })} />
             <FilterButton count={activeCount} open={filterOpen} onClick={() => setFilterOpen((o) => !o)} />
           </div>

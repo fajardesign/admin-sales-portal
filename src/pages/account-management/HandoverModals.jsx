@@ -105,7 +105,7 @@ export function DisableModal({ target, user, onClose, onDone }) {
     <ActionModal open onClose={onClose} title={`Nonaktifkan ${target.fullName}?`} description={`${ROLES[target.role].label} · ${target.email}`} icon="ForbidFill" status="error"
       confirmLabel="Nonaktifkan" confirmTone="error" busy={busy} onConfirm={confirm} confirmDisabled={!h.ready || !reason.trim()} width={withHandover ? 600 : 480}>
       <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>
-        Akun dinonaktifkan di Keycloak, sesi yang aktif berakhir, dan pengguna tidak bisa login lagi. Status ini tidak dapat dikembalikan dari portal.
+        Akun dinonaktifkan, sesi yang aktif berakhir, dan pengguna tidak bisa login lagi. Status ini tidak dapat dikembalikan dari portal.
       </span>
       {withHandover && <HandoverFields target={target} mode="disable" h={h} />}
       {target.assignedStores > 0 && <Alert status="warning" size="sm" title={`${target.assignedStores} toko akan dilepas dari penugasan.`} />}
