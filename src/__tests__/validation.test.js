@@ -72,11 +72,16 @@ describe('identitas login email atau nomor telepon', () => {
 
 describe('absensi & kunjungan (revisi stakeholder 2026-10-08)', () => {
   const localMin = (d, a) => { const t = new Date(new Date(d).getTime() + a.utcOffset * 3600e3); return t.getUTCHours() * 60 + t.getUTCMinutes(); };
-  it('Tepat Waktu = check in ≤ 10:00 waktu lokal, Terlambat > 10:00', () => {
-    attendance.filter((a) => a.clockInAt).forEach((a) => {
+  it('Tepat Waktu = check in ≤ 10:00 jam server zona area, Terlambat > 10:00', () => {
+    attendance.filter((a) => a.clockInAt && a.status !== 'ABSENT').forEach((a) => {
       const m = localMin(a.clockInAt, a);
       expect(a.status === 'ON_TIME' ? m <= 600 : m > 600).toBe(true);
     });
+  });
+  it('PRD Scope 2 S13: check in tanpa check out di hari yang sudah lewat = Absen', () => {
+    const noOut = attendance.filter((a) => a.clockInAt && !a.clockOutAt && a.date < '2026-10-07');
+    expect(noOut.length).toBeGreaterThan(0);
+    expect(noOut.every((a) => a.status === 'ABSENT')).toBe(true);
   });
   it('jarak check in = jarak dari titik lat/long yang tercatat (kantor OFFICES / lokasi toko), maks. 3 km', () => {
     const stores = partners.flatMap((p) => p.stores);

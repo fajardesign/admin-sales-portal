@@ -22,7 +22,7 @@ const Selfie = ({ n }) => (n ? (
 /** Detail produktivitas satu orang (PRD v3 §B3) — tampilan harian, mingguan, bulanan. */
 export function ProductivityDrawer({ person, tab, period, onClose }) {
   const area = AREAS.find((a) => a.id === person.areaId);
-  // Jam ditampilkan pada zona perangkat yang tercatat di check in (WIB/WITA/WIT), bila ada.
+  // Jam = jam server dalam zona area pengguna yang tercatat di setiap check in (PRD Scope 2 S8: WIB/WITA/WIT).
   const time = (d, rec) => formatTimeLocal(d, rec?.tz ? rec : area);
   const [rows, setRows] = useState(null);
   const [weeks, setWeeks] = useState([]);
@@ -41,8 +41,9 @@ export function ProductivityDrawer({ person, tab, period, onClose }) {
       columns = [
         { key: 'date', header: 'Tanggal', render: (v) => ({ priority: 'regular', title: nowrap(day(v.date)) }) },
         { key: 'store', header: 'Toko', render: (v) => ({ priority: 'regular', title: v.storeName, description: v.partnerName }) },
-        { key: 'in', header: 'Check in / out', render: (v) => nowrap(`${time(v.checkInAt, v)} – ${time(v.checkOutAt, v)}`) },
-        { key: 'dur', header: 'Durasi', render: (v) => `${Math.round((new Date(v.checkOutAt) - new Date(v.checkInAt)) / 60000)} menit` },
+        // Check-out kunjungan opsional (PRD Scope 2 S13): toko dihitung saat check-in diterima.
+        { key: 'in', header: 'Check in / out', render: (v) => nowrap(`${time(v.checkInAt, v)} – ${v.checkOutAt ? time(v.checkOutAt, v) : 'tanpa check-out'}`) },
+        { key: 'dur', header: 'Durasi', render: (v) => (v.checkOutAt ? `${Math.round((new Date(v.checkOutAt) - new Date(v.checkInAt)) / 60000)} menit` : '-') },
         { key: 'dist', header: 'Jarak ke toko', align: 'right', render: (v) => formatKm(v.distanceKm) },
         { key: 'ev', header: 'Bukti', render: (v) => ({ misc: true, children: <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-8)' }}><Selfie n={v.selfie} /><LinkButton size="sm" onClick={() => openMap(v.lat, v.lng)}>Peta</LinkButton></span> }) },
       ];
@@ -51,7 +52,7 @@ export function ProductivityDrawer({ person, tab, period, onClose }) {
         { key: 'date', header: 'Tanggal', render: (a) => ({ priority: 'regular', title: nowrap(day(a.date)) }) },
         { key: 'status', header: 'Status', render: (a) => ({ misc: true, children: <StatusBadge status={ATT[a.status][0]}>{ATT[a.status][1]}</StatusBadge> }) },
         { key: 'in', header: 'Check in', render: (a) => time(a.clockInAt, a) },
-        { key: 'out', header: 'Check out', render: (a) => (a.clockOutAt ? time(a.clockOutAt, a) : a.clockInAt ? ATTENDANCE_LABEL.CHECKED_IN : '-') },
+        { key: 'out', header: 'Check out', render: (a) => (a.clockOutAt ? time(a.clockOutAt, a) : a.clockInAt ? (a.status === 'ABSENT' ? 'Tidak check out' : ATTENDANCE_LABEL.CHECKED_IN) : '-') },
         { key: 'place', header: 'Lokasi', render: (a) => (a.place ? { priority: 'regular', title: a.place.name, description: `${a.place.kind === 'OFFICE' ? 'Kantor terdaftar' : 'Toko partner'} · ${formatKm(a.distanceKm)}` } : '-') },
         { key: 'ev', header: 'Bukti', render: (a) => (a.clockInAt ? { misc: true, children: <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-8)' }}><Selfie n={a.selfie} /><LinkButton size="sm" onClick={() => openMap(a.lat, a.lng)}>Peta</LinkButton></span> } : '-') },
       ];
@@ -113,7 +114,7 @@ export function ProductivityDrawer({ person, tab, period, onClose }) {
           <DataTable loading={!rows} rows={data} columns={columns} minWidth={720} />
           {rows && rows.length === 0 && <span style={{ display: 'block', padding: 'var(--space-16)', font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>Belum ada data pada periode ini.</span>}
         </div>
-        <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>Jam dalam zona waktu perangkat saat check in (WIB/WITA/WIT). Foto selfie di prototipe ini adalah foto contoh.</span>
+        <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>Jam memakai waktu server sesuai zona area pengguna (WIB/WITA/WIT). Foto selfie di prototipe ini adalah foto contoh.</span>
       </div>
     </Drawer>
   );

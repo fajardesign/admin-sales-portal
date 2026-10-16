@@ -7,7 +7,7 @@ import {
   ACCOUNT_STATUS, AREAS, CREATABLE_ROLES, ACTIVATION_TTL_MS, FINAL_STATUSES, PAGE_SIZE, PKS_VIA, RESET_TTL_MS, PARTNER_STATUS, ROLES, TRANSITIONS,
 } from '../lib/constants.js';
 import {
-  attendance, CURRENT_MONTH, defaultTlOf, loans, mfp, MONTHS, now, partners, partnerTls, schemes, superAdmins, targets, users, visits, wibDate, weekStoresOf,
+  attendance, CURRENT_MONTH, defaultTlOf, loans, mfp, MONTHS, now, partners, partnerTls, schemes, superAdmins, targets, users, visits, validStoresOf, wibDate, weekStoresOf,
 } from './db.js';
 import { hydrateUsers, syncUser } from './supabaseSync.js';
 
@@ -1013,12 +1013,14 @@ const mondayOf = (ymd) => { const d = new Date(`${ymd}T12:00:00Z`); return addDa
 export function visitWeekStores(uid, start) {
   const u = userById(uid);
   const end = addDays(start, 5);
-  // Toko minggu itu, bukan toko hari ini (keputusan 2026-10-14): dipegang hari Senin dan masih dipegang di akhir minggu.
+  // PRD Scope 2 S9/S11: minggu berjalan memakai toko yang dipegang sekarang (target berubah seketika, tanpa prorata);
+  // minggu yang sudah selesai dibekukan memakai riwayat (dipegang hari Senin dan masih dipegang di akhir minggu, 2026-10-14).
   const off = AREAS.find((a) => a.id === u.areaIds[0])?.utcOffset ?? 7;
   const endOf = (ymd) => new Date(Date.parse(`${addDays(ymd, 1)}T00:00:00Z`) - off * 3600e3 - 1);
   const seen = new Set(visits.filter((v) => v.userId === uid && v.date >= start && v.date <= end).map((v) => v.storeId));
   const groups = new Map();
-  weekStoresOf(u, endOf(start), new Date(Math.min(+endOf(end), +now()))).forEach(({ p, s }) => {
+  const current = end >= todayDate();
+  (current ? validStoresOf(u) : weekStoresOf(u, endOf(start), endOf(end))).forEach(({ p, s }) => {
     const g = groups.get(p.id) ?? { partnerId: p.id, partnerName: p.partnerName, stores: [] };
     g.stores.push({ id: s.id, name: s.name, visited: seen.has(s.id) });
     groups.set(p.id, g);
@@ -1204,7 +1206,7 @@ export async function aplPartners(areaIds, period, f = {}, { retry = false } = {
 
 // ------------------------------------------------------------------ APL B5 Tim
 /** Absensi hari ini (revisi stakeholder 2026-10-08): label Bahasa Indonesia. */
-export const ATTENDANCE_TODAY = { ON_TIME: 'Sudah Check In · Tepat Waktu', LATE: 'Sudah Check In · Terlambat', CHECKED_OUT: 'Sudah Check Out', NONE: 'Belum Check In', OFF: 'Libur' };
+export const ATTENDANCE_TODAY = { ON_TIME: 'Sudah Check In · Tepat Waktu', LATE: 'Sudah Check In · Terlambat', CHECKED_OUT: 'Sudah Check Out', NONE: 'Belum Check In', OFF: 'Bukan hari kerja' };
 export async function aplTeam(areaIds, f = {}, { retry = false } = {}) {
   const empty = await listGate(retry);
   if (empty) return [];
