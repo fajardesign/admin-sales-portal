@@ -73,7 +73,7 @@ export const VERIFICATION = {
 };
 
 export const PKS_STATUS = { NOT_SENT: 'Belum dikirim', WAITING_SIGNATURE: 'Menunggu tanda tangan', SIGNED: 'Sudah ditandatangani' };
-export const PKS_VIA = { PRIVY_ID: 'Privy ID', EMAIL: 'Email undangan' };
+export const PKS_VIA = { PRIVY_ID: 'Privy ID', EMAIL_PIC: 'Email PIC' };
 
 /** Bagian data yang bisa diminta revisi (PRD §2C). */
 export const REVISION_SECTIONS = [

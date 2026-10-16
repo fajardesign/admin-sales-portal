@@ -101,7 +101,7 @@ function BerandaView({ user, onLogout, query }) {
               {ld ? bar('100%', 120, 'var(--rounded-12)') : d.pksFollowUp.length === 0 ? <Empty>Tidak ada PKS yang perlu ditindaklanjuti.</Empty> : (
                 <List items={d.pksFollowUp.map((p) => ({
                   key: p.id, title: p.partnerName, badge: <PartnerStatusBadge status={p.status} />,
-                  sub: p.status === 'VERIFIED' ? 'Kirim PKS di Privy web, lalu catat' : `Dikirim ${ageLabel(p.pks.sentAt)} lalu via ${p.pks.sentVia === 'PRIVY_ID' ? 'Privy ID' : 'email undangan'}`,
+                  sub: p.status === 'VERIFIED' ? 'Kirim PKS di Privy web, lalu catat' : `Dikirim ${ageLabel(p.pks.sentAt)} lalu via ${p.pks.sentVia === 'PRIVY_ID' ? 'Privy ID' : 'Email PIC'}`,
                   onClick: () => navigate(`/partner-pipeline/${p.id}`),
                 }))} />
               )}

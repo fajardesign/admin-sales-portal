@@ -1,34 +1,42 @@
 import { useState } from 'react';
-import { FileUploadArea, FileUploadCard, RadioGroup, TextInput } from '@ds/index.js';
+import { FileUploadArea, FileUploadCard, RadioGroup } from '@ds/index.js';
 import { ActionModal } from '../../components/ActionModal.jsx';
 import { useToast } from '../../components/Toaster.jsx';
 import { updatePksDelivery, uploadPks } from '../../api/mockApi.js';
-import { EMAIL_RE, validatePksFile } from '../../lib/validation.js';
+import { validatePksFile } from '../../lib/validation.js';
 
-/** Waiting PKS — "Ubah Data Pengiriman PKS": catat pengiriman ulang; tanggal kirim pertama tidak berubah. */
+/**
+ * Pilihan kanal PKS (PRD Scope 1 v2 FR-009, C3): Privy ID (nonaktif bila tidak diisi) atau Email PIC. Tidak ada isian email
+ * terpisah; email PKS = Email PIC. Dipakai modal "PKS Dikirim" dan "Ubah Data Pengiriman PKS".
+ */
+export function PksChannelPicker({ partner, value, onChange }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
+      <span style={{ font: 'var(--label-sm)', color: 'var(--text-strong-950)' }}>Pilih kanal yang dipakai untuk mengirim PKS:</span>
+      <RadioGroup value={value ?? undefined} onChange={onChange} options={[
+        { value: 'PRIVY_ID', label: partner.privyId ? `Privy ID: ${partner.privyId}` : 'Privy ID', description: partner.privyId ? undefined : 'Privy ID tidak diisi', disabled: !partner.privyId },
+        { value: 'EMAIL_PIC', label: `Email PIC: ${partner.pic.email}` },
+      ]} />
+    </div>
+  );
+}
+
+/** Waiting PKS — "Ubah Data Pengiriman PKS": kanal yang sama dengan PKS Dikirim; tanggal kirim pertama tidak berubah. */
 export function PksDeliveryModal({ partner, user, onClose, onDone }) {
   const toast = useToast();
-  const [via, setVia] = useState(partner.pks.sentVia ?? 'EMAIL');
-  const [email, setEmail] = useState(partner.pks.inviteEmail ?? partner.pic.email);
-  const [touched, setTouched] = useState(false);
+  const [via, setVia] = useState(partner.pks.sentVia);
   const [busy, setBusy] = useState(false);
-  const err = via === 'EMAIL' ? (!email.trim() ? 'Informasi wajib diisi' : !EMAIL_RE.test(email.trim()) ? 'Format tidak valid' : undefined) : undefined;
   async function save() {
-    setTouched(true);
-    if (err) return;
+    if (!via) return;
     setBusy(true);
-    const p = await updatePksDelivery(partner.id, { via, inviteEmail: email.trim().toLowerCase() }, user);
+    const p = await updatePksDelivery(partner.id, { via }, user);
     toast('success', 'Data pengiriman PKS diperbarui.');
     onDone(p);
   }
   return (
-    <ActionModal open onClose={onClose} title="Ubah Data Pengiriman PKS" description="Catat bila PKS dikirim ulang di Privy web ke Privy ID atau email lain. Tanggal kirim pertama tidak berubah."
-      icon="SendPlaneLine" confirmLabel="Simpan" busy={busy} onConfirm={save}>
-      <RadioGroup value={via} onChange={setVia} options={[
-        { value: 'PRIVY_ID', label: 'Privy ID', description: partner.privyId ?? 'Tidak diisi saat pengajuan', disabled: !partner.privyId },
-        { value: 'EMAIL', label: 'Email undangan' },
-      ]} />
-      {via === 'EMAIL' && <TextInput label="Email undangan" required leftIcon="MailLine" value={email} onChange={(e) => setEmail(e.target.value)} error={touched ? err : undefined} />}
+    <ActionModal open onClose={onClose} title="Ubah Data Pengiriman PKS" description="Catat bila PKS dikirim ulang di Privy web lewat kanal lain. Tanggal kirim pertama tidak berubah."
+      icon="SendPlaneLine" confirmLabel="Simpan" busy={busy} onConfirm={save} confirmDisabled={!via}>
+      <PksChannelPicker partner={partner} value={via} onChange={setVia} />
     </ActionModal>
   );
 }

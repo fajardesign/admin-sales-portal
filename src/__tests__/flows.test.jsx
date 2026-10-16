@@ -168,8 +168,13 @@ describe('W3 Partner Pipeline', () => {
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Verifikasi Selesai' }));
     expect(await screen.findByText('Status berhasil diperbarui.', {}, T)).toBeTruthy();
 
+    // PRD Scope 1 v2 AC-013: modal selalu terbuka, Simpan nonaktif sampai kanal dipilih; email PKS = Email PIC.
     await user.click(await screen.findByRole('button', { name: 'PKS Dikirim' }, T));
-    await user.click(within(await screen.findByRole('dialog', {}, T)).getByRole('button', { name: 'PKS Dikirim' }));
+    const pks = await screen.findByRole('dialog', {}, T);
+    expect(within(pks).getByRole('button', { name: 'Simpan' }).disabled).toBe(true);
+    await user.click(within(pks).getByText(/^Email PIC: /));
+    await user.click(within(pks).getByRole('button', { name: 'Simpan' }));
+    expect(await screen.findByText('Status diperbarui: Waiting PKS.', {}, T)).toBeTruthy();
     await waitFor(() => expect(screen.getByRole('button', { name: 'Konfirmasi PKS Ditandatangani & Aktifkan' })).toBeTruthy(), T);
 
     await user.click(screen.getByRole('button', { name: 'Konfirmasi PKS Ditandatangani & Aktifkan' }));

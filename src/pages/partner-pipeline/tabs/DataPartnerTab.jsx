@@ -1,4 +1,4 @@
-import { Alert, Icon, LinkButton } from '@ds/index.js';
+import { Icon, LinkButton } from '@ds/index.js';
 import { KeyValueGrid, RevisedBadge, SectionCard } from '../../../components/KeyValueGrid.jsx';
 import { PartnerStatusBadge } from '../../../components/Badges.jsx';
 import { actorLabel } from '../../../api/mockApi.js';
@@ -13,7 +13,6 @@ export function DataPartnerTab({ partner: p, onGoStores }) {
     const c = field && changed(field);
     return { label, value, revised: !!c, hint: c ? `Sebelumnya: ${c.old}` : undefined, ...extra };
   };
-  const mismatch = ![p.partnerName, p.pic.name].some((n) => n.trim().toLowerCase() === p.bank.accountName.trim().toLowerCase());
   const editable = p.status === 'UNDER_REVIEW';
   const pa = p.picAccount;
 
@@ -43,7 +42,6 @@ export function DataPartnerTab({ partner: p, onGoStores }) {
       </SectionCard>
 
       <SectionCard title="Data Rekening" badge={sec('bank') && <RevisedBadge />}>
-        {mismatch && <Alert status="warning" size="sm" title="Nama rekening berbeda dengan nama partner/PIC" />}
         <KeyValueGrid items={[
           fv('Bank', BANKS[p.bank.code]), fv('Cabang', p.bank.branch), fv('No. Rekening', p.bank.accountNumber, 'accountNumber'), fv('Nama Rekening', p.bank.accountName),
         ]} />

@@ -8,7 +8,7 @@ export function PksTab({ partner: p, onEditDelivery, onUpload, onViewFile }) {
   const k = p.pks;
   const hint = {
     UNDER_REVIEW: 'PKS dikirim setelah status Verified.', REVISION_REQUIRED: 'PKS dikirim setelah status Verified.',
-    VERIFIED: 'Kirim PKS di Privy web (via Privy ID atau email undangan), lalu klik "PKS Dikirim" di atas untuk mencatatnya.',
+    VERIFIED: 'Kirim PKS di Privy web (via Privy ID atau Email PIC), lalu klik "PKS Dikirim" di atas untuk mencatatnya.',
     WAITING_PKS: 'Setelah PKS terlihat sudah ditandatangani di Privy web, klik "Konfirmasi PKS Ditandatangani & Aktifkan" di atas.',
   }[p.status];
   return (
@@ -20,9 +20,10 @@ export function PksTab({ partner: p, onEditDelivery, onUpload, onViewFile }) {
       <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>PKS dikirim dan ditandatangani di Privy web. Portal ini hanya mencatat log pengiriman dan konfirmasi tanda tangan.</span>
       <KeyValueGrid items={[
         { label: 'Privy ID', value: p.privyId ?? 'Tidak diisi' },
-        { label: 'Email undangan', value: k.inviteEmail },
-        { label: 'Dikirim via', value: k.sentVia ? PKS_VIA[k.sentVia] : null },
-        { label: 'Tanggal PKS dikirim', value: formatDateTime(k.sentAt) },
+        { label: 'Email PKS (Email PIC)', value: p.pic.email },
+        { label: 'Dikirim via', value: k.sentVia ? `${PKS_VIA[k.sentVia]} · ${k.target}` : null },
+        { label: 'Tanggal PKS dikirim', value: formatDateTime(k.sentAt), hint: k.sentBy ? `Dicatat oleh ${k.sentBy}` : undefined },
+        ...(k.privyRef ? [{ label: 'Referensi dokumen Privy', value: k.privyRef }] : []),
         { label: 'Status PKS', value: PKS_STATUS[k.status] },
         { label: 'Dikonfirmasi oleh / pada', value: k.confirmedBy ? `${k.confirmedBy} · ${formatDateTime(k.confirmedAt)}` : null },
         { label: 'Dokumen PKS', value: k.file ? <LinkButton onClick={onViewFile} leftIcon={<Icon name="FileTextLine" size={16} />}>{k.file.name}</LinkButton> : null, hint: k.file ? `Diunggah ${k.file.by} · ${formatDateTime(k.file.at)}` : undefined },

@@ -3,7 +3,7 @@
 import { getScenario } from '../dev/scenario.js';
 import { formatPhone, normalizePhone } from '../lib/format.js';
 import {
-  ACCOUNT_STATUS, AREAS, CREATABLE_ROLES, ACTIVATION_TTL_MS, FINAL_STATUSES, PAGE_SIZE, RESET_TTL_MS, PARTNER_STATUS, ROLES, TRANSITIONS,
+  ACCOUNT_STATUS, AREAS, CREATABLE_ROLES, ACTIVATION_TTL_MS, FINAL_STATUSES, PAGE_SIZE, PKS_VIA, RESET_TTL_MS, PARTNER_STATUS, ROLES, TRANSITIONS,
 } from '../lib/constants.js';
 import {
   attendance, CURRENT_MONTH, loans, mfp, MONTHS, now, owningTl, partners, schemes, superAdmins, targets, users, visits, wibDate, weekStoresOf,
@@ -215,7 +215,7 @@ export async function requestRevision(pid, items, general, session) {
 }
 
 /**
- * US-P03…P08 — ubah status. opts: { reason, via, inviteEmail, file }.
+ * US-P03…P08 — ubah status. opts: { reason, via: 'PRIVY_ID'|'EMAIL_PIC', privyRef, file }.
  * Efek samping sesuai PRD: Verified mengunci data; Waiting PKS mencatat pengiriman; Active membuat kode merchant/toko + akun PIC;
  * Inactive menonaktifkan toko, melepas penugasan SA/SR, dan menonaktifkan akun PIC.
  */
@@ -232,8 +232,11 @@ export async function changeStatus(pid, to, opts, session) {
     reason = 'Seluruh dokumen wajib valid';
   }
   if (to === 'WAITING_PKS') {
-    Object.assign(p.pks, { status: 'WAITING_SIGNATURE', sentAt: now(), sentVia: opts.via, inviteEmail: opts.via === 'EMAIL' ? opts.inviteEmail : null });
-    reason = `PKS dikirim di Privy web via ${opts.via === 'PRIVY_ID' ? `Privy ID ${p.privyId}` : `email ${opts.inviteEmail}`}`;
+    // PRD Scope 1 v2 FR-009 (C3): hanya log, portal tidak memanggil Privy. Kanal wajib dipilih: Privy ID (bila diisi) atau Email PIC.
+    const target = pksTarget(p, opts.via);
+    if (!target) throw new ApiError('CONFLICT');
+    Object.assign(p.pks, { status: 'WAITING_SIGNATURE', sentAt: now(), sentBy: actor, sentVia: opts.via, target, privyRef: opts.privyRef?.trim() || null });
+    reason = `PKS dikirim via ${PKS_VIA[opts.via]} ${target}${p.pks.privyRef ? ` (ref. ${p.pks.privyRef})` : ''}`;
   }
   if (to === 'ACTIVE') {
     // PRD Scope 1 FR-010 / AC-016: akun PIC dibuat lebih dulu; bila bentrok atau gagal, status tetap Waiting PKS dan
@@ -286,12 +289,17 @@ function createPicAccount(p, actor) {
 }
 
 /** Waiting PKS — catat pengiriman ulang ke Privy ID/email lain. Tanggal kirim pertama tidak berubah. */
-export async function updatePksDelivery(pid, { via, inviteEmail }, session) {
+/** Nilai tujuan PKS untuk kanal: Privy ID partner atau Email PIC; null bila kanal tidak tersedia. */
+const pksTarget = (p, via) => (via === 'PRIVY_ID' ? p.privyId : via === 'EMAIL_PIC' ? p.pic.email : null) || null;
+
+export async function updatePksDelivery(pid, { via }, session) {
   await wait(400);
   const p = findP(pid);
   if (p.status !== 'WAITING_PKS') throw new ApiError('CONFLICT');
-  Object.assign(p.pks, { sentVia: via, inviteEmail: via === 'EMAIL' ? inviteEmail : p.pks.inviteEmail });
-  log(p, { from: null, to: null, by: actorOf(session), reason: `Data pengiriman PKS diperbarui: via ${via === 'PRIVY_ID' ? `Privy ID ${p.privyId}` : `email ${inviteEmail}`}` });
+  const target = pksTarget(p, via);
+  if (!target) throw new ApiError('CONFLICT');
+  Object.assign(p.pks, { sentVia: via, target });
+  log(p, { from: null, to: null, by: actorOf(session), reason: `Data pengiriman PKS diperbarui: via ${PKS_VIA[via]} ${target}` });
   return enrich(p);
 }
 

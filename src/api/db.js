@@ -155,7 +155,7 @@ function partner(n, name, entity, areaId, status, submitterId, cfg = {}) {
     areaId, submittedBy: submitterId, submittedAt,
     verifiedAt: null, verifiedBy: null, activatedAt: null, statusUpdatedAt: submittedAt,
     status, privyId: cfg.privyId ?? null,
-    pks: { inviteEmail: null, sentVia: null, sentAt: null, status: 'NOT_SENT', confirmedBy: null, confirmedAt: null, file: null },
+    pks: { sentVia: null, target: null, privyRef: null, sentAt: null, status: 'NOT_SENT', confirmedBy: null, confirmedAt: null, file: null },
     merchantCode: null, picAccountFailed: false,
     revisedSections: [], fieldChanges: [], changeLog: [], revisionRequest: null,
     revisionRound: 0, // bertambah 1 setiap TL/SR mengirim ulang perbaikan (PRD Scope 1 FR-007, AC-010)
@@ -177,7 +177,7 @@ function advance(p, steps) {
     p.history.push({ at, from, to, by: R, reason: reason ?? null });
     p.status = to; p.statusUpdatedAt = at;
     if (to === 'VERIFIED') { p.verifiedAt = at; p.verifiedBy = R; }
-    if (to === 'WAITING_PKS') Object.assign(p.pks, { status: 'WAITING_SIGNATURE', sentAt: at, sentVia: p.privyId ? 'PRIVY_ID' : 'EMAIL', inviteEmail: p.privyId ? null : p.pic.email });
+    if (to === 'WAITING_PKS') Object.assign(p.pks, { status: 'WAITING_SIGNATURE', sentAt: at, sentBy: R, sentVia: p.privyId ? 'PRIVY_ID' : 'EMAIL_PIC', target: p.privyId ?? p.pic.email });
     if (to === 'ACTIVE') {
       p.activatedAt = at;
       Object.assign(p.pks, { status: 'SIGNED', confirmedBy: R, confirmedAt: at });
@@ -236,9 +236,9 @@ p143.revisionRequest = { at: ago(30), by: R, general: null, items: [{ kind: 'DOC
 [p142, p141, p140, p139, p138, p137, p136, p132, p131, p133].forEach(allValid);
 advance(p142, [['VERIFIED', 40, 'Seluruh dokumen wajib valid']]);
 advance(p141, [['VERIFIED', 30, 'Seluruh dokumen wajib valid']]);
-advance(p140, [['VERIFIED', 26, 'Seluruh dokumen wajib valid'], ['WAITING_PKS', 50, 'PKS dikirim di Privy web via Privy ID PRV48802']]);
-const live = [[p139, 'via Privy ID PRV31877'], [p138, `via email ${p138.pic.email}`], [p137, `via email ${p137.pic.email}`], [p136, `via email ${p136.pic.email}`], [p132, `via email ${p132.pic.email}`], [p131, `via email ${p131.pic.email}`], [p133, 'via Privy ID PRV22014']];
-live.forEach(([p, via]) => advance(p, [['VERIFIED', 22, 'Seluruh dokumen wajib valid'], ['WAITING_PKS', 46, `PKS dikirim di Privy web ${via}`], ['ACTIVE', 24 * 6, 'PKS ditandatangani (dicek di Privy web); partner diaktifkan']]));
+advance(p140, [['VERIFIED', 26, 'Seluruh dokumen wajib valid'], ['WAITING_PKS', 50, 'PKS dikirim via Privy ID PRV48802']]);
+const live = [[p139, 'via Privy ID PRV31877'], [p138, `via Email PIC ${p138.pic.email}`], [p137, `via Email PIC ${p137.pic.email}`], [p136, `via Email PIC ${p136.pic.email}`], [p132, `via Email PIC ${p132.pic.email}`], [p131, `via Email PIC ${p131.pic.email}`], [p133, 'via Privy ID PRV22014']];
+live.forEach(([p, via]) => advance(p, [['VERIFIED', 22, 'Seluruh dokumen wajib valid'], ['WAITING_PKS', 46, `PKS dikirim ${via}`], ['ACTIVE', 24 * 6, 'PKS ditandatangani (dicek di Privy web); partner diaktifkan']]));
 // Toko tambahan baru aktif setelah ditambahkan (setelah partner Active).
 p139.pks.file = { name: 'pks_jaya_abadi_signed.pdf', by: R, at: p139.activatedAt };
 advance(p135, [['REJECTED', 30, 'Usaha tidak sesuai kriteria partner (bukan toko gadget)']]);
