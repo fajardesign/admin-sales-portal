@@ -435,7 +435,8 @@ export const validStoresOf = (u) => (u.role === 'TL'
  * attendance: absensi harian (Senin–Sabtu) TL, SR, SA aktif (revisi stakeholder 2026-10-08).
  * Check in/out dengan selfie + lokasi dalam radius 3 km dari titik lat/long yang tercatat (review 2026-10-09): kantor = titik kantor
  * terdaftar (`OFFICES`), toko = lokasi saat pendaftaran/Tambah Toko. distanceKm = jarak dari titik itu.
- * status ON_TIME (check in ≤ 10:00 lokal) | LATE (> 10:00) | ABSENT (tidak check in sampai akhir hari). Hari ini bisa belum check in.
+ * Waktu = jam server dalam zona area pengguna (PRD Scope 2 S8). status ON_TIME (check in ≤ 10:00) | LATE (> 10:00) | ABSENT (tidak check
+ * in, atau check in tanpa check out sebelum 23:59 hari itu, S13). Senin–Sabtu termasuk hari libur nasional/cuti (S10). Hari ini bisa belum check in.
  * place: { kind: 'OFFICE' | 'STORE', name }, distanceKm dari titik referensi.
  */
 export const attendance = [];
@@ -454,19 +455,22 @@ users.filter((u) => ['TL', 'SR', 'SA'].includes(u.role) && u.status === 'ACTIVE'
     const atStore = stores.length && rnd() < 0.4 ? stores[between(0, stores.length - 1)].s : null;
     const ref = atStore ?? office;
     const pt = near(ref, 1.2);
+    const outAt = today ? null : atLocal(d, area, between(17, 18), between(0, 59));
+    // Contoh lupa check out (tanpa memakai angka acak agar data lain tidak bergeser): hari lalu tanpa check out = Absen (S13).
+    const noOut = !today && (u.id * 7 + Number(d.slice(8))) % 29 === 0;
     attendance.push({
-      userId: u.id, date: d, status, clockInAt: inAt,
-      clockOutAt: today ? null : atLocal(d, area, between(17, 18), between(0, 59)),
+      userId: u.id, date: d, status: noOut ? 'ABSENT' : status, clockInAt: inAt,
+      clockOutAt: noOut ? null : outAt,
       ...pt, place: { kind: atStore ? 'STORE' : 'OFFICE', name: ref.name }, distanceKm: +distanceKm(ref, pt).toFixed(2),
-      // Zona waktu perangkat saat check in (PRD Scope 2 §2.1: WIB/WITA/WIT) dan foto selfie contoh 1–6.
+      // Zona waktu area pengguna (jam server, PRD Scope 2 S8: WIB/WITA/WIT) dan foto selfie contoh 1–6.
       tz: area.tz, utcOffset: area.utcOffset, selfie: (u.id + d.length + inAt.getUTCMinutes()) % 6 + 1,
     });
   });
 });
 
 /**
- * visits: check-in kunjungan (PRD Scope 2 §2.2 + keputusan review 2026-10-09). Target per minggu = setiap toko yang ditugaskan
- * (SA/SR) atau toko partner milik TL dikunjungi sekali; boleh lebih dari satu toko per hari. Check in mulai 12:00 lokal, radius
+ * visits: check-in kunjungan (PRD Scope 2 §2.2). Target per minggu = setiap toko yang ditugaskan (SA/SR) atau toko kursi TL
+ * dikunjungi sekali (satu kunjungan per toko per minggu, S12); boleh lebih dari satu toko per hari. Check in mulai 12:00 lokal, radius
  * 3 km dari titik lokasi toko yang tercatat (distanceKm). Hari absen tidak ada kunjungan; hari ini belum ada (jam demo < 12:00).
  */
 export const visits = [];
@@ -476,7 +480,8 @@ users.filter((u) => ['TL', 'SR', 'SA'].includes(u.role) && u.status === 'ACTIVE'
   const own = validStoresOf(u);
   if (!own.length) return;
   const area = AREAS.find((a) => a.id === u.areaIds[0]);
-  const present = new Set(attendance.filter((a) => a.userId === u.id && a.status !== 'ABSENT' && a.date !== TODAY).map((a) => a.date));
+  // Hari dengan check in kerja (absensi dan kunjungan independen, S12: lupa check out tetap bisa berkunjung).
+  const present = new Set(attendance.filter((a) => a.userId === u.id && a.clockInAt && a.date !== TODAY).map((a) => a.date));
   const weeks = new Map();
   daysFrom(u.activatedAt).filter((d) => isWorkday(d) && d !== TODAY && present.has(d)).forEach((d) => { const k = mondayOfYmd(d); weeks.set(k, [...(weeks.get(k) ?? []), d]); });
   weeks.forEach((days) => own.forEach(({ p, s }) => {
@@ -487,7 +492,8 @@ users.filter((u) => ['TL', 'SR', 'SA'].includes(u.role) && u.status === 'ACTIVE'
     const pt = near(s, 0.8);
     visits.push({
       id: ++visitSeq, userId: u.id, partnerId: p.id, storeId: s.id, date: d,
-      checkInAt: inAt, checkOutAt: new Date(inAt.getTime() + between(25, 110) * 60000), ...pt, distanceKm: +distanceKm(s, pt).toFixed(2),
+      // Check-out kunjungan opsional (S13): sebagian contoh tanpa check-out; toko tetap dihitung dikunjungi.
+      checkInAt: inAt, checkOutAt: ((out) => (visitSeq % 7 === 0 ? null : out))(new Date(inAt.getTime() + between(25, 110) * 60000)), ...pt, distanceKm: +distanceKm(s, pt).toFixed(2),
       tz: area.tz, utcOffset: area.utcOffset, selfie: (u.id + visitSeq) % 6 + 1,
     });
   }));

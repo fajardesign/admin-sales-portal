@@ -64,8 +64,8 @@ function AplProductivityView({ user, onLogout, query }) {
       </ListCard>
       <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>
         {tab === 'absensi'
-          ? 'Hari kerja Senin–Sabtu. Check in dengan selfie dan lokasi dalam radius 3 km dari titik lokasi kantor atau toko partner yang terdaftar. Check in setelah 10:00 waktu lokal perangkat (WIB/WITA/WIT) dihitung Terlambat; tidak check in sampai akhir hari dihitung Absen.'
-          : 'Target per minggu = setiap toko yang ditugaskan dikunjungi sekali (TL: toko yang ia pegang), tanpa jumlah hari tetap; boleh lebih dari satu toko per hari. Check in kunjungan mulai 12:00 waktu lokal, dalam radius 3 km dari titik lokasi toko yang terdaftar. Minggu lengkap = minggu yang sudah selesai dengan semua toko dikunjungi; minggu masuk periode yang memuat hari Seninnya.'}
+          ? 'Hari kerja Senin–Sabtu, termasuk hari libur nasional dan cuti. Check in dengan selfie dan lokasi dalam radius 3 km dari titik lokasi kantor atau toko partner yang terdaftar. Check in setelah 10:00 waktu server sesuai zona area (WIB/WITA/WIT) dihitung Terlambat; tidak check in, atau check in tanpa check out sebelum 23:59, dihitung Absen.'
+          : 'Target per minggu = setiap toko yang ditugaskan dikunjungi sekali (TL: toko yang ia pegang), tanpa jumlah hari tetap; boleh lebih dari satu toko per hari. Target minggu berjalan langsung berubah saat penugasan toko berubah. Check in kunjungan mulai 12:00 waktu server sesuai zona area, dalam radius 3 km dari titik lokasi toko yang terdaftar; check-out kunjungan opsional. Minggu lengkap = minggu yang sudah selesai dengan semua toko dikunjungi; minggu masuk periode yang memuat hari Seninnya.'}
       </span>
       {person && <ProductivityDrawer person={person} tab={tab} period={period} onClose={() => setPerson(null)} />}
     </AdminShell>

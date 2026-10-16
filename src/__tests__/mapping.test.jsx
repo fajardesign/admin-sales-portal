@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event';
 import App from '../App.jsx';
 import { DEFAULT_SCENARIO, setScenario } from '../dev/scenario.js';
 import { DEMO_PASSWORD, partners } from '../api/db.js';
-import { activateAccount, assignTl, createUser, releaseTl, storeTlHistory, tlCandidates, tlMapping } from '../api/mockApi.js';
+import { activateAccount, assignTl, createUser, currentVisitWeek, releaseTl, storeTlHistory, tlCandidates, tlMapping } from '../api/mockApi.js';
 
 const T = { timeout: 4000 };
 const admin = { userId: 1, name: 'Rina Saraswati', role: 'REVIEWER' };
@@ -38,8 +38,10 @@ describe('Mapping TL (API)', () => {
   });
 
   it('AC-004/005: tugaskan Bagus; toko yang sudah punya TL ditolak (stale)', async () => {
+    const before = currentVisitWeek(22).target;
     await assignTl([TAMALANREA], '22', hasan);
     expect(store(TAMALANREA).tlId).toBe(22);
+    expect(currentVisitWeek(22).target).toBe(before + 1); // PRD Scope 2 S9: target minggu berjalan berubah seketika
     expect(store(TAMALANREA).tlLog.at(-1)).toMatchObject({ to: 22, by: 'Hasan Basri (APL)', source: 'APL' });
     await expect(assignTl([TAMALANREA], '6', hasan)).rejects.toMatchObject({ code: 'STALE', field: 'PT Bintang Gadget Store Tamalanrea' });
   });
