@@ -247,7 +247,7 @@ describe('W3 Partner Pipeline', () => {
     const user = await start('rina.saraswati');
     go('/partner-pipeline/REG2026-0139');
     await user.click(await screen.findByRole('button', { name: 'Nonaktifkan' }, T));
-    expect(await screen.findByText('3 toko akan nonaktif, 2 SA/SR dilepas, dan akun PIC dinonaktifkan.', {}, T)).toBeTruthy();
+    expect(await screen.findByText('3 toko akan nonaktif, 6 penugasan TL/SA/SR dilepas, dan akun PIC dinonaktifkan.', {}, T)).toBeTruthy(); // 3 kursi TL + 3 kursi SA/SR (C6)
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Batal' }));
     go('/partner-pipeline/REG2026-0140');
     await user.click(await screen.findByRole('button', { name: 'Batalkan' }, T));

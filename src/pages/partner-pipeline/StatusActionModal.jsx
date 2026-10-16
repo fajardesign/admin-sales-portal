@@ -9,11 +9,11 @@ import { PksChannelPicker } from './PksModals.jsx';
 import { ACTIONS } from './actions.js';
 
 
-/** Dampak Nonaktifkan (PRD Scope 1 FR-013, SCR-05): jumlah toko aktif, SA/SR yang ditugaskan, akun PIC. */
+/** Dampak Nonaktifkan (PRD Scope 1 FR-013, v1.1 C6): toko aktif, penugasan TL dan SA/SR yang dilepas, akun PIC. */
 function impactText(p) {
   const stores = p.stores.filter((s) => s.status === 'ACTIVE');
-  const people = new Set(stores.flatMap((s) => s.assigned)).size;
-  return `${stores.length} toko akan nonaktif, ${people} SA/SR dilepas, dan akun PIC dinonaktifkan.`;
+  const seats = stores.reduce((a, s) => a + (s.tlId != null ? 1 : 0) + s.assigned.length, 0);
+  return `${stores.length} toko akan nonaktif, ${seats} penugasan TL/SA/SR dilepas, dan akun PIC dinonaktifkan.`;
 }
 
 /** W3d · Konfirmasi "Ubah status menjadi {status}?" dengan isian sesuai aksi. */
