@@ -4,6 +4,7 @@ import { homeFor } from '../lib/nav.js';
 import { demoSession, getPartner, onDataChange, simulateResubmit } from '../api/mockApi.js';
 import { useToast } from '../components/Toaster.jsx';
 import { SCENARIO_LABELS, SCENARIO_OPTIONS, setScenario, useScenario } from './scenario.js';
+import { VersionTag } from '../components/VersionTag.jsx';
 
 const SESSIONS = [['', 'Keluar'], ['rina.saraswati', 'Admin'], ['hasan.basri', 'APL Makassar'], ['lestari.wulandari', 'APL Bandung+Jakarta'], ['hendra.wijaya', 'Super Admin'], ['andi.pratama', 'TL (ditolak)']];
 
@@ -44,6 +45,7 @@ export function DevToolbar({ path, session, setSession }) {
   return (
     <div style={{ position: 'fixed', left: '50%', bottom: 'var(--space-16)', transform: 'translateX(-50%)', zIndex: 90, display: 'flex', alignItems: 'center', gap: 'var(--space-4)', padding: 'var(--space-4)', borderRadius: 'var(--rounded-12)', background: 'var(--bg-strong-950)', boxShadow: 'var(--shadow-modal)', maxWidth: 'calc(100vw - var(--space-32))', flexWrap: 'wrap' }}>
       <button type="button" style={pill(open)} onClick={() => setOpen((o) => !o)} aria-expanded={open}>Demo</button>
+      <VersionTag dark />
       {open && (
         <>
           <select title="Sesi" aria-label="Masuk sebagai" value={SESSIONS.find(([u]) => u && demoSession(u).userId === session?.userId)?.[0] ?? ''} style={select} onChange={(e) => switchSession(e.target.value)}>
