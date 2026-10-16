@@ -17,6 +17,7 @@ import { AplDashboard } from './pages/apl/AplDashboard.jsx';
 import { AplSales } from './pages/apl/AplSales.jsx';
 import { AplProductivity } from './pages/apl/AplProductivity.jsx';
 import { AplPartners } from './pages/apl/AplPartners.jsx';
+import { AplMappingTl } from './pages/apl/AplMappingTl.jsx';
 import { AplTeam } from './pages/apl/AplTeam.jsx';
 import { AplIncentive } from './pages/apl/AplIncentive.jsx';
 import { IncentiveSchemes } from './pages/super-admin/IncentiveSchemes.jsx';
@@ -29,12 +30,12 @@ import { preset } from './dev/presets.js';
  * Rute (hash) — akses mengikuti feature access roles (src/lib/nav.js):
  *  /login, /denied, /activate?user=<id>[&mode=reset]
  *  Admin: /beranda, /toko-aktif, /partner-pipeline[/<reg>], /account-management
- *  APL: /apl, /apl/kinerja, /apl/produktivitas, /apl/partner, /apl/tim, /apl/insentif
+ *  APL: /apl, /apl/kinerja, /apl/produktivitas, /apl/partner, /apl/mapping-tl, /apl/tim, /apl/insentif
  *  Super Admin: /skema-insentif, /hasil-perhitungan
  */
 const PAGES = {
   '/beranda': Beranda, '/partner-pipeline': PipelineList, '/toko-aktif': ActiveStores, '/account-management': AccountManagement,
-  '/apl': AplDashboard, '/apl/kinerja': AplSales, '/apl/produktivitas': AplProductivity, '/apl/partner': AplPartners, '/apl/tim': AplTeam, '/apl/insentif': AplIncentive,
+  '/apl': AplDashboard, '/apl/kinerja': AplSales, '/apl/produktivitas': AplProductivity, '/apl/partner': AplPartners, '/apl/mapping-tl': AplMappingTl, '/apl/tim': AplTeam, '/apl/insentif': AplIncentive,
   '/skema-insentif': IncentiveSchemes, '/hasil-perhitungan': IncentiveResults,
 };
 

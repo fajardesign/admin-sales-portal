@@ -72,6 +72,7 @@ function AplDashboardView({ user, onLogout, query }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-16)' }}>
               <StatCard icon="Building2Line" color="blue" label="Partner aktif" value={ld ? '…' : formatNumber(d.partnerCount)} hint={ld ? undefined : `${d.storeCount} toko aktif`} onClick={() => go('/apl/partner')} />
               <StatCard icon="TeamLine" color="purple" label="Tim" value={ld ? '…' : formatNumber(d.team.TL + d.team.SR + d.team.SA)} hint={ld ? undefined : `${d.team.TL} TL · ${d.team.SR} SR · ${d.team.SA} SA`} onClick={() => go('/apl/tim')} />
+              <StatCard icon="UserAddLine" color="orange" label="Toko belum ada TL" value={ld ? '…' : formatNumber(d.noTlCount)} hint="Tugaskan TL di Mapping TL" onClick={() => go('/apl/mapping-tl', { tl: 'none' })} />
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 'var(--space-16)' }}>

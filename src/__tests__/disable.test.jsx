@@ -6,16 +6,13 @@ import userEvent from '@testing-library/user-event';
 import App from '../App.jsx';
 import { DEFAULT_SCENARIO, setScenario } from '../dev/scenario.js';
 import { DEMO_PASSWORD, partners, users } from '../api/db.js';
-import { activateAccount, createUser, disableUser, handoverPlan, moveSubordinates, remapStoreTl } from '../api/mockApi.js';
+import { activateAccount, createUser, disableUser, handoverPlan, moveSubordinates } from '../api/mockApi.js';
 
 const T = { timeout: 4000 };
 const admin = { userId: 1, name: 'Rina Saraswati', role: 'REVIEWER' };
-const hasan = { userId: 3, name: 'Hasan Basri', role: 'APL' };
-const lestari = { userId: 4, name: 'Lestari Wulandari', role: 'APL' };
 const byId = (id) => users.find((u) => u.id === id);
 const storesOfTl = (id) => partners.filter((p) => !['REJECTED', 'CANCELLED', 'INACTIVE'].includes(p.status)).flatMap((p) => p.stores.filter((s) => s.tlId === id));
 const heldBy = (id) => partners.flatMap((p) => p.stores.filter((s) => s.assigned.includes(id)));
-const store = (id) => partners.flatMap((p) => p.stores).find((s) => s.id === id);
 
 beforeEach(() => { setScenario(DEFAULT_SCENARIO); sessionStorage.clear(); window.location.hash = '/login'; });
 afterEach(cleanup);
@@ -82,17 +79,6 @@ describe('Serah terima dan TL per toko (API)', () => {
     await expect(moveSubordinates(7, {}, 'x', admin)).rejects.toMatchObject({ code: 'CONFLICT' });
     await moveSubordinates(22, { 11: '6' }, 'Kembali ke tim lama', admin); // Bagus kini punya bawahan
     expect(byId(11).supervisorId).toBe(6);
-  });
-
-  it('APL ganti TL toko hanya tanggal 1–3; SA/SR yang bukan bawahan TL baru dilepas', async () => {
-    const s = store('REG2026-0139-1'); // Makassar, TL Andi, dipegang SA Eko (bawahan Andi)
-    await expect(remapStoreTl(s.id, '22', 'x', hasan)).rejects.toMatchObject({ code: 'WINDOW_CLOSED' });
-    setScenario({ ...DEFAULT_SCENARIO, remapWindow: 'open' });
-    await expect(remapStoreTl(s.id, '22', 'x', lestari)).rejects.toMatchObject({ code: 'CONFLICT' }); // di luar area APL
-    await remapStoreTl(s.id, '22', 'Penyesuaian wilayah', hasan);
-    expect(s.tlId).toBe(22);
-    expect(s.assigned).toEqual([]); // Eko bukan bawahan Bagus
-    expect(s.tlLog.at(-1)).toMatchObject({ from: 6, to: 22 });
   });
 
   it('AC-AM-011: TL dinonaktifkan — bawahan dan semua toko pindah ke pengganti utama', async () => {

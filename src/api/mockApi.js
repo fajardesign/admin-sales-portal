@@ -596,35 +596,94 @@ export async function moveSubordinates(tlId, moves, reason, session) {
   return enrichUser(u);
 }
 
-/** APL boleh memetakan ulang TL toko hanya tanggal 1–3 setiap bulan (keputusan 2026-10-16); DevToolbar bisa membukanya. */
-export const tlRemapWindowOpen = () => getScenario().remapWindow === 'open' || Number(todayDate().slice(8)) <= 3;
-/** Calon TL baru untuk toko: TL Active di area partner, selain TL toko sekarang. */
-export function storeTlOptions(storeId) {
-  const p = partners.find((x) => x.stores.some((s) => s.id === storeId)); const s = p.stores.find((x) => x.id === storeId);
-  return users.filter((x) => x.role === 'TL' && accountStatus(x) === 'ACTIVE' && x.areaIds.includes(p.areaId) && x.id !== s.tlId).map(optionOf);
-}
-/** Nama SA/SR yang akan dilepas dari toko bila TL toko diganti ke `tlId` (bukan bawahan TL baru). */
-export function storeRemapReleases(storeId, tlId) {
-  const s = partners.flatMap((p) => p.stores).find((x) => x.id === storeId);
-  return tlId ? s.assigned.filter((x) => userById(x).supervisorId !== Number(tlId)).map((x) => userById(x).fullName) : [];
-}
+// ------------------------------------------------------------------ 1.7 APL Mapping TL (PRD Scope 1 v1.1)
+const aplHolds = (session, areaId) => { const u = userById(session.userId); return u?.role === 'APL' && accountStatus(u) === 'ACTIVE' && u.areaIds.includes(areaId); };
+const storeOf = (storeId) => { const p = partners.find((x) => x.stores.some((s) => s.id === storeId)); return p ? { p, s: p.stores.find((s) => s.id === storeId) } : {}; };
+const tlSince = (p, s) => [...(s.tlLog ?? [])].reverse().find((e) => e.to === s.tlId)?.at ?? p.activatedAt;
+
 /**
- * APL — ganti TL satu toko (keputusan 2026-10-16). SA/SR yang memegang toko dilepas bila bukan bawahan TL baru (FR-AM-013).
- * Error: WINDOW_CLOSED (di luar tanggal 1–3) | CONFLICT (toko/TL tidak valid atau di luar area APL).
+ * FR-002/FR-003: toko Active partner Active di area APL, dikelompokkan per partner (partner yang punya toko tanpa TL di atas).
+ * f.tl: '' semua | 'none' belum ada TL | id TL; f.q: partner, toko, atau kode. Ringkasan dihitung dari area terpilih tanpa filter.
  */
-export async function remapStoreTl(storeId, tlId, reason, session) {
+export async function tlMapping(apl, areaIds, f = {}, { retry = false } = {}) {
+  const empty = await listGate(retry);
+  const all = partners.filter((p) => p.status === 'ACTIVE' && areaIds.includes(p.areaId))
+    .flatMap((p) => p.stores.filter((s) => s.status === 'ACTIVE').map((s) => ({ p, s })));
+  const tls = users.filter((u) => u.role === 'TL' && u.supervisorId === apl.userId && areaIds.includes(u.areaIds[0]) && accountStatus(u) !== 'DISABLED');
+  const activeTls = tls.filter((u) => accountStatus(u) === 'ACTIVE');
+  const summary = {
+    tlUnder: activeTls.length,
+    tlByArea: areaIds.map((a) => ({ areaId: a, count: activeTls.filter((u) => u.areaIds[0] === a).length })).filter((x) => x.count),
+    tlInactive: tls.length - activeTls.length,
+    stores: all.length,
+    noTl: all.filter(({ s }) => s.tlId == null).length,
+    noSales: all.filter(({ s }) => s.tlId != null && s.assigned.length === 0).length,
+  };
+  const term = (f.q ?? '').trim().toLowerCase();
+  const rows = all.filter(({ p, s }) => (f.tl === 'none' ? s.tlId == null : f.tl ? s.tlId === Number(f.tl) : true)
+    && (!term || [p.partnerName, s.name, s.referralCode ?? ''].some((v) => v.toLowerCase().includes(term))));
+  const groups = new Map();
+  rows.forEach(({ p, s }) => {
+    const g = groups.get(p.id) ?? { id: p.id, name: p.partnerName, areaId: p.areaId, storeCount: p.stores.filter((x) => x.status === 'ACTIVE').length, tlCount: partnerTls(p).length, stores: [] };
+    g.stores.push({
+      id: s.id, name: s.name, code: s.code, primary: s.primary, referralCode: s.referralCode, areaId: p.areaId, partnerName: p.partnerName,
+      tlId: s.tlId, tl: userById(s.tlId)?.fullName ?? null, tlSince: s.tlId != null ? tlSince(p, s) : null,
+      sales: s.assigned.map((id) => userById(id)).filter(Boolean).map((u) => `${u.fullName} (${u.role})`),
+    });
+    groups.set(p.id, g);
+  });
+  const list = [...groups.values()].sort((a, b) => (b.stores.some((x) => x.tlId == null) - a.stores.some((x) => x.tlId == null)) || a.name.localeCompare(b.name));
+  const tlOptions = activeTls.map((u) => ({ value: String(u.id), label: u.fullName }));
+  return { rows: empty ? [] : list, summary, tlOptions };
+}
+
+/** FR-004: calon TL untuk toko terpilih — TL Active di area partner; null area = toko dari lebih dari satu area. */
+export function tlCandidates(storeIds) {
+  const areas = [...new Set(storeIds.map((id) => storeOf(id).p?.areaId))];
+  if (areas.length !== 1) return { areaId: null, options: [] };
+  return { areaId: areas[0], options: users.filter((u) => u.role === 'TL' && accountStatus(u) === 'ACTIVE' && u.areaIds.includes(areas[0])).map(optionOf) };
+}
+
+/**
+ * FR-004 Tugaskan TL ke satu atau banyak toko (satu area). Server memeriksa ulang: APL memegang area, TL Active di area itu,
+ * toko masih tanpa TL. Error: FORBIDDEN | MIXED_AREA | TL_INVALID | STALE (field = nama toko yang sudah punya TL).
+ */
+export async function assignTl(storeIds, tlId, session) {
   await wait(400);
-  if (!tlRemapWindowOpen()) throw new ApiError('WINDOW_CLOSED');
-  const p = partners.find((x) => x.stores.some((s) => s.id === storeId));
-  const apl = userById(session.userId);
-  if (!p || p.status !== 'ACTIVE' || !apl.areaIds.includes(p.areaId) || !storeTlOptions(storeId).some((o) => o.value === String(tlId))) throw new ApiError('CONFLICT');
-  const s = p.stores.find((x) => x.id === storeId); const from = userById(s.tlId); const to = userById(Number(tlId));
-  const actor = actorOf(session);
-  s.tlLog = [...(s.tlLog ?? []), { at: now(), from: s.tlId, to: to.id }];
-  s.tlId = to.id;
-  log(p, { from: null, to: null, by: actor, reason: `TL toko ${s.name} diganti dari ${from?.fullName ?? '-'} ke ${to.fullName}: ${reason}` });
-  s.assigned.filter((x) => userById(x).supervisorId !== to.id).forEach((x) => systemRelease(p, s, x, `bukan bawahan ${to.fullName}`));
-  return aplPartnerRow(p, null);
+  if (!storeIds.length) throw new ApiError('CONFLICT');
+  const { areaId, options } = tlCandidates(storeIds);
+  if (areaId == null) throw new ApiError('MIXED_AREA');
+  if (!aplHolds(session, areaId)) throw new ApiError('FORBIDDEN');
+  if (!options.some((o) => o.value === String(tlId))) throw new ApiError('TL_INVALID');
+  const taken = storeIds.map(storeOf).find(({ p, s }) => !s || p.status !== 'ACTIVE' || s.status !== 'ACTIVE' || s.tlId != null);
+  if (taken) throw new ApiError('STALE', taken.s?.name ?? '-');
+  const by = actorOf(session);
+  storeIds.map(storeOf).forEach(({ p, s }) => setTlSeat(p, s, Number(tlId), by, 'APL'));
+  return { count: storeIds.length, tl: userById(Number(tlId)).fullName };
+}
+
+/** FR-005 Lepas TL: kursi TL dilepas (sumber "dilepas APL") dan SA/SR di toko itu ikut dilepas (sumber "TL dilepas"). */
+export async function releaseTl(storeId, session) {
+  await wait(400);
+  const { p, s } = storeOf(storeId);
+  if (!s || !aplHolds(session, p.areaId)) throw new ApiError('FORBIDDEN');
+  if (s.tlId == null) throw new ApiError('STALE', s.name);
+  const by = actorOf(session);
+  [...s.assigned].forEach((x) => systemRelease(p, s, x, 'TL dilepas', by));
+  releaseTlSeat(p, s, by, 'dilepas APL');
+  return { store: s.name };
+}
+
+/** FR-007 Riwayat TL satu toko: penugasan & pelepasan TL dan SA/SR, terbaru di atas. */
+export function storeTlHistory(storeId) {
+  const { s } = storeOf(storeId);
+  if (!s) return [];
+  const name = (id) => userById(id)?.fullName ?? '-';
+  const tl = (s.tlLog ?? []).map((e) => ({ at: e.at, by: e.by ?? 'Sistem', source: e.source ?? '-',
+    text: e.to != null ? `TL ${name(e.to)} ditugaskan${e.from != null ? ` (sebelumnya ${name(e.from)})` : ''}` : `TL ${name(e.from)} dilepas` }));
+  const sales = (s.assignLog ?? []).map((e) => ({ at: e.at, by: e.by ?? 'Sistem', source: e.source ?? '-',
+    text: `${name(e.userId)} ${e.action === 'ASSIGN' ? 'ditugaskan' : 'dilepas'} sebagai SA/SR` }));
+  return [...tl, ...sales].sort((a, b) => b.at - a.at);
 }
 
 // ------------------------------------------------------------------ Aktivasi (KC1)
@@ -1020,6 +1079,8 @@ export async function aplDashboard(areaIds, period, { retry = false } = {}) {
     productivity: { cur: productivity(ids, period), prev: productivity(ids, prev) },
     weeks, top: tls.slice(0, 5), bottom: [...tls].reverse().slice(0, 5),
     partnerCount: ps.length, storeCount: ps.reduce((a, p) => a + p.stores.filter((s) => s.status === 'ACTIVE').length, 0),
+    // 1.7 FR-008: toko aktif di area tanpa TL
+    noTlCount: ps.reduce((a, p) => a + p.stores.filter((s) => s.status === 'ACTIVE' && s.tlId == null).length, 0),
     team: { TL: team.filter((u) => u.role === 'TL').length, SR: team.filter((u) => u.role === 'SR').length, SA: team.filter((u) => u.role === 'SA').length },
   };
 }

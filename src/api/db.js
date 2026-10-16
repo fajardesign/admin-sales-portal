@@ -351,6 +351,15 @@ partners.filter((p) => p.activatedAt).forEach((p) => p.stores.forEach((s) => { s
 partners.filter((p) => p.status === 'INACTIVE').forEach((p) => p.stores.forEach((s) => {
   if (s.tlId != null) { s.tlLog = [{ at: p.statusUpdatedAt, from: s.tlId, to: null, by: 'Sistem', source: 'partner nonaktif' }]; s.tlId = null; }
 }));
+// Data contoh 1.7 Mapping TL: dua hari lalu APL Hasan melepas TL Andi dari toko Tamalanrea (SR Siti ikut dilepas);
+// toko menunggu TL baru ("Belum ada TL"). Pinjaman sebelum itu tetap milik Andi/Siti lewat riwayat.
+{
+  const s = p132.stores[1]; const at = ago(48); const by = 'Hasan Basri (APL)';
+  s.assignLog = [{ at, userId: s.assigned[0], action: 'RELEASE', by, source: 'TL dilepas' }];
+  s.tlLog = [{ at, from: s.tlId, to: null, by, source: 'dilepas APL' }];
+  p132.history.push({ at, from: null, to: null, by, reason: `Andi Pratama dilepas dari ${s.name} (dilepas APL)` });
+  s.assigned = []; s.tlId = null;
+}
 
 /**
  * loans: aplikasi pinjaman hasil sinkronisasi CRM (read-only). status CRM disederhanakan:
@@ -376,7 +385,7 @@ partners.filter((p) => p.activatedAt).forEach((p) => {
         const amount = between(30, 150) * 1e5;
         const updatedAt = new Date(Math.min(BASE, submittedAt.getTime() + between(2, 72) * 3600e3));
         loans.push({
-          id: `APP${++loanSeq}`, partnerId: p.id, storeId: s.id, areaId: p.areaId, channel: p.channel, salesId: s.assigned[0] ?? null, tlId: tlAt(s, submittedAt),
+          id: `APP${++loanSeq}`, partnerId: p.id, storeId: s.id, areaId: p.areaId, channel: p.channel, salesId: [...holdersAt(s, submittedAt)][0] ?? null, tlId: tlAt(s, submittedAt),
           customer: `${FIRST[between(0, FIRST.length - 1)]} ${LAST[between(0, LAST.length - 1)]}`,
           amount, units: rnd() < 0.2 ? 2 : 1, submittedAt, status,
           rejectionReason: status === 'REJECTED' ? REJECT[between(0, REJECT.length - 1)] : null,

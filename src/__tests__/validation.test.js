@@ -109,7 +109,8 @@ describe('absensi & kunjungan (revisi stakeholder 2026-10-08)', () => {
     expect(w).toMatchObject({ start: '2026-09-07', target: 3, closed: true });
     expect(w.complete).toBe(w.visited >= 3);
     const cur = currentVisitWeek(11);
-    expect(cur).toMatchObject({ start: '2026-10-05', target: 3, closed: false });
+    // Senin 5 Okt APL melepas TL dari toko Tamalanrea (SR Siti ikut dilepas): minggu berjalan tinggal 2 toko.
+    expect(cur).toMatchObject({ start: '2026-10-05', target: 2, closed: false });
     expect(stores.every((g) => g.visited === g.stores.every((x) => x.visited))).toBe(true);
     expect(weekStatusLabel({ visited: 3, target: 5, complete: false })).toBe('Belum lengkap 3/5');
     expect(weekStatusLabel({ visited: 5, target: 5, complete: true })).toBe('Lengkap 5/5');
