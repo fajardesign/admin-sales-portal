@@ -70,7 +70,7 @@ export function Login({ onLoggedIn, notice }) {
 
   return (
     <AuthLayout label="Sales & Partner Portal"
-      footer={<><span>© 2026 Amar Bank</span><span>Didukung Keycloak · realm sales-portal</span></>}>
+      footer={<><span>© 2026 Amar Bank</span></>}>
       <form onSubmit={submit} style={{ display: 'contents' }}>
         <AuthCard>
           <AuthHero icon="User6Line" title="Masuk ke S&P Portal" description="Masukkan email atau nomor telepon dan password Anda." />

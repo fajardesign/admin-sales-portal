@@ -1,7 +1,7 @@
 // Kode Referral per toko (PRD Scope 1 v2 C2: FR-019, FR-010, FR-015; OQ-25/OQ-26 keputusan 2026-10-16).
 // File terpisah karena mengubah data contoh; vitest mengisolasi modul per file.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../App.jsx';
 import { DEFAULT_SCENARIO, setScenario } from '../dev/scenario.js';
@@ -68,23 +68,28 @@ describe('Kode Referral per toko (API)', () => {
   });
 });
 
-describe('Kode Referral (UI)', () => {
-  it('menu Kode Referral: tab Perlu diisi, isi kode toko dari tabel, toast', async () => {
+describe('Toko Aktif (UI)', () => {
+  it('ringkasan, pengingat kuning menyaring toko tanpa kode, isi kode langsung di baris', async () => {
     const user = userEvent.setup();
     render(<App />);
     await user.type(screen.getByPlaceholderText('nama@amarbank.co.id atau 08123456789'), 'rina.saraswati@amarbank.co.id');
     await user.type(screen.getByPlaceholderText('••••••••'), DEMO_PASSWORD);
     await user.click(screen.getByRole('button', { name: 'Masuk' }));
-    await screen.findByText(/Menunggu review/, {}, T); // Beranda terbuka setelah login
-    window.location.hash = '/kode-referral?q=Anugerah';
-    const fill = await screen.findByRole('button', { name: 'Isi kode' }, T);
-    expect(document.body.textContent).toContain('Kode referral wajib diisi'); // Waiting PKS tanpa kode (SCR-07)
-    await user.click(fill);
-    expect(screen.getByRole('tab', { name: /Perlu diisi/ })).toBeTruthy();
-    expect(document.body.textContent).toContain('Anugerah Gadget');
-    await user.type(screen.getByPlaceholderText('Masukkan kode dari AppsFlyer'), 'OFSBY1401');
+    await screen.findByText(/Menunggu review/, {}, T);
+    // Toko baru REG2026-0140 (Waiting PKS) tidak termasuk; toko Antang (partner Active) sudah diisi di test API di atas,
+    // jadi tambahkan toko baru lain yang menunggu kode untuk pengingat.
+    const p = find('REG2026-0137');
+    p.stores.push({ ...p.stores[1], id: 'REG2026-0137-3', name: 'Galaxy Phone Center Kemang', code: null, referralCode: null, status: 'WAITING_REFERRAL', assigned: [] });
+    window.location.hash = '/toko-aktif';
+    expect(await screen.findByText('Jumlah toko', {}, T)).toBeTruthy();
+    expect(screen.getByText('Jumlah TL')).toBeTruthy();
+    expect(screen.getByText('Belum ditugaskan ke SA/SR')).toBeTruthy();
+    await user.click(await screen.findByRole('button', { name: 'Lihat toko' }, T));
+    await waitFor(() => expect(window.location.hash).toContain('ref=belum'));
+    await user.click(await screen.findByRole('button', { name: 'Isi kode' }, T));
+    await user.type(screen.getByPlaceholderText('Masukkan kode referral'), 'OFJKT1373');
     await user.click(screen.getByRole('button', { name: 'Simpan' }));
     expect(await screen.findByText('Kode referral disimpan.', {}, T)).toBeTruthy();
-    expect(find('REG2026-0140').stores[0].referralCode).toBe('OFSBY1401');
+    expect(p.stores[2].status).toBe('ACTIVE');
   });
 });

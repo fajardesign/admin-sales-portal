@@ -136,11 +136,15 @@ describe('W3 Partner Pipeline', () => {
     go('/partner-pipeline');
     expect(await screen.findByText('Sinar Jaya Ponsel', {}, T)).toBeTruthy();
     expect(window.location.hash).not.toContain('status=under_review');
-    await user.click(screen.getByRole('tab', { name: /Active/ }));
+    // Status sebagai filter (keputusan 2026-10-17): Alur review → Active
+    await pick(user, /^Semua status \(/, /^Active \(/);
     expect(await screen.findByText('Jaya Abadi Cellular', {}, T)).toBeTruthy();
     await waitFor(() => expect(screen.queryByText('Sinar Jaya Ponsel')).toBeNull());
     expect(window.location.hash).toContain('status=active');
-    await user.click(screen.getByRole('tab', { name: /Semua/ }));
+    // Partner Active: tombol Lihat {n} toko dan Detail Partner
+    expect(screen.getAllByRole('button', { name: /^Lihat \d+ toko$/ }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: 'Detail Partner' }).length).toBeGreaterThan(0);
+    await pick(user, /^Active \(/, /^Semua status \(/);
     await user.type(screen.getByPlaceholderText('Cari nama partner, no. registrasi, atau kode referral'), '0135');
     expect(await screen.findByText('Mega Cell Makassar', {}, T)).toBeTruthy();
     await waitFor(() => expect(screen.queryByText('Sinar Jaya Ponsel')).toBeNull());
@@ -148,7 +152,7 @@ describe('W3 Partner Pipeline', () => {
     await user.clear(search);
     await user.type(search, 'ofmks1391'); // Kode Referral toko (PRD Scope 1 v2 FR-003)
     expect(await screen.findByText('Jaya Abadi Cellular', {}, T)).toBeTruthy();
-    await waitFor(() => expect(screen.getByRole('tab', { name: /Semua/ }).textContent).toMatch(/1/));
+    await waitFor(() => expect(screen.getByRole('button', { name: /^Semua status \(1\)$/ })).toBeTruthy());
   });
 
   it('Verifikasi Selesai nonaktif bila dokumen wajib belum Valid; Data Rekening tanpa tombol verifikasi', async () => {
@@ -156,7 +160,7 @@ describe('W3 Partner Pipeline', () => {
     go('/partner-pipeline/REG2026-0147');
     expect(await screen.findByText(/Verifikasi Selesai aktif setelah semua dokumen wajib/, {}, T)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Verifikasi Selesai' }).disabled).toBe(true);
-    expect(screen.getByText('Kode Referral')).toBeTruthy();
+    expect(screen.queryByText('Kode Referral')).toBeNull(); // per toko di tab Toko, bukan Informasi Partner (PRD Scope 1 v2)
     expect(screen.queryByRole('button', { name: 'Valid' })).toBeNull();
   });
 
@@ -183,7 +187,7 @@ describe('W3 Partner Pipeline', () => {
     expect(within(dlg).getByText('Kode referral wajib diisi untuk semua toko sebelum aktivasi.')).toBeTruthy();
     await user.click(within(dlg).getByRole('button', { name: 'Buka tab Toko' }));
     await user.click(await screen.findByRole('button', { name: 'Isi kode' }, T));
-    await user.type(screen.getByPlaceholderText('Masukkan kode dari AppsFlyer'), 'ofsas148');
+    await user.type(screen.getByPlaceholderText('Masukkan kode referral'), 'ofsas148');
     await user.click(screen.getByRole('button', { name: 'Simpan' }));
     expect(await screen.findByText('OFSAS148', {}, T)).toBeTruthy();
 
@@ -269,8 +273,14 @@ describe('W3 Partner Pipeline', () => {
     go('/partner-pipeline?status=active');
     await user.click(await screen.findByText('Jaya Abadi Cellular', {}, T));
     await screen.findByRole('tab', { name: /Toko \(4\)/ }, T);
-    await user.click(screen.getByRole('button', { name: 'Kembali' }));
+    // Tombol Kembali dihapus (keputusan 2026-10-17); breadcrumb "Partner Pipeline" memulihkan daftar sebelumnya.
+    expect(screen.queryByRole('button', { name: 'Kembali' })).toBeNull();
+    // jsdom mengikuti <a> tanpa href (hash jadi kosong); browser tidak. Cegah aksi bawaan agar hanya onClick breadcrumb yang jalan.
+    const noHref = (e) => { if (e.target.closest?.('a:not([href])')) e.preventDefault(); };
+    document.addEventListener('click', noHref, true);
+    await user.click(within(screen.getByRole('navigation', { name: 'Breadcrumb' })).getByText('Partner Pipeline'));
     await waitFor(() => expect(window.location.hash).toBe('#/partner-pipeline?status=active'));
+    document.removeEventListener('click', noHref, true);
   });
 });
 

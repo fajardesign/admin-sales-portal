@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button, CheckboxLabel, Drawer, DrawerFooter, DrawerHeader, Field, Modal, Select, StatusModal, TextInput } from '@ds/index.js';
 import { ApiError, aplAreaHolders, createUser, identityTaken, leaderOptions } from '../../api/mockApi.js';
 import { useToast } from '../../components/Toaster.jsx';
-import { AREAS, CREATABLE_ROLES, ROLES, TL_LEVEL } from '../../lib/constants.js';
+import { AREAS, CREATABLE_ROLES, PLATFORM_LABEL, ROLES, TL_LEVEL } from '../../lib/constants.js';
 import { validateUserForm } from '../../lib/validation.js';
 import { preset } from '../../dev/presets.js';
 
@@ -109,7 +109,7 @@ export function AddUserDrawer({ user, onClose, onCreated }) {
   return (
     <>
       <Drawer open width={480} onClose={confirmOpen ? undefined : requestCancel}
-        header={<DrawerHeader size="lg" title="Tambah Pengguna" description="Akun dibuat di Keycloak dan tautan aktivasi (berlaku 3x24 jam, sekali pakai) dikirim ke email pengguna." icon="UserAddLine" onClose={requestCancel} />}
+        header={<DrawerHeader size="lg" title="Tambah Pengguna" description="Akun dibuat dan tautan aktivasi (berlaku 3x24 jam, sekali pakai) dikirim ke email pengguna." icon="UserAddLine" onClose={requestCancel} />}
         footer={(
           <DrawerFooter>
             <Button variant="stroke" tone="neutral" size="sm" disabled={saving} onClick={requestCancel}>Batal</Button>
@@ -126,7 +126,7 @@ export function AddUserDrawer({ user, onClose, onCreated }) {
           {text('fullName', { label: 'Nama Lengkap', placeholder: 'Budi Santoso', onChange: (e) => setField('fullName', e.target.value) })}
           <Select label="Role Type" required placeholder="Pilih role" value={form.role || undefined} error={errs.role} disabled={saving}
             options={CREATABLE_ROLES.map((r) => ({ value: r, label: ROLES[r].label }))} onChange={setRole}
-            hint={form.role ? `Realm role ${ROLES[form.role].realm} · akses platform ${ROLES[form.role].platform}` : 'Akun Partner dibuat otomatis saat partner Active.'} />
+            hint={form.role ? `Masuk lewat ${PLATFORM_LABEL[ROLES[form.role].platform]}` : 'Akun Partner dibuat otomatis saat partner Active.'} />
           {form.role === 'TL' && (
             <Select label="Level TL" required placeholder="Pilih level" value={form.tlLevel || undefined} error={errs.tlLevel} disabled={saving}
               options={Object.entries(TL_LEVEL).map(([value, label]) => ({ value, label }))} onChange={(v) => { setField('tlLevel', v); touch('tlLevel'); }} />

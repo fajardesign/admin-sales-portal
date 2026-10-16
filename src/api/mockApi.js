@@ -427,7 +427,7 @@ export async function createUser(form, session) {
     areaIds: form.role === 'REVIEWER' ? [] : form.areaIds, supervisorId: form.leaderId ? Number(form.leaderId) : null, partnerId: null,
     status: 'PENDING', inviteSentAt: now(), inviteResendCount: 0, activatedAt: null, disabledAt: null, disabledBy: null, disabledReason: null,
     createdBy: actorOf(session), createdAt: now(), password: null, fails: 0, lockUntil: null,
-    log: [{ at: now(), text: inviteSent ? `Akun dibuat di Keycloak, tautan aktivasi dikirim ke ${email}` : 'Akun dibuat di Keycloak, email undangan gagal dikirim' }],
+    log: [{ at: now(), text: inviteSent ? `Akun dibuat, tautan aktivasi dikirim ke ${email}` : 'Akun dibuat, email undangan gagal dikirim' }],
   };
   users.push(u);
   syncUser(u);
@@ -730,27 +730,32 @@ export async function setStoreReferral(pid, storeId, code, reason, session) {
 export const storesWithoutReferral = (p) => p.stores.filter((s) => !s.referralCode);
 
 /**
- * Menu Kode Referral (keputusan 2026-10-16, OQ-25): partner (payung) dengan tokonya; filter "perlu" = toko tanpa kode di partner
- * yang masih bisa diisi (termasuk toko baru "Menunggu kode referral"), "terisi" = toko yang sudah punya kode.
+ * Toko Aktif (keputusan 2026-10-16/17): sudut pandang toko untuk partner Active — toko aktif dan toko baru yang menunggu kode
+ * referral (OQ-25). Filter: partner, nama toko, status kode referral ('belum' | 'sudah'). Ringkasan dihitung dari semua toko
+ * (tanpa filter): jumlah toko, jumlah TL, toko aktif yang belum ditugaskan ke SA/SR, toko menunggu kode referral.
  */
-export async function referralOverview(f = {}, { retry = false } = {}) {
+export async function activeStores(f = {}, { retry = false } = {}) {
   const empty = await listGate(retry);
+  const all = partners.filter((p) => p.status === 'ACTIVE').flatMap((p) => p.stores.filter((s) => ['ACTIVE', 'WAITING_REFERRAL'].includes(s.status)).map((s) => ({ p, s })));
+  const summary = {
+    stores: all.length,
+    tls: new Set(all.map(({ s }) => s.tlId).filter((x) => x != null)).size,
+    unassigned: all.filter(({ s }) => s.status === 'ACTIVE' && s.assigned.length === 0).length,
+    waiting: all.filter(({ s }) => s.status === 'WAITING_REFERRAL').length,
+    noCode: all.filter(({ s }) => !s.referralCode).length,
+  };
+  const partnerOptions = [...new Map(all.map(({ p }) => [p.id, { value: p.id, label: p.partnerName }])).values()].sort((a, b) => a.label.localeCompare(b.label));
   const term = (f.q ?? '').trim().toLowerCase();
-  const all = partners.filter((p) => !['REJECTED', 'CANCELLED'].includes(p.status) && (!f.area || p.areaId === Number(f.area)));
-  const need = (p, s) => !s.referralCode && REFERRAL_EDITABLE.includes(p.status);
-  const counts = { all: 0, need: 0, waiting: 0, filled: 0 };
-  const rows = all.map((p) => {
-    const stores = p.stores.map((s) => ({
-      id: s.id, name: s.name, code: s.code, referralCode: s.referralCode, status: s.status, primary: s.primary, needsAction: need(p, s),
-      tl: userById(s.tlId)?.fullName ?? null, addedAt: s.addedAt,
+  const rows = all.filter(({ p, s }) => (!f.partner || p.id === f.partner)
+    && (!term || [s.name, s.code ?? '', s.referralCode ?? ''].some((v) => v.toLowerCase().includes(term)))
+    && (f.ref === 'belum' ? !s.referralCode : f.ref === 'sudah' ? !!s.referralCode : true))
+    .sort((x, y) => (y.s.status === 'WAITING_REFERRAL') - (x.s.status === 'WAITING_REFERRAL') || x.p.partnerName.localeCompare(y.p.partnerName) || x.s.id.localeCompare(y.s.id))
+    .map(({ p, s }) => ({
+      id: s.id, name: s.name, code: s.code, primary: s.primary, status: s.status, referralCode: s.referralCode, areaId: p.areaId,
+      partnerId: p.id, partnerName: p.partnerName, partnerStatus: p.status,
+      tl: userById(s.tlId)?.fullName ?? null, sales: s.assigned.map((id) => userById(id)).filter(Boolean).map((u) => `${u.fullName} (${u.role})`),
     }));
-    stores.forEach((s) => { counts.all += 1; if (s.needsAction) counts.need += 1; if (s.status === 'WAITING_REFERRAL') counts.waiting += 1; if (s.referralCode) counts.filled += 1; });
-    return { id: p.id, name: p.partnerName, status: p.status, areaId: p.areaId, editable: REFERRAL_EDITABLE.includes(p.status), stores };
-  }).map((r) => ({ ...r, stores: r.stores.filter((s) => (f.status === 'perlu' ? s.needsAction : f.status === 'terisi' ? !!s.referralCode : true)) }))
-    .filter((r) => r.stores.length && (!term || r.name.toLowerCase().includes(term) || r.id.toLowerCase().includes(term) || r.stores.some((s) => [s.name, s.referralCode ?? ''].some((v) => v.toLowerCase().includes(term)))))
-    .sort((a, b) => b.stores.filter((s) => s.status === 'WAITING_REFERRAL').length - a.stores.filter((s) => s.status === 'WAITING_REFERRAL').length
-      || b.stores.filter((s) => s.needsAction).length - a.stores.filter((s) => s.needsAction).length || a.name.localeCompare(b.name));
-  return { rows: empty ? [] : rows, counts };
+  return { rows: empty ? [] : rows, summary, partnerOptions };
 }
 
 const EDITABLE = {
@@ -810,11 +815,8 @@ export async function adminHome(areaId, { retry = false } = {}) {
     verified: { count: verified.length },
     waitingPks: { count: waiting.length, oldestSent: waiting.length ? waiting.reduce((m, p) => (p.pks.sentAt < m ? p.pks.sentAt : m), waiting[0].pks.sentAt) : null },
     expiredUsers: us.filter((u) => accountStatus(u) === 'EXPIRED').map(enrichUser),
-    // Kode Referral (OQ-25): toko baru partner Active yang menunggu kode, dan toko partner Verified/Waiting PKS yang belum diisi.
-    referral: {
-      waiting: ps.flatMap((p) => p.stores.filter((s) => s.status === 'WAITING_REFERRAL')).length,
-      beforeActivation: [...verified, ...waiting].flatMap((p) => storesWithoutReferral(p)).length,
-    },
+    // Kode Referral (OQ-25): toko baru partner Active yang menunggu kode.
+    referral: { waiting: ps.flatMap((p) => p.stores.filter((s) => s.status === 'WAITING_REFERRAL')).length },
     revision: counts.REVISION_REQUIRED, pendingUsers: us.filter((u) => accountStatus(u) === 'PENDING').length,
     active: { count: counts.ACTIVE, stores: by('ACTIVE').reduce((s, p) => s + p.stores.filter((x) => x.status === 'ACTIVE').length, 0) },
     reviewQueue: [...uReview].sort((x, y) => x.statusUpdatedAt - y.statusUpdatedAt).slice(0, 5).map(enrich),

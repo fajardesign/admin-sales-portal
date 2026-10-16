@@ -5,8 +5,6 @@
 const NAV = [
   { title: 'Utama', items: [
     { label: 'Beranda', value: '/beranda', icon: 'HomeSmile2Line', feature: 'DASHBOARD' },
-    { label: 'Partner Pipeline', value: '/partner-pipeline', icon: 'Building2Line', feature: 'PARTNER_PIPELINE' },
-    { label: 'Kode Referral', value: '/kode-referral', icon: 'Hashtag', feature: 'PARTNER_PIPELINE' },
     { label: 'Dashboard', value: '/apl', icon: 'Dashboard3Line', feature: 'SALES_PERFORMANCE' },
     { label: 'Kinerja Penjualan', value: '/apl/kinerja', icon: 'BarChartLine', feature: 'SALES_PERFORMANCE' },
     { label: 'Produktivitas', value: '/apl/produktivitas', icon: 'TimeLine', feature: 'PRODUCTIVITY_PERFORMANCE_CHECK_IN' },
@@ -16,8 +14,13 @@ const NAV = [
     { label: 'Skema Insentif', value: '/skema-insentif', icon: 'CoinsLine', feature: 'INCENTIVE_SCHEME' },
     { label: 'Hasil Perhitungan', value: '/hasil-perhitungan', icon: 'FileList2Line', feature: 'INCENTIVE_SCHEME' },
   ] },
+  // Admin (keputusan 2026-10-16): Utama (Beranda) · Partner (Toko Aktif, Partner Pipeline) · Atur (Manajemen Akun).
+  { title: 'Partner', items: [
+    { label: 'Toko Aktif', value: '/toko-aktif', icon: 'ShoppingBagLine', feature: 'PARTNER_PIPELINE' },
+    { label: 'Partner Pipeline', value: '/partner-pipeline', icon: 'Building2Line', feature: 'PARTNER_PIPELINE' },
+  ] },
   { title: 'Atur', items: [
-    { label: 'Account Management', value: '/account-management', icon: 'UserLine', feature: 'ACCOUNT_CREATION' },
+    { label: 'Manajemen Akun', value: '/account-management', icon: 'UserLine', feature: 'ACCOUNT_CREATION' },
   ] },
 ];
 

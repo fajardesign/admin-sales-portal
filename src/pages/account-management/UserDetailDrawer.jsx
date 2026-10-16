@@ -5,7 +5,7 @@ import { KeyValueGrid } from '../../components/KeyValueGrid.jsx';
 import { Timeline } from '../../components/Timeline.jsx';
 import { getUser } from '../../api/mockApi.js';
 import { now } from '../../api/db.js';
-import { ACTIVATION_TTL_MS, ROLES, TL_LEVEL, areaName } from '../../lib/constants.js';
+import { ACTIVATION_TTL_MS, FEATURE_LABEL, PLATFORM_LABEL, ROLES, TL_LEVEL, areaName } from '../../lib/constants.js';
 import { DEMO } from '../../lib/env.js';
 import { formatDateTime, formatDuration, formatPhone } from '../../lib/format.js';
 import { navigate } from '../../lib/router.js';
@@ -56,8 +56,8 @@ export function UserDetailDrawer({ userId, user, version, onClose, onResend, onD
             { label: 'Area', value: areas },
             { label: 'Leader (Atasan)', value: u.leader ? `${u.leader.name} (${u.leader.role})` : null },
             { label: 'Bawahan aktif', value: u.subordinates.length ? u.subordinates.map((s) => `${s.name} (${s.role})`).join(', ') : null, full: true },
-            { label: 'Realm role', value: ROLES[u.role].realm }, { label: 'Akses platform', value: ROLES[u.role].platform },
-            { label: 'Akses fitur', value: ROLES[u.role].features.join(', '), full: true },
+            { label: 'Masuk lewat', value: PLATFORM_LABEL[ROLES[u.role].platform] },
+            { label: 'Akses fitur', value: ROLES[u.role].features.map((f) => FEATURE_LABEL[f] ?? f).join(', '), full: true },
             u.partner && { label: 'Partner terkait', full: true, value: <LinkButton onClick={() => navigate(`/partner-pipeline/${u.partner.id}`)} rightIcon={<Icon name="ArrowRightSLine" size={16} />}>{u.partner.name} · {u.partner.id}</LinkButton> },
           ]} />
         </Section>

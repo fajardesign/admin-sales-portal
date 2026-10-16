@@ -57,7 +57,7 @@ export function PartnerDetail({ id, user, onLogout }) {
 
   const shell = (children) => (
     <AdminShell active="/partner-pipeline" icon="Building2Line" title="Partner Pipeline" description="Tinjau pengajuan partner, verifikasi dokumen, catat PKS, dan ubah status partner." user={user} onLogout={onLogout}>
-      <Breadcrumbs items={[{ label: 'Partner Pipeline', icon: 'Building2Line', onClick: back }, { label: id }]} />
+      <Breadcrumbs items={[{ label: 'Partner Pipeline', icon: 'Building2Line', onClick: back }, { label: p?.partnerName ?? id }]} />
       {children}
     </AdminShell>
   );
@@ -86,11 +86,10 @@ export function PartnerDetail({ id, user, onLogout }) {
             {p.revisionRound > 0 && <StatusBadge status="information">Revisi ke-{p.revisionRound}</StatusBadge>}
           </div>
           <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>
-            {p.registrationNumber} · Diajukan oleh {p.submitter?.name} ({p.submitter?.role}) · {formatDateTime(p.submittedAt)} · {p.stores.length} toko
+            Diajukan oleh {p.submitter?.name} ({p.submitter?.role}) · {formatDateTime(p.submittedAt)} · {p.stores.length} toko
           </span>
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-8)', flexWrap: 'wrap', alignItems: 'center' }}>
-          <Button variant="ghost" tone="neutral" size="sm" leftIcon={<Icon name="ArrowLeftLine" />} onClick={back}>Kembali</Button>
           {buttons.map((to) => {
             const isPrimary = PRIMARY.includes(to);
             if (to === 'EDIT') return <Button key={to} size="sm" variant="stroke" tone="neutral" leftIcon={<Icon name="EditLine" />} onClick={() => setEditing(true)}>Ubah Data Partner</Button>;

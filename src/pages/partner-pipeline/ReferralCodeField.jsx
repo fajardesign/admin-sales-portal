@@ -52,12 +52,12 @@ export function ReferralCodeField({ partnerId, partnerStatus, store, user, requi
   }
   return (
     <span style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)', minWidth: 260 }}>
-      <TextInput size="sm" value={value} placeholder="Masukkan kode dari AppsFlyer" aria-label={`Kode referral ${store.name}`}
+      <TextInput size="sm" value={value} placeholder="Masukkan kode referral" aria-label={`Kode referral ${store.name}`}
         onChange={(e) => { setValue(e.target.value); setError(null); }}
         hint={touched && formatErr ? undefined : 'Diawali "OF", huruf dan angka, maks. 20 karakter. Contoh: OFSAS001.'}
         error={error ?? (touched ? formatErr : undefined)} />
       {needReason && (
-        <TextInput size="sm" label="Alasan perubahan" required value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Contoh: Kode diganti di AppsFlyer"
+        <TextInput size="sm" label="Alasan perubahan" required value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Contoh: Kode referral diganti"
           error={touched ? reasonErr : undefined} />
       )}
       <span style={{ display: 'flex', gap: 'var(--space-8)' }}>

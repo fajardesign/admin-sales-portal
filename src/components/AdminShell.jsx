@@ -1,14 +1,25 @@
-import { Sidebar, PageHeader, Avatar, Button, Icon, AmarBankLogo } from '@ds/index.js';
+import { useState } from 'react';
+import { Sidebar, SidebarItem, PageHeader, Avatar, Button, Icon, AmarBankLogo } from '@ds/index.js';
 import { navigate } from '../lib/router.js';
 import { navFor } from '../lib/nav.js';
 
 
-/** Shell portal: Sidebar gelap 272px + PageHeader (ikon, judul, deskripsi, chip pengguna, Keluar) + konten pad 24/32. */
+const COLLAPSE_KEY = 'sp-sidebar-collapsed';
+const readCollapsed = () => { try { return localStorage.getItem(COLLAPSE_KEY) === '1'; } catch { return false; } };
+
+/**
+ * Shell portal: Sidebar gelap 272px (bisa diciutkan ke 80px, hanya ikon; pilihan diingat per perangkat) + PageHeader
+ * (ikon, judul, deskripsi, chip pengguna, Keluar) + konten pad 24/32.
+ */
 export function AdminShell({ active, icon, title, description, user, onLogout, headerExtra, children }) {
+  const [collapsed, setCollapsed] = useState(readCollapsed);
+  const toggle = () => setCollapsed((c) => { try { localStorage.setItem(COLLAPSE_KEY, c ? '0' : '1'); } catch { /* abaikan */ } return !c; });
   return (
     <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-white-0)' }}>
-      <Sidebar theme="dark" company="" logo={<AmarBankLogo lockup="horizontal" color="white" height={26} />}
-        sections={navFor(user)} value={active} onChange={(v) => navigate(v)} />
+      <Sidebar theme="dark" company="" collapsed={collapsed}
+        logo={collapsed ? <AmarBankLogo lockup="mark" color="white" height={26} /> : <AmarBankLogo lockup="horizontal" color="white" height={26} />}
+        sections={navFor(user)} value={active} onChange={(v) => navigate(v)}
+        footer={<SidebarItem theme="dark" collapsed={collapsed} icon={collapsed ? 'ArrowRightSLine' : 'ArrowLeftSLine'} label={collapsed ? 'Bentangkan menu' : 'Ciutkan menu'} onClick={toggle} />} />
       <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <PageHeader
           media={(
