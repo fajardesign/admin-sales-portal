@@ -42,11 +42,13 @@ describe('alasan & file PKS', () => {
 });
 
 describe('revisi stakeholder 2026-10-08', () => {
-  it('kode referral wajib, huruf/angka, maks. 20', () => {
-    expect(validateReferralCode('')).toBe('Informasi wajib diisi');
-    expect(validateReferralCode('AMR-01')).toBe('Format tidak valid');
-    expect(validateReferralCode('A'.repeat(21))).toBe('Maksimal 20 karakter');
-    expect(validateReferralCode(' AMR6148 ')).toBeUndefined();
+  it('kode referral per toko: diawali OF, huruf/angka, maks. 20 (PRD Scope 1 v2 FR-019)', () => {
+    const fmt = 'Kode referral harus diawali OF dan hanya berisi huruf dan angka, maks. 20 karakter.';
+    expect(validateReferralCode('')).toBe('Kode referral wajib diisi');
+    expect(validateReferralCode('SAS001')).toBe(fmt);
+    expect(validateReferralCode('OF-SAS01')).toBe(fmt);
+    expect(validateReferralCode(`OF${'A'.repeat(19)}`)).toBe(fmt);
+    expect(validateReferralCode(' ofsas001 ')).toBeUndefined();
   });
   it('sisa waktu tautan 3x24 jam ditampilkan dalam hari', () => {
     expect(formatDuration(72 * 3600e3)).toBe('3 hari');
@@ -124,13 +126,13 @@ describe('absensi & kunjungan (revisi stakeholder 2026-10-08)', () => {
   });
 });
 
-describe('Kode Referral unik per partner (review 2026-10-09)', () => {
-  it('dibandingkan setelah trim tanpa beda huruf besar/kecil; partner sendiri, Rejected, dan Cancelled tidak dihitung', () => {
-    expect(referralTaken(' amr7138 ', 'REG2026-0139')).toBe(true);
-    expect(referralTaken('AMR7138', 'REG2026-0138')).toBe(false);
-    expect(referralTaken('AMR11135')).toBe(false); // REG2026-0135 Rejected
-    expect(referralTaken('AMR10134')).toBe(false); // REG2026-0134 Cancelled
-    expect(referralTaken('KODEBARU1')).toBe(false);
+describe('Kode Referral unik per toko (PRD Scope 1 v2 FR-019, keputusan 2026-10-16)', () => {
+  it('dibandingkan setelah trim, huruf besar; toko sendiri dan partner Rejected/Cancelled tidak dihitung; Inactive tetap dipegang', () => {
+    expect(referralTaken(' ofmks1391 ', 'REG2026-0139-2')).toBe(true);
+    expect(referralTaken('OFMKS1391', 'REG2026-0139-1')).toBe(false);
+    expect(referralTaken('OFMKS1351')).toBe(false); // REG2026-0135 Rejected: boleh dipakai ulang
+    expect(referralTaken('OFSBY1331')).toBe(true); // REG2026-0133 Inactive: tetap dipegang
+    expect(referralTaken('OFBARU1')).toBe(false);
   });
 });
 

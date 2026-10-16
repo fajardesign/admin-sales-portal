@@ -2,11 +2,12 @@
 // Semua data di src/api/db.js (memori). Fungsi async dengan jeda kecil agar state loading terlihat.
 import { getScenario } from '../dev/scenario.js';
 import { formatPhone, normalizePhone } from '../lib/format.js';
+import { validateReferralCode } from '../lib/validation.js';
 import {
   ACCOUNT_STATUS, AREAS, CREATABLE_ROLES, ACTIVATION_TTL_MS, FINAL_STATUSES, PAGE_SIZE, PKS_VIA, RESET_TTL_MS, PARTNER_STATUS, ROLES, TRANSITIONS,
 } from '../lib/constants.js';
 import {
-  attendance, CURRENT_MONTH, loans, mfp, MONTHS, now, owningTl, partners, schemes, superAdmins, targets, users, visits, wibDate, weekStoresOf,
+  attendance, CURRENT_MONTH, loans, mfp, MONTHS, now, partners, partnerTls, schemes, superAdmins, targets, users, visits, wibDate, weekStoresOf,
 } from './db.js';
 import { hydrateUsers, syncUser } from './supabaseSync.js';
 
@@ -154,8 +155,8 @@ export async function listPartners(q = {}, { retry = false } = {}) {
   const term = (q.q ?? '').trim().toLowerCase();
   const from = q.from ? new Date(`${q.from}T00:00:00+07:00`) : null;
   const to = q.to ? new Date(`${q.to}T23:59:59+07:00`) : null;
-  // Cari No. Registrasi, Nama Partner, atau Kode Referral (PRD Scope 1 FR-003/FR-019, AC-025).
-  const filtered = partners.filter((p) => (!term || [p.partnerName, p.registrationNumber, p.referralCode].some((v) => v.toLowerCase().includes(term)))
+  // Cari No. Registrasi, Nama Partner, atau Kode Referral toko mana pun (PRD Scope 1 v2 FR-003/FR-019, AC-025).
+  const filtered = partners.filter((p) => (!term || [p.partnerName, p.registrationNumber, ...p.stores.map((s) => s.referralCode ?? '')].some((v) => v.toLowerCase().includes(term)))
     && (!q.area || p.areaId === Number(q.area))
     && (!q.entity || p.businessEntityType === q.entity)
     && (!q.channel || p.channel === q.channel)
@@ -239,6 +240,8 @@ export async function changeStatus(pid, to, opts, session) {
     reason = `PKS dikirim via ${PKS_VIA[opts.via]} ${target}${p.pks.privyRef ? ` (ref. ${p.pks.privyRef})` : ''}`;
   }
   if (to === 'ACTIVE') {
+    // PRD Scope 1 v2 FR-010 / AC-028: semua toko wajib punya Kode Referral sebelum aktivasi (dicek ulang di backend).
+    if (storesWithoutReferral(p).length) throw new ApiError('REFERRAL_MISSING');
     // PRD Scope 1 FR-010 / AC-016: akun PIC dibuat lebih dulu; bila bentrok atau gagal, status tetap Waiting PKS dan
     // tidak ada kode merchant/toko yang tersisa. Email/HP PIC yang sudah dipakai pengguna lain memblokir aktivasi (OQ-03).
     const email = p.pic.email.trim().toLowerCase();
@@ -358,7 +361,7 @@ function enrichUser(u) {
     leader: leader ? { id: leader.id, name: leader.fullName, role: leader.role } : null,
     partner: partner ? { id: partner.id, name: partner.partnerName } : null,
     subordinates: users.filter((x) => x.supervisorId === u.id && x.status !== 'DISABLED').map((x) => ({ id: x.id, name: x.fullName, role: x.role, status: accountStatus(x) })),
-    ownedPartners: u.role === 'TL' ? partners.filter((p) => owningTl(p) === u.id).length : 0,
+    ownedStores: u.role === 'TL' ? activeStoresOfTl(u.id).length : 0,
     assignedStores: ['SA', 'SR'].includes(u.role) ? partners.reduce((a, p) => a + p.stores.filter((s) => s.assigned.includes(u.id)).length, 0) : 0,
   };
 }
@@ -442,71 +445,150 @@ export async function resendInvite(id, session) {
   return enrichUser(u);
 }
 
+// ---------------------------------------------------- Serah terima leader (PRD Scope 1 v2 C4: FR-AM-009, FR-AM-012, FR-AM-013)
+const optionOf = (x) => ({ value: String(x.id), label: x.fullName });
+const subsOf = (id) => users.filter((x) => x.supervisorId === id && x.status !== 'DISABLED');
+const activeStoresOfTl = (tlId) => partners.filter((p) => !FINAL_STATUSES.includes(p.status))
+  .flatMap((p) => p.stores.filter((s) => s.tlId === tlId).map((s) => ({ p, s })));
+/** Calon atasan baru untuk bawahan `sub` dari atasan `from`: Active, role sama dengan `from`, memegang area bawahan, bukan `from`. */
+const candidatesFor = (from, sub) => users.filter((x) => x.id !== from.id && x.role === from.role && accountStatus(x) === 'ACTIVE' && x.areaIds.includes(sub.areaIds[0]));
+
 /**
- * Calon leader pengganti saat menonaktifkan leader (keputusan PO 2026-10-12/13):
- * TL → TL lain di area yang sama; APL → APL lain mana pun (area APL lama ikut pindah). Status Active atau Pending.
+ * Rencana serah terima untuk modal Nonaktifkan (mode 'disable') atau Pindahkan Bawahan (mode 'move'):
+ * { subs: [{ id, name, role, status, options }], mainOptions, ownedStores, stores: [{ subId, storeId, storeName, partnerName, tlId }] }.
+ * `stores` = toko yang dipegang tiap SA/SR bawahan, untuk menghitung penugasan yang akan dilepas (FR-AM-013).
  */
-export function replacementLeaderOptions(id) {
+export function handoverPlan(id, mode = 'disable') {
   const u = userById(id);
-  if (!u || !['TL', 'APL'].includes(u.role)) return [];
-  return users.filter((x) => x.id !== u.id && x.role === u.role && x.status !== 'DISABLED' && (u.role === 'APL' || x.areaIds[0] === u.areaIds[0]))
-    .map((x) => ({ value: String(x.id), label: `${x.fullName}${accountStatus(x) !== 'ACTIVE' ? ` (${ACCOUNT_STATUS[accountStatus(x)].label})` : ''}` }));
+  const subs = subsOf(id).map((x) => ({ id: x.id, name: x.fullName, role: x.role, areaId: x.areaIds[0], status: accountStatus(x), options: candidatesFor(u, x).map(optionOf) }));
+  const owned = u.role === 'TL' ? activeStoresOfTl(u.id) : [];
+  // "untuk semua": TL → TL Active lain di area TL; APL → APL Active lain yang memegang area salah satu bawahan.
+  const pool = u.role === 'TL'
+    ? users.filter((x) => x.id !== u.id && x.role === 'TL' && accountStatus(x) === 'ACTIVE' && x.areaIds.includes(u.areaIds[0]))
+    : users.filter((x) => x.id !== u.id && x.role === u.role && accountStatus(x) === 'ACTIVE' && subs.some((sb) => x.areaIds.includes(sb.areaId)));
+  const stores = subsOf(id).filter((x) => ['SA', 'SR'].includes(x.role)).flatMap((x) => partners.flatMap((p) => p.stores
+    .filter((s) => s.assigned.includes(x.id)).map((s) => ({ subId: x.id, storeId: s.id, storeName: s.name, partnerName: p.partnerName, tlId: s.tlId }))));
+  return { mode, role: u.role, subs, mainOptions: pool.map(optionOf), ownedStores: mode === 'disable' ? owned.length : 0, stores };
 }
 
 /**
- * Nonaktifkan akun (final). Admin tidak bisa menonaktifkan akunnya sendiri.
- * opts.replacements = { [idBawahan]: idLeaderBaru }, opts.defaultLeaderId = pengganti utama (wajib bila masih punya bawahan).
- * Akibat (jawaban feedback DD poin 5 & 7, keputusan PO 2026-10-12):
- *  - Bawahan pindah ke leader pengganti; partner milik TL lama pindah ke pengganti utama; area APL lama pindah ke APL pengganti.
- *  - SA/SR: semua penugasan toko dilepas otomatis (dicatat "Sistem" di Riwayat partner).
+ * FR-AM-013 (per toko, keputusan 2026-10-16): penugasan SA/SR yang dilepas setelah serah terima. Setelah serah terima, TL toko =
+ * pengganti utama bila toko milik TL yang dinonaktifkan; SA/SR dilepas dari toko yang TL-nya bukan atasan barunya.
+ */
+export function releasesAfter(plan, fromId, leaderOf, mainId) {
+  return plan.stores.filter((x) => {
+    const to = Number(leaderOf[x.subId]);
+    if (!to) return false;
+    const tl = plan.mode === 'disable' && x.tlId === fromId ? Number(mainId) : x.tlId;
+    return tl !== to;
+  });
+}
+
+/** Lepas SA/SR dari satu toko oleh Sistem, dengan sumbernya (FR-MP-007). */
+function systemRelease(p, s, uid, source) {
+  s.assigned = s.assigned.filter((x) => x !== uid);
+  s.assignLog = [...(s.assignLog ?? []), { at: now(), userId: uid, action: 'RELEASE' }];
+  log(p, { from: null, to: null, by: 'Sistem', reason: `${userById(uid).fullName} dilepas dari ${s.name} (${source})` });
+}
+
+/** Validasi & terapkan serah terima: atasan bawahan, toko TL lama (disable), lalu pelepasan penugasan (FR-AM-013). */
+function applyHandover(u, mode, leaderOf, mainId, reason, actor) {
+  const plan = handoverPlan(u.id, mode);
+  const picked = plan.subs.filter((x) => mode === 'disable' || leaderOf[x.id] != null);
+  if (picked.some((x) => !x.options.some((o) => o.value === String(leaderOf[x.id] ?? '')))) throw new ApiError('LEADER_REQUIRED');
+  const main = mainId != null && mainId !== '' ? userById(Number(mainId)) : null;
+  if (mode === 'disable' && u.role === 'TL' && plan.ownedStores > 0 && (!main || !plan.mainOptions.some((o) => o.value === String(main.id)))) throw new ApiError('LEADER_REQUIRED');
+  const releases = releasesAfter(plan, u.id, leaderOf, main?.id);
+  const source = mode === 'disable' ? `atasan baru setelah ${u.fullName} dinonaktifkan` : 'Pindahkan Bawahan';
+  picked.forEach((x) => {
+    const sub = userById(x.id); const to = userById(Number(leaderOf[x.id]));
+    sub.supervisorId = to.id;
+    sub.log.push({ at: now(), text: `Atasan diganti dari ${u.fullName} ke ${to.fullName} oleh ${actor} (${mode === 'disable' ? 'atasan sebelumnya dinonaktifkan' : 'Pindahkan Bawahan'}): ${reason}` });
+    if (mode === 'move') to.log.push({ at: now(), text: `Menerima bawahan ${sub.fullName} dari ${u.fullName} oleh ${actor}: ${reason}` });
+    syncUser(sub); if (mode === 'move') syncUser(to);
+  });
+  if (mode === 'disable' && u.role === 'TL' && main) {
+    activeStoresOfTl(u.id).forEach(({ p, s }) => {
+      s.tlLog = [...(s.tlLog ?? []), { at: now(), from: u.id, to: main.id }];
+      s.tlId = main.id;
+      log(p, { from: null, to: null, by: actor, reason: `TL toko ${s.name} pindah dari ${u.fullName} ke ${main.fullName} (TL lama dinonaktifkan)` });
+    });
+  }
+  releases.forEach((r) => { const p = partners.find((x) => x.stores.some((s) => s.id === r.storeId)); systemRelease(p, p.stores.find((s) => s.id === r.storeId), r.subId, source); });
+  return { moved: picked.length, released: releases.length, stores: mode === 'disable' ? plan.ownedStores : 0 };
+}
+
+/**
+ * FR-AM-009 — Nonaktifkan akun (final), dengan serah terima leader. Admin tidak bisa menonaktifkan akunnya sendiri.
+ * opts.replacements = { [idBawahan]: idLeaderBaru } untuk setiap bawahan; opts.defaultLeaderId = "Leader pengganti untuk semua"
+ * (TL: penerima toko milik TL). SA/SR: semua penugasan toko dilepas (Sistem). APL tidak memindahkan area (OQ-AM-12: buat APL
+ * baru lebih dulu, dua APL boleh memegang area yang sama selama serah terima).
  */
 export async function disableUser(id, reason, session, opts = {}) {
   await wait(500);
   const u = userById(id);
   if (u.id === session.userId || u.status === 'DISABLED') throw new ApiError('CONFLICT');
   const actor = actorOf(session);
-  const subs = users.filter((x) => x.supervisorId === u.id && x.status !== 'DISABLED');
-  const valid = new Set(replacementLeaderOptions(id).map((o) => Number(o.value)));
-  const pick = (sid) => Number(opts.replacements?.[sid] ?? opts.defaultLeaderId);
-  if (subs.some((x) => !valid.has(pick(x.id)))) throw new ApiError('LEADER_REQUIRED');
-  const main = opts.defaultLeaderId != null ? userById(Number(opts.defaultLeaderId)) : null;
-  const needsMain = subs.length > 0 || (u.role === 'TL' && partners.some((p) => owningTl(p) === u.id));
-  if (needsMain && (!main || !valid.has(main.id))) throw new ApiError('LEADER_REQUIRED');
-
-  subs.forEach((x) => {
-    const to = userById(pick(x.id));
-    x.supervisorId = to.id;
-    x.log.push({ at: now(), text: `Atasan diganti dari ${u.fullName} ke ${to.fullName} oleh ${actor} (atasan sebelumnya dinonaktifkan)` });
-    syncUser(x);
-  });
-  if (u.role === 'TL' && main) {
-    partners.filter((p) => owningTl(p) === u.id).forEach((p) => {
-      p.ownerLog = [...(p.ownerLog ?? []), { at: now(), from: u.id, to: main.id }];
-      p.ownerTlId = main.id;
-      log(p, { from: null, to: null, by: actor, reason: `Kepemilikan partner pindah dari ${u.fullName} ke ${main.fullName} (TL lama dinonaktifkan)` });
-    });
-  }
-  if (u.role === 'APL' && main) {
-    main.areaIds = [...new Set([...main.areaIds, ...u.areaIds])];
-    main.log.push({ at: now(), text: `Area ${u.areaIds.map((a) => AREAS.find((x) => x.id === a)?.name).join(', ')} pindah dari ${u.fullName} oleh ${actor}` });
-    syncUser(main);
-  }
-  let released = 0;
+  const leaderOf = Object.fromEntries(subsOf(id).map((x) => [x.id, opts.replacements?.[x.id] ?? opts.defaultLeaderId]));
+  const r = applyHandover(u, 'disable', leaderOf, opts.defaultLeaderId, reason, actor);
+  let released = r.released;
   if (['SA', 'SR'].includes(u.role)) {
-    partners.forEach((p) => p.stores.forEach((s) => {
-      if (!s.assigned.includes(u.id)) return;
-      s.assigned = s.assigned.filter((x) => x !== u.id);
-      s.assignLog = [...(s.assignLog ?? []), { at: now(), userId: u.id, action: 'RELEASE' }];
-      released += 1;
-      log(p, { from: null, to: null, by: 'Sistem', reason: `${u.fullName} dilepas dari ${s.name} (akun dinonaktifkan)` });
-    }));
+    partners.forEach((p) => p.stores.filter((s) => s.assigned.includes(u.id)).forEach((s) => { systemRelease(p, s, u.id, 'akun dinonaktifkan'); released += 1; }));
   }
   Object.assign(u, { status: 'DISABLED', disabledAt: now(), disabledBy: actor, disabledReason: reason });
   u.log.push({ at: now(), text: `Akun dinonaktifkan: ${reason}` });
-  if (subs.length) u.log.push({ at: now(), text: `${subs.length} bawahan dipindahkan ke leader pengganti` });
-  if (released) u.log.push({ at: now(), text: `${released} toko dilepas dari penugasan` });
+  if (r.moved) u.log.push({ at: now(), text: `${r.moved} bawahan dipindahkan ke leader pengganti` });
+  if (r.stores) u.log.push({ at: now(), text: `${r.stores} toko pindah ke TL pengganti` });
+  if (released) u.log.push({ at: now(), text: `${released} penugasan toko dilepas` });
   syncUser(u);
   return enrichUser(u);
+}
+
+/**
+ * FR-AM-012 — Pindahkan Bawahan: sebagian/semua bawahan TL Active pindah ke TL Active lain di area yang sama; TL tetap Active
+ * dan tetap memegang semua tokonya (OQ-AM-13: toko tidak ikut pindah). moves = { [idBawahan]: idTlBaru } untuk yang dicentang.
+ */
+export async function moveSubordinates(tlId, moves, reason, session) {
+  await wait(500);
+  const u = userById(tlId);
+  if (u.role !== 'TL' || accountStatus(u) !== 'ACTIVE' || subsOf(tlId).length === 0 || !Object.keys(moves).length) throw new ApiError('CONFLICT');
+  if (!Object.keys(moves).every((sid) => subsOf(tlId).some((x) => String(x.id) === String(sid)))) throw new ApiError('CONFLICT');
+  const actor = actorOf(session);
+  const r = applyHandover(u, 'move', moves, null, reason, actor);
+  u.log.push({ at: now(), text: `${r.moved} bawahan dipindahkan oleh ${actor}${r.released ? `, ${r.released} penugasan toko dilepas` : ''}: ${reason}` });
+  syncUser(u);
+  return enrichUser(u);
+}
+
+/** APL boleh memetakan ulang TL toko hanya tanggal 1–3 setiap bulan (keputusan 2026-10-16); DevToolbar bisa membukanya. */
+export const tlRemapWindowOpen = () => getScenario().remapWindow === 'open' || Number(todayDate().slice(8)) <= 3;
+/** Calon TL baru untuk toko: TL Active di area partner, selain TL toko sekarang. */
+export function storeTlOptions(storeId) {
+  const p = partners.find((x) => x.stores.some((s) => s.id === storeId)); const s = p.stores.find((x) => x.id === storeId);
+  return users.filter((x) => x.role === 'TL' && accountStatus(x) === 'ACTIVE' && x.areaIds.includes(p.areaId) && x.id !== s.tlId).map(optionOf);
+}
+/** Nama SA/SR yang akan dilepas dari toko bila TL toko diganti ke `tlId` (bukan bawahan TL baru). */
+export function storeRemapReleases(storeId, tlId) {
+  const s = partners.flatMap((p) => p.stores).find((x) => x.id === storeId);
+  return tlId ? s.assigned.filter((x) => userById(x).supervisorId !== Number(tlId)).map((x) => userById(x).fullName) : [];
+}
+/**
+ * APL — ganti TL satu toko (keputusan 2026-10-16). SA/SR yang memegang toko dilepas bila bukan bawahan TL baru (FR-AM-013).
+ * Error: WINDOW_CLOSED (di luar tanggal 1–3) | CONFLICT (toko/TL tidak valid atau di luar area APL).
+ */
+export async function remapStoreTl(storeId, tlId, reason, session) {
+  await wait(400);
+  if (!tlRemapWindowOpen()) throw new ApiError('WINDOW_CLOSED');
+  const p = partners.find((x) => x.stores.some((s) => s.id === storeId));
+  const apl = userById(session.userId);
+  if (!p || p.status !== 'ACTIVE' || !apl.areaIds.includes(p.areaId) || !storeTlOptions(storeId).some((o) => o.value === String(tlId))) throw new ApiError('CONFLICT');
+  const s = p.stores.find((x) => x.id === storeId); const from = userById(s.tlId); const to = userById(Number(tlId));
+  const actor = actorOf(session);
+  s.tlLog = [...(s.tlLog ?? []), { at: now(), from: s.tlId, to: to.id }];
+  s.tlId = to.id;
+  log(p, { from: null, to: null, by: actor, reason: `TL toko ${s.name} diganti dari ${from?.fullName ?? '-'} ke ${to.fullName}: ${reason}` });
+  s.assigned.filter((x) => userById(x).supervisorId !== to.id).forEach((x) => systemRelease(p, s, x, `bukan bawahan ${to.fullName}`));
+  return aplPartnerRow(p, null);
 }
 
 // ------------------------------------------------------------------ Aktivasi (KC1)
@@ -606,18 +688,73 @@ export async function changePhone(id, newPhone, reason, session) {
  * Setiap perubahan dicatat (field, lama, baru, alasan, Admin, waktu) di changeLog dan Riwayat.
  */
 /** Partner yang dihitung untuk cek unik (Kode Referral, No. Handphone PIC): semua kecuali Rejected/Cancelled. */
-const registeredPartners = (exceptId) => partners.filter((p) => p.id !== exceptId && !['REJECTED', 'CANCELLED'].includes(p.status));
+// ------------------------------------------------------------------ Kode Referral per toko (PRD Scope 1 v2 C2, FR-019)
+/** Status partner tempat Admin boleh mengisi/mengubah Kode Referral toko (FR-015 pengecualian). */
+export const REFERRAL_EDITABLE = ['UNDER_REVIEW', 'REVISION_REQUIRED', 'VERIFIED', 'WAITING_PKS', 'ACTIVE'];
 /**
- * Kode Referral di level partner menjadi penghubung loan yang diajukan dari partner itu (lewat PIC-nya), jadi unik per partner:
- * dibandingkan setelah trim, tanpa beda huruf besar/kecil (keputusan review 2026-10-09; sama dengan Android `referralTaken`).
+ * Unik di semua toko; toko milik partner Rejected/Cancelled tidak dihitung, jadi kodenya boleh dipakai lagi (keputusan
+ * 2026-10-16, OQ-26: toko/partner Inactive tetap memegang kodenya). Dibandingkan setelah trim, huruf besar.
  */
-export function referralTaken(code, exceptId) {
-  const c = (code || '').trim().toLowerCase();
-  return !!c && registeredPartners(exceptId).some((p) => p.referralCode.trim().toLowerCase() === c);
+export function referralTaken(code, exceptStoreId) {
+  const c = (code || '').trim().toUpperCase();
+  return !!c && partners.filter((p) => !['REJECTED', 'CANCELLED'].includes(p.status))
+    .some((p) => p.stores.some((s) => s.id !== exceptStoreId && s.referralCode === c));
+}
+/**
+ * Admin mengisi/mengubah Kode Referral satu toko. Alasan wajib bila mengubah kode yang sudah ada saat partner Active.
+ * Toko "Menunggu kode referral" (toko baru setelah Active, OQ-25 opsi 1) langsung aktif setelah kodenya diisi.
+ * Error: FORBIDDEN (bukan Admin) | CONFLICT (status di luar jendela) | FORMAT | DUPLICATE | REASON_REQUIRED.
+ */
+export async function setStoreReferral(pid, storeId, code, reason, session) {
+  await wait(400);
+  if (session.role !== 'REVIEWER') throw new ApiError('FORBIDDEN');
+  const p = findP(pid); const s = p?.stores.find((x) => x.id === storeId);
+  if (!s || !REFERRAL_EDITABLE.includes(p.status)) throw new ApiError('CONFLICT');
+  const c = (code || '').trim().toUpperCase();
+  if (validateReferralCode(c)) throw new ApiError('FORMAT');
+  if (referralTaken(c, s.id)) throw new ApiError('DUPLICATE');
+  const old = s.referralCode;
+  if (old === c) return enrich(p);
+  if (p.status === 'ACTIVE' && old && !(reason || '').trim()) throw new ApiError('REASON_REQUIRED');
+  s.referralCode = c;
+  log(p, { from: null, to: null, by: actorOf(session), reason: `Kode referral ${s.name}: ${old ?? '-'} → ${c}${(reason || '').trim() ? ` (${reason.trim()})` : ''}` });
+  if (s.status === 'WAITING_REFERRAL') {
+    s.status = 'ACTIVE';
+    s.code = `TK${p.registrationNumber.slice(-4)}-${String(p.stores.indexOf(s) + 1).padStart(2, '0')}`;
+    s.activatedAt = now();
+    log(p, { from: null, to: null, by: 'Sistem', reason: `${s.name} aktif setelah kode referral diisi` });
+  }
+  return enrich(p);
+}
+/** Toko partner yang belum punya Kode Referral (gerbang aktivasi FR-010, AC-028). */
+export const storesWithoutReferral = (p) => p.stores.filter((s) => !s.referralCode);
+
+/**
+ * Menu Kode Referral (keputusan 2026-10-16, OQ-25): partner (payung) dengan tokonya; filter "perlu" = toko tanpa kode di partner
+ * yang masih bisa diisi (termasuk toko baru "Menunggu kode referral"), "terisi" = toko yang sudah punya kode.
+ */
+export async function referralOverview(f = {}, { retry = false } = {}) {
+  const empty = await listGate(retry);
+  const term = (f.q ?? '').trim().toLowerCase();
+  const all = partners.filter((p) => !['REJECTED', 'CANCELLED'].includes(p.status) && (!f.area || p.areaId === Number(f.area)));
+  const need = (p, s) => !s.referralCode && REFERRAL_EDITABLE.includes(p.status);
+  const counts = { all: 0, need: 0, waiting: 0, filled: 0 };
+  const rows = all.map((p) => {
+    const stores = p.stores.map((s) => ({
+      id: s.id, name: s.name, code: s.code, referralCode: s.referralCode, status: s.status, primary: s.primary, needsAction: need(p, s),
+      tl: userById(s.tlId)?.fullName ?? null, addedAt: s.addedAt,
+    }));
+    stores.forEach((s) => { counts.all += 1; if (s.needsAction) counts.need += 1; if (s.status === 'WAITING_REFERRAL') counts.waiting += 1; if (s.referralCode) counts.filled += 1; });
+    return { id: p.id, name: p.partnerName, status: p.status, areaId: p.areaId, editable: REFERRAL_EDITABLE.includes(p.status), stores };
+  }).map((r) => ({ ...r, stores: r.stores.filter((s) => (f.status === 'perlu' ? s.needsAction : f.status === 'terisi' ? !!s.referralCode : true)) }))
+    .filter((r) => r.stores.length && (!term || r.name.toLowerCase().includes(term) || r.id.toLowerCase().includes(term) || r.stores.some((s) => [s.name, s.referralCode ?? ''].some((v) => v.toLowerCase().includes(term)))))
+    .sort((a, b) => b.stores.filter((s) => s.status === 'WAITING_REFERRAL').length - a.stores.filter((s) => s.status === 'WAITING_REFERRAL').length
+      || b.stores.filter((s) => s.needsAction).length - a.stores.filter((s) => s.needsAction).length || a.name.localeCompare(b.name));
+  return { rows: empty ? [] : rows, counts };
 }
 
 const EDITABLE = {
-  partnerName: (p) => [p, 'partnerName'], address: (p) => [p, 'address'], referralCode: (p) => [p, 'referralCode'], businessEmail: (p) => [p, 'businessEmail'], channel: (p) => [p, 'channel'],
+  partnerName: (p) => [p, 'partnerName'], address: (p) => [p, 'address'], businessEmail: (p) => [p, 'businessEmail'], channel: (p) => [p, 'channel'],
   businessLocationCount: (p) => [p, 'businessLocationCount'], picName: (p) => [p.pic, 'name'], picPhone: (p) => [p.pic, 'phone'], picStatus: (p) => [p.pic, 'status'],
 };
 export async function updatePartnerData(pid, changes, reason, session) {
@@ -625,8 +762,6 @@ export async function updatePartnerData(pid, changes, reason, session) {
   const p = findP(pid);
   if (p.status !== 'ACTIVE') throw new ApiError('CONFLICT');
   const account = users.find((x) => x.partnerId === p.id);
-  const referralChange = changes.find((c) => c.field === 'referralCode');
-  if (referralChange && referralTaken(referralChange.value, p.id)) throw new ApiError('DUPLICATE', 'referralCode');
   const phoneChange = changes.find((c) => c.field === 'picPhone');
   if (phoneChange && (phoneTaken(phoneChange.value, account?.id) || picPhoneTaken(phoneChange.value, p.id))) throw new ApiError('DUPLICATE', 'picPhone');
   changes.forEach((c) => {
@@ -675,6 +810,11 @@ export async function adminHome(areaId, { retry = false } = {}) {
     verified: { count: verified.length },
     waitingPks: { count: waiting.length, oldestSent: waiting.length ? waiting.reduce((m, p) => (p.pks.sentAt < m ? p.pks.sentAt : m), waiting[0].pks.sentAt) : null },
     expiredUsers: us.filter((u) => accountStatus(u) === 'EXPIRED').map(enrichUser),
+    // Kode Referral (OQ-25): toko baru partner Active yang menunggu kode, dan toko partner Verified/Waiting PKS yang belum diisi.
+    referral: {
+      waiting: ps.flatMap((p) => p.stores.filter((s) => s.status === 'WAITING_REFERRAL')).length,
+      beforeActivation: [...verified, ...waiting].flatMap((p) => storesWithoutReferral(p)).length,
+    },
     revision: counts.REVISION_REQUIRED, pendingUsers: us.filter((u) => accountStatus(u) === 'PENDING').length,
     active: { count: counts.ACTIVE, stores: by('ACTIVE').reduce((s, p) => s + p.stores.filter((x) => x.status === 'ACTIVE').length, 0) },
     reviewQueue: [...uReview].sort((x, y) => x.statusUpdatedAt - y.statusUpdatedAt).slice(0, 5).map(enrich),
@@ -904,23 +1044,26 @@ export async function visitDetail(userId, period) {
 }
 
 // ------------------------------------------------------------------ APL B4 Partner
+/** Baris Partner APL: partner aktif + toko aktif dengan TL toko dan SA/SR (TL per toko, PRD Scope 1 v2). */
+function aplPartnerRow(p, period) {
+  const paid = (storeId) => loans.filter((l) => l.partnerId === p.id && (!storeId || l.storeId === storeId) && l.status === 'PAID_OUT' && (!period || inP(wibDate(l.submittedAt), period))).reduce((a, l) => a + l.amount, 0);
+  return {
+    id: p.id, name: p.partnerName, areaId: p.areaId, channel: p.channel, entity: p.businessEntityType, tls: partnerTls(p).map((id) => userById(id)?.fullName).filter(Boolean),
+    activatedAt: p.activatedAt, paidOutAmount: paid(),
+    picName: p.pic.name, picEmail: p.pic.email, picPhone: p.pic.phone, address: `${p.address}, ${p.village}, ${p.district}, ${p.city}`,
+    stores: p.stores.filter((s) => s.status === 'ACTIVE').map((s) => ({
+      id: s.id, name: s.name, code: s.code, referralCode: s.referralCode, primary: s.primary, address: s.address, lat: s.lat, lng: s.lng, activeSince: new Date(Math.max(p.activatedAt, s.addedAt)),
+      tlId: s.tlId, tl: userById(s.tlId)?.fullName ?? null,
+      sales: s.assigned.map((id) => userById(id)).filter(Boolean).map((u) => `${u.fullName} (${u.role})`), paidOutAmount: paid(s.id),
+    })),
+  };
+}
 export async function aplPartners(areaIds, period, f = {}, { retry = false } = {}) {
   const empty = await listGate(retry);
   if (empty) return [];
   const term = (f.q ?? '').trim().toLowerCase();
-  return partners.filter((p) => p.status === 'ACTIVE' && inArea(areaIds, p.areaId) && (!f.channel || p.channel === f.channel) && (!f.tl || owningTl(p) === Number(f.tl)))
-    .map((p) => {
-      const tl = userById(owningTl(p));
-      const paid = (storeId) => loans.filter((l) => l.partnerId === p.id && (!storeId || l.storeId === storeId) && l.status === 'PAID_OUT' && inP(wibDate(l.submittedAt), period)).reduce((a, l) => a + l.amount, 0);
-      return {
-        id: p.id, name: p.partnerName, areaId: p.areaId, channel: p.channel, entity: p.businessEntityType, tl: tl ? tl.fullName : null, activatedAt: p.activatedAt, paidOutAmount: paid(),
-        picName: p.pic.name, picEmail: p.pic.email, picPhone: p.pic.phone, address: `${p.address}, ${p.village}, ${p.district}, ${p.city}`,
-        stores: p.stores.filter((s) => s.status === 'ACTIVE').map((s) => ({
-          id: s.id, name: s.name, code: s.code, primary: s.primary, address: s.address, lat: s.lat, lng: s.lng, activeSince: new Date(Math.max(p.activatedAt, s.addedAt)),
-          sales: s.assigned.map((id) => userById(id)).filter(Boolean).map((u) => `${u.fullName} (${u.role})`), paidOutAmount: paid(s.id),
-        })),
-      };
-    })
+  return partners.filter((p) => p.status === 'ACTIVE' && inArea(areaIds, p.areaId) && (!f.channel || p.channel === f.channel) && (!f.tl || p.stores.some((s) => s.tlId === Number(f.tl))))
+    .map((p) => aplPartnerRow(p, period))
     .filter((p) => !term || p.name.toLowerCase().includes(term) || p.stores.some((s) => s.name.toLowerCase().includes(term)))
     .sort((a, b) => b.paidOutAmount - a.paidOutAmount);
 }
@@ -937,7 +1080,7 @@ export async function aplTeam(areaIds, f = {}, { retry = false } = {}) {
     .filter((u) => (!f.role || u.role === f.role) && (!term || [u.fullName, u.email].some((v) => v.toLowerCase().includes(term))))
     .map((u) => {
       const a = attendance.find((x) => x.userId === u.id && x.date === today);
-      const ps = u.role === 'TL' ? partners.filter((p) => p.status === 'ACTIVE' && owningTl(p) === u.id) : partners.filter((p) => p.stores.some((s) => s.assigned.includes(u.id) && s.status === 'ACTIVE'));
+      const ps = u.role === 'TL' ? partners.filter((p) => p.status === 'ACTIVE' && p.stores.some((s) => s.status === 'ACTIVE' && s.tlId === u.id)) : partners.filter((p) => p.stores.some((s) => s.assigned.includes(u.id) && s.status === 'ACTIVE'));
       return {
         id: u.id, name: u.fullName, role: u.role, tlLevel: u.tlLevel, areaId: u.areaIds[0], email: u.email, phone: u.phone, registeredAt: u.activatedAt,
         leader: u.supervisorId ? userById(u.supervisorId).fullName : null, partners: ps.map((p) => p.partnerName),

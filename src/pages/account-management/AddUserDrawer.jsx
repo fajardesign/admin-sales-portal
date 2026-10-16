@@ -26,7 +26,7 @@ export function AddUserDrawer({ user, onClose, onCreated }) {
   const areaId = form.areaIds[0];
   const leaders = ['TL', 'SR', 'SA'].includes(form.role) ? leaderOptions(form.role, areaId) : [];
   const holders = aplAreaHolders();
-  // Leader otomatis: TL → APL pemegang area; SR/SA → bila hanya ada satu TL.
+  // Leader otomatis bila hanya satu kandidat: TL → APL pemegang area (bisa dua selama serah terima APL); SR/SA → TL di area.
   useEffect(() => {
     if (leaders.length === 1 && form.leaderId !== leaders[0].value) setForm((f) => ({ ...f, leaderId: leaders[0].value }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -78,12 +78,12 @@ export function AddUserDrawer({ user, onClose, onCreated }) {
     if (form.role === 'REVIEWER') return <TextInput label="Area" required disabled value="Semua area" hint="Admin tidak terikat area." />;
     if (form.role === 'APL') {
       return (
-        <Field label="Area" required error={errs.areaIds} hint={errs.areaIds ? undefined : '1 area hanya dipegang 1 APL.'}>
+        <Field label="Area" required error={errs.areaIds} hint={errs.areaIds ? undefined : 'Satu area dipegang satu APL. Untuk serah terima, buat APL baru di area yang sama lalu nonaktifkan APL lama.'}>
           <div role="group" aria-label="Area APL" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-8) var(--space-12)', padding: 'var(--space-12)', borderRadius: 'var(--rounded-10)', boxShadow: 'var(--shadow-stroke)' }}>
             {AREAS.map((a) => {
               const held = holders[a.id];
               return (
-                <CheckboxLabel key={a.id} label={a.name} description={held ? `Dipegang ${held}` : undefined} disabled={!!held || saving}
+                <CheckboxLabel key={a.id} label={a.name} description={held ? `Dipegang ${held} · serah terima` : undefined} disabled={saving}
                   checked={form.areaIds.includes(a.id)} onChange={(on) => setArea(on ? [...form.areaIds, a.id] : form.areaIds.filter((x) => x !== a.id))} />
               );
             })}

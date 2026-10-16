@@ -119,14 +119,14 @@ export function PartnerDetail({ id, user, onLogout }) {
         { value: 'docs', label: `Dokumen (${uploaded})` }, { value: 'pks', label: 'PKS (Privy)' }, { value: 'history', label: 'Riwayat Status' },
       ]} />
       {tab === 'data' && <DataPartnerTab partner={p} onGoStores={() => setTab('stores')} />}
-      {tab === 'stores' && <StoresTab partner={p} />}
+      {tab === 'stores' && <StoresTab partner={p} user={user} onSaved={setP} />}
       {tab === 'docs' && <DocumentsTab partner={p} onView={(doc, file) => setViewer({ doc, file })}
         onVerify={(doc, v) => (v === 'VALID' ? verifyDoc(doc, 'VALID') : setReason({ doc }))} />}
       {tab === 'pks' && <PksTab partner={p} onEditDelivery={() => setPksModal('delivery')} onUpload={() => setPksModal('upload')}
         onViewFile={() => setViewer({ doc: { label: 'Dokumen PKS' }, file: { ...p.pks.file, version: 1, pages: 3 } })} />}
       {tab === 'history' && <HistoryTab partner={p} />}
 
-      {action && <StatusActionModal partner={p} to={action} user={user} onClose={() => setAction(null)} onDone={done} />}
+      {action && <StatusActionModal partner={p} to={action} user={user} onClose={() => setAction(null)} onDone={done} onGoStores={() => { setAction(null); setTab('stores'); }} />}
       {revision && <RevisionDrawer partner={p} user={user} onClose={() => setRevision(false)} onDone={done} />}
       {reason && (
         <ReasonModal open title={`Perlu revisi: ${reason.doc.label}`} description="Tulis alasan agar TL/SR tahu apa yang harus diperbaiki."

@@ -16,7 +16,8 @@ import { formatDateWIB, formatDuration, formatPhone } from '../../lib/format.js'
 import { navigate, withQuery } from '../../lib/router.js';
 import { AddUserDrawer } from './AddUserDrawer.jsx';
 import { UserDetailDrawer } from './UserDetailDrawer.jsx';
-import { ChangeEmailModal, ChangePhoneModal, DisableModal, ResendModal, ResetPasswordModal } from './UserActionModals.jsx';
+import { ChangeEmailModal, ChangePhoneModal, ResendModal, ResetPasswordModal } from './UserActionModals.jsx';
+import { DisableModal, MoveSubordinatesModal } from './HandoverModals.jsx';
 
 const ROLE_FILTER = ['REVIEWER', 'APL', 'TL', 'SR', 'SA', 'PARTNER'];
 
@@ -37,8 +38,12 @@ function AccountManagementView({ user, onLogout, query }) {
   const [version, setVersion] = useState(0);
   const [resend, setResend] = useState(null);
   const [disable, setDisable] = useState(null);
+  const [move, setMove] = useState(null);
   // Preset capture: buka modal Nonaktifkan untuk pengguna tertentu (mis. TL dengan bawahan).
-  useEffect(() => { if (preset?.users?.disableId) getUser(preset.users.disableId).then(setDisable); }, []);
+  useEffect(() => {
+    if (preset?.users?.disableId) getUser(preset.users.disableId).then(setDisable);
+    if (preset?.users?.moveId) getUser(preset.users.moveId).then(setMove);
+  }, []);
   const [resetPw, setResetPw] = useState(null);
   const [emailEdit, setEmailEdit] = useState(null);
   const [phoneEdit, setPhoneEdit] = useState(null);
@@ -92,7 +97,7 @@ function AccountManagementView({ user, onLogout, query }) {
     { key: 'actions', header: 'Aksi', render: actionsCell },
   ];
   const counts = data?.counts ?? {};
-  const after = () => { setResend(null); setDisable(null); setResetPw(null); setEmailEdit(null); setPhoneEdit(null); refresh(); };
+  const after = () => { setResend(null); setDisable(null); setMove(null); setResetPw(null); setEmailEdit(null); setPhoneEdit(null); refresh(); };
 
   return (
     <AdminShell active="/account-management" icon="TeamLine" title="Account Management" description="Buat akun login, pantau status aktivasi Keycloak, kirim ulang tautan, dan nonaktifkan akun." user={user} onLogout={onLogout}>
@@ -130,9 +135,10 @@ function AccountManagementView({ user, onLogout, query }) {
       </div>
 
       {adding && <AddUserDrawer user={user} onClose={() => setAdding(false)} onCreated={(u) => { setAdding(false); setHighlightId(u.id); set({ status: '', q: '', role: '', area: '' }); refresh(); }} />}
-      {detailId && <UserDetailDrawer userId={detailId} user={user} version={version} onClose={resend || disable || resetPw || emailEdit || phoneEdit ? undefined : () => setDetailId(null)} onResend={setResend} onDisable={setDisable} onReset={setResetPw} onChangeEmail={setEmailEdit} onChangePhone={setPhoneEdit} />}
+      {detailId && <UserDetailDrawer userId={detailId} user={user} version={version} onClose={resend || disable || move || resetPw || emailEdit || phoneEdit ? undefined : () => setDetailId(null)} onResend={setResend} onDisable={setDisable} onMove={setMove} onReset={setResetPw} onChangeEmail={setEmailEdit} onChangePhone={setPhoneEdit} />}
       {resend && <ResendModal target={resend} user={user} onClose={() => setResend(null)} onDone={after} />}
       {disable && <DisableModal target={disable} user={user} onClose={() => setDisable(null)} onDone={after} />}
+      {move && <MoveSubordinatesModal target={move} user={user} onClose={() => setMove(null)} onDone={after} />}
       {resetPw && <ResetPasswordModal target={resetPw} user={user} onClose={() => setResetPw(null)} onDone={after} />}
       {emailEdit && <ChangeEmailModal target={emailEdit} user={user} onClose={() => setEmailEdit(null)} onDone={after} />}
       {phoneEdit && <ChangePhoneModal target={phoneEdit} user={user} onClose={() => setPhoneEdit(null)} onDone={after} />}

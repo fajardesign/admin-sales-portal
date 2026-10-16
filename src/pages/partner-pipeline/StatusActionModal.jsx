@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, CheckboxLabel, FileUploadArea, FileUploadCard, TextArea, TextInput } from '@ds/index.js';
+import { Alert, CheckboxLabel, FileUploadArea, FileUploadCard, LinkButton, TextArea, TextInput } from '@ds/index.js';
 import { ActionModal } from '../../components/ActionModal.jsx';
 import { ApiError, changeStatus } from '../../api/mockApi.js';
 import { useToast } from '../../components/Toaster.jsx';
@@ -17,7 +17,7 @@ function impactText(p) {
 }
 
 /** W3d · Konfirmasi "Ubah status menjadi {status}?" dengan isian sesuai aksi. */
-export function StatusActionModal({ partner, to, user, onClose, onDone }) {
+export function StatusActionModal({ partner, to, user, onClose, onDone, onGoStores }) {
   const toast = useToast();
   const a = ACTIONS[to];
   const [reason, setReason] = useState('');
@@ -27,7 +27,9 @@ export function StatusActionModal({ partner, to, user, onClose, onDone }) {
   const [file, setFile] = useState(null);
   const [touched, setTouched] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [failure, setFailure] = useState(null); // galat aktivasi ditampilkan di modal, modal tetap terbuka (PRD Scope 1 §11)
+  const [failure, setFailure] = useState(null);
+  // PRD Scope 1 v2 FR-010 / AC-028: aktivasi ditolak bila ada toko tanpa Kode Referral.
+  const missingRef = to === 'ACTIVE' ? partner.stores.filter((s) => !s.referralCode) : []; // galat aktivasi ditampilkan di modal, modal tetap terbuka (PRD Scope 1 §11)
 
   const errs = {
     reason: a.reason ? validateReason(reason) : undefined,
@@ -49,6 +51,7 @@ export function StatusActionModal({ partner, to, user, onClose, onDone }) {
     } catch (e) {
       setBusy(false);
       if (e instanceof ApiError && e.code === 'PIC_FAILED') setFailure('Aktivasi gagal: akun PIC tidak dapat dibuat.');
+      else if (e instanceof ApiError && e.code === 'REFERRAL_MISSING') setFailure('Kode referral wajib diisi untuk semua toko sebelum aktivasi.');
       else if (e instanceof ApiError && e.code === 'PIC_CONFLICT') setFailure('Email atau nomor HP PIC sudah digunakan pengguna lain.');
       else toast('error', e instanceof ApiError && e.code === 'CONFLICT' ? 'Status tidak dapat diubah.' : 'Gagal memperbarui status. Coba lagi.');
     }
@@ -57,12 +60,20 @@ export function StatusActionModal({ partner, to, user, onClose, onDone }) {
   return (
     <ActionModal open onClose={onClose} title={to === 'WAITING_PKS' ? 'PKS dikirim' : `Ubah status menjadi ${PARTNER_STATUS[to].label}?`} description={`${partner.partnerName} · ${partner.registrationNumber}`}
       icon={a.icon} status={a.status} confirmLabel={to === 'WAITING_PKS' ? 'Simpan' : a.label} confirmTone={a.status === 'error' ? 'error' : 'primary'} busy={busy} onConfirm={confirm}
-      confirmDisabled={(to === 'ACTIVE' && !signedChecked) || (to === 'WAITING_PKS' && !via)}>
+      confirmDisabled={(to === 'ACTIVE' && (!signedChecked || missingRef.length > 0)) || (to === 'WAITING_PKS' && !via)}>
       <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>{a.desc}</span>
       {a.final && <Alert status="warning" size="sm" title="Status ini final dan tidak dapat diubah kembali." />}
       {to === 'INACTIVE' && <Alert status="error" size="sm" title={impactText(partner)} />}
       {to === 'CANCELLED' && partner.status === 'WAITING_PKS' && <Alert status="warning" size="sm" title="Batalkan juga dokumen PKS di Privy." />}
-      {failure && <Alert status="error" size="sm" title={failure} />}
+      {missingRef.length > 0 && (
+        <Alert status="error" size="sm" title="Kode referral wajib diisi untuk semua toko sebelum aktivasi.">
+          <span style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', alignItems: 'flex-start' }}>
+            {missingRef.map((s) => <span key={s.id}>{s.name}: Kode referral wajib diisi</span>)}
+            {onGoStores && <LinkButton size="sm" onClick={onGoStores}>Buka tab Toko</LinkButton>}
+          </span>
+        </Alert>
+      )}
+      {failure && failure !== 'Kode referral wajib diisi untuk semua toko sebelum aktivasi.' && <Alert status="error" size="sm" title={failure} />}
       {to === 'WAITING_PKS' && (
         <>
           <PksChannelPicker partner={partner} value={via} onChange={setVia} />

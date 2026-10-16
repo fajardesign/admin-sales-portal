@@ -6,6 +6,7 @@ const NAV = [
   { title: 'Utama', items: [
     { label: 'Beranda', value: '/beranda', icon: 'HomeSmile2Line', feature: 'DASHBOARD' },
     { label: 'Partner Pipeline', value: '/partner-pipeline', icon: 'Building2Line', feature: 'PARTNER_PIPELINE' },
+    { label: 'Kode Referral', value: '/kode-referral', icon: 'Hashtag', feature: 'PARTNER_PIPELINE' },
     { label: 'Dashboard', value: '/apl', icon: 'Dashboard3Line', feature: 'SALES_PERFORMANCE' },
     { label: 'Kinerja Penjualan', value: '/apl/kinerja', icon: 'BarChartLine', feature: 'SALES_PERFORMANCE' },
     { label: 'Produktivitas', value: '/apl/produktivitas', icon: 'TimeLine', feature: 'PRODUCTIVITY_PERFORMANCE_CHECK_IN' },

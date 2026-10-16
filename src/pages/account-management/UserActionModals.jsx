@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Alert, CheckboxLabel, Select, TextArea, TextInput } from '@ds/index.js';
+import { Alert, CheckboxLabel, TextArea, TextInput } from '@ds/index.js';
 import { ActionModal } from '../../components/ActionModal.jsx';
 import { useToast } from '../../components/Toaster.jsx';
-import { ApiError, changeEmail, changePhone, disableUser, replacementLeaderOptions, resendInvite, sendResetPassword } from '../../api/mockApi.js';
-import { ROLES, areaName } from '../../lib/constants.js';
+import { ApiError, changeEmail, changePhone, resendInvite, sendResetPassword } from '../../api/mockApi.js';
+import { ROLES } from '../../lib/constants.js';
 import { formatPhone, normalizePhone } from '../../lib/format.js';
 import { EMAIL_RE, MSG, validatePhone, validateReason } from '../../lib/validation.js';
 
@@ -23,79 +23,6 @@ export function ResendModal({ target, user, onClose, onDone }) {
       <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>
         Tautan baru dikirim ke <strong style={{ color: 'var(--text-strong-950)', fontWeight: 'inherit' }}>{target.email}</strong> dan berlaku 3x24 jam. Tautan sebelumnya tidak berlaku lagi.
       </span>
-    </ActionModal>
-  );
-}
-
-/**
- * Nonaktifkan pengguna. Leader (TL/APL) yang masih punya bawahan wajib diberi leader pengganti: satu untuk semua (default),
- * bisa diubah per orang; tombol Nonaktifkan aktif setelah semua bawahan punya atasan baru (keputusan PO 2026-10-12).
- * SA/SR: toko yang dipegang dilepas otomatis.
- */
-export function DisableModal({ target, user, onClose, onDone }) {
-  const toast = useToast();
-  const [reason, setReason] = useState('');
-  const [touched, setTouched] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const subs = target.subordinates;
-  // Pengganti wajib bila masih punya bawahan, atau TL yang masih memiliki partner (kepemilikan harus pindah).
-  const needsLeader = subs.length > 0 || target.ownedPartners > 0;
-  const options = needsLeader ? replacementLeaderOptions(target.id) : [];
-  const [main, setMain] = useState(options.length === 1 ? options[0].value : '');
-  const [perPerson, setPerPerson] = useState({}); // { idBawahan: idLeader } yang berbeda dari pengganti utama
-  const leaderOf = (sid) => perPerson[sid] ?? main;
-  const allSet = Boolean(main) && subs.every((x) => leaderOf(x.id));
-  const err = validateReason(reason);
-  const roleWord = target.role === 'APL' ? 'APL' : 'TL';
-  const mainName = options.find((o) => o.value === main)?.label.replace(/ \(.*\)$/, '');
-  async function confirm() {
-    setTouched(true);
-    if (err || (needsLeader && !allSet)) return;
-    setBusy(true);
-    try {
-      const u = await disableUser(target.id, reason.trim(), user, { defaultLeaderId: main || undefined, replacements: perPerson });
-      toast('success', 'Pengguna berhasil dinonaktifkan.');
-      onDone(u);
-    } catch {
-      setBusy(false);
-      toast('error', 'Gagal menonaktifkan pengguna. Coba lagi.');
-    }
-  }
-  return (
-    <ActionModal open onClose={onClose} title={`Nonaktifkan ${target.fullName}?`} description={`${ROLES[target.role].label} · ${target.email}`} icon="ForbidFill" status="error"
-      confirmLabel="Nonaktifkan" confirmTone="error" busy={busy} onConfirm={confirm} confirmDisabled={needsLeader && !allSet} width={needsLeader ? 560 : 480}>
-      <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>
-        Akun dinonaktifkan di Keycloak, sesi yang aktif berakhir, dan pengguna tidak bisa login lagi. Status ini tidak dapat dikembalikan dari portal.
-      </span>
-      {needsLeader && options.length === 0 && (
-        <Alert status="error" size="sm" title={`Belum ada ${roleWord} lain ${target.role === 'APL' ? 'yang aktif' : 'di area ini'}. Buat akun ${roleWord} baru terlebih dahulu.`} />
-      )}
-      {needsLeader && options.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-12)' }}>
-          <Select label="Leader pengganti untuk semua" required placeholder={`Pilih ${roleWord} pengganti`} value={main || undefined} options={options}
-            hint={subs.length ? `Masih menjadi atasan ${subs.length} pengguna. Pilih atasan baru sebelum menonaktifkan.` : 'Pilih TL yang menerima partner milik pengguna ini.'}
-            onChange={(v) => { setMain(v); setPerPerson({}); }} />
-          {main && subs.length > 0 && <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
-            {subs.map((x) => (
-              <div key={x.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 'var(--space-12)', alignItems: 'center' }}>
-                <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-strong-950)' }}>
-                  {x.name} <span style={{ color: 'var(--text-sub-600)' }}>({x.role}{x.status !== 'ACTIVE' ? ` · ${x.status === 'PENDING' ? 'Pending' : 'Expired'}` : ''})</span>
-                </span>
-                <Select size="sm" placeholder="Leader pengganti" value={leaderOf(x.id) || undefined} options={options}
-                  onChange={(v) => setPerPerson((pp) => ({ ...pp, [x.id]: v }))} />
-              </div>
-            ))}
-          </div>}
-          {target.role === 'TL' && target.ownedPartners > 0 && mainName && (
-            <Alert status="information" size="sm" title={`${target.ownedPartners} partner milik ${target.fullName} pindah ke ${mainName}.`} />
-          )}
-          {target.role === 'APL' && mainName && (
-            <Alert status="information" size="sm" title={`Area ${target.areaIds.map(areaName).join(', ')} pindah ke ${mainName}.`} />
-          )}
-        </div>
-      )}
-      {target.assignedStores > 0 && <Alert status="warning" size="sm" title={`${target.assignedStores} toko akan dilepas dari penugasan.`} />}
-      <TextArea label="Alasan" required maxLength={255} rows={3} value={reason} onChange={setReason} placeholder="Contoh: Resign per 31 Okt 2026" error={touched ? err : undefined} />
     </ActionModal>
   );
 }
