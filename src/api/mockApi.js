@@ -7,7 +7,7 @@ import {
   ACCOUNT_STATUS, AREAS, CREATABLE_ROLES, ACTIVATION_TTL_MS, FINAL_STATUSES, PAGE_SIZE, PKS_VIA, RESET_TTL_MS, PARTNER_STATUS, ROLES, TRANSITIONS,
 } from '../lib/constants.js';
 import {
-  attendance, CURRENT_MONTH, loans, mfp, MONTHS, now, partners, partnerTls, schemes, superAdmins, targets, users, visits, wibDate, weekStoresOf,
+  attendance, CURRENT_MONTH, defaultTlOf, loans, mfp, MONTHS, now, partners, partnerTls, schemes, superAdmins, targets, users, visits, wibDate, weekStoresOf,
 } from './db.js';
 import { hydrateUsers, syncUser } from './supabaseSync.js';
 
@@ -258,14 +258,19 @@ export async function changeStatus(pid, to, opts, session) {
     if (opts.file) p.pks.file = { name: opts.file.name, by: actor, at: now() };
     p.merchantCode = `MRC-${p.registrationNumber.slice(-4)}`;
     p.stores.forEach((s, i) => { s.status = 'ACTIVE'; s.code = `TK${p.registrationNumber.slice(-4)}-${String(i + 1).padStart(2, '0')}`; });
+    // C6 FR-010: kursi TL = TL pengaju / atasan SR pengaju bila Active (sumber "aktivasi"), selain itu "Belum ada TL";
+    // kursi SA/SR kosong (SR pengaju tidak otomatis memegang toko).
+    const tl = userById(defaultTlOf(p.submittedBy));
+    p.stores.forEach((s) => {
+      s.assigned = []; s.tlId = null;
+      if (tl && tl.role === 'TL' && accountStatus(tl) === 'ACTIVE') setTlSeat(p, s, tl.id, 'Sistem', 'aktivasi');
+    });
     reason = `PKS ditandatangani (dicek di Privy web)${opts.file ? ', dokumen PKS diunggah' : ''}; partner diaktifkan`;
     createPicAccount(p, actor);
   }
   if (to === 'INACTIVE') {
-    p.stores.forEach((s) => {
-      s.assignLog = [...(s.assignLog ?? []), ...s.assigned.map((userId) => ({ at: now(), userId, action: 'RELEASE' }))];
-      s.status = 'INACTIVE'; s.assigned = [];
-    });
+    // C6 FR-013: semua kursi (TL dan SA/SR) di semua toko dilepas, sumber "partner nonaktif".
+    p.stores.forEach((s) => { releaseTlSeat(p, s, 'Sistem', 'partner nonaktif'); s.status = 'INACTIVE'; });
     const u = users.find((x) => x.partnerId === p.id);
     if (u && u.status !== 'DISABLED') {
       Object.assign(u, { status: 'DISABLED', disabledAt: now(), disabledBy: 'Sistem (partner Inactive)', disabledReason: 'Partner dinonaktifkan di Partner Pipeline' });
@@ -496,11 +501,29 @@ export function releasesAfter(plan, fromId, leaderOf, mainId) {
   });
 }
 
-/** Lepas SA/SR dari satu toko oleh Sistem, dengan sumbernya (FR-MP-007). */
-function systemRelease(p, s, uid, source) {
+/** Lepas SA/SR dari satu toko, dengan pelaku dan sumbernya (FR-MP-007; default oleh Sistem). */
+function systemRelease(p, s, uid, source, by = 'Sistem') {
   s.assigned = s.assigned.filter((x) => x !== uid);
-  s.assignLog = [...(s.assignLog ?? []), { at: now(), userId: uid, action: 'RELEASE' }];
-  log(p, { from: null, to: null, by: 'Sistem', reason: `${userById(uid).fullName} dilepas dari ${s.name} (${source})` });
+  s.assignLog = [...(s.assignLog ?? []), { at: now(), userId: uid, action: 'RELEASE', by, source }];
+  log(p, { from: null, to: null, by, reason: `${userById(uid).fullName} dilepas dari ${s.name} (${source})` });
+}
+
+/** Isi kursi TL toko (C6), dicatat di riwayat toko dan Riwayat Status partner. */
+function setTlSeat(p, s, tlId, by, source) {
+  const from = s.tlId;
+  s.tlLog = [...(s.tlLog ?? []), { at: now(), from, to: tlId, by, source }];
+  s.tlId = tlId;
+  log(p, { from: null, to: null, by, reason: `${userById(tlId).fullName} ditugaskan sebagai TL ${s.name} (${source})` });
+}
+
+/** Lepas kursi TL toko beserta kursi SA/SR di bawahnya (C6, daftar pemicu pelepasan kursi). */
+function releaseTlSeat(p, s, by, source) {
+  [...s.assigned].forEach((x) => systemRelease(p, s, x, source, by));
+  if (s.tlId == null) return;
+  const tl = userById(s.tlId);
+  s.tlLog = [...(s.tlLog ?? []), { at: now(), from: s.tlId, to: null, by, source }];
+  s.tlId = null;
+  log(p, { from: null, to: null, by, reason: `${tl?.fullName ?? 'TL'} dilepas dari ${s.name} (${source})` });
 }
 
 /** Validasi & terapkan serah terima: atasan bawahan, toko TL lama (disable), lalu pelepasan penugasan (FR-AM-013). */
@@ -521,7 +544,7 @@ function applyHandover(u, mode, leaderOf, mainId, reason, actor) {
   });
   if (mode === 'disable' && u.role === 'TL' && main) {
     activeStoresOfTl(u.id).forEach(({ p, s }) => {
-      s.tlLog = [...(s.tlLog ?? []), { at: now(), from: u.id, to: main.id }];
+      s.tlLog = [...(s.tlLog ?? []), { at: now(), from: u.id, to: main.id, by: actor, source: 'TL dinonaktifkan' }];
       s.tlId = main.id;
       log(p, { from: null, to: null, by: actor, reason: `TL toko ${s.name} pindah dari ${u.fullName} ke ${main.fullName} (TL lama dinonaktifkan)` });
     });
@@ -749,6 +772,31 @@ export async function setStoreReferral(pid, storeId, code, qr, reason, session) 
   }
   return enrich(p);
 }
+/** Dampak Ubah Area Partner (FR-021): jumlah toko yang punya kursi terisi dan jumlah kursi TL/SA/SR yang akan dilepas. */
+export function areaChangeImpact(pid) {
+  const p = findP(pid);
+  const seated = p.stores.filter((s) => s.tlId != null || s.assigned.length);
+  return { stores: seated.length, seats: seated.reduce((a, s) => a + (s.tlId != null ? 1 : 0) + s.assigned.length, 0) };
+}
+/**
+ * FR-021 Ubah Area Partner (Admin, Under Review s.d. Active, alasan wajib): area berlaku untuk semua toko; semua kursi dilepas
+ * (sumber "ubah area") dan toko tampil sebagai "Belum ada TL" di Mapping TL area baru.
+ * Error: FORBIDDEN | CONFLICT (status / area sama / area tidak dikenal) | REASON_REQUIRED.
+ */
+export async function changePartnerArea(pid, areaId, reason, session) {
+  await wait(400);
+  if (session.role !== 'REVIEWER') throw new ApiError('FORBIDDEN');
+  const p = findP(pid); const to = Number(areaId);
+  if (!p || !REFERRAL_EDITABLE.includes(p.status) || to === p.areaId || !AREAS.some((a) => a.id === to)) throw new ApiError('CONFLICT');
+  if (!(reason || '').trim()) throw new ApiError('REASON_REQUIRED');
+  const actor = actorOf(session);
+  p.stores.forEach((s) => releaseTlSeat(p, s, actor, 'ubah area'));
+  const from = p.areaId;
+  p.areaId = to;
+  log(p, { from: null, to: null, by: actor, reason: `Area partner diubah dari ${AREAS.find((a) => a.id === from).name} ke ${AREAS.find((a) => a.id === to).name}: ${reason.trim()}` });
+  return enrich(p);
+}
+
 /** Toko partner yang belum punya Kode Referral atau QR (gerbang aktivasi FR-010, AC-028). */
 export const storesWithoutReferral = (p) => p.stores.filter((s) => !s.referralCode || !s.referralQr);
 

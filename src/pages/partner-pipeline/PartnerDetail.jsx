@@ -17,6 +17,7 @@ import { ACTIONS } from './actions.js';
 import { RevisionDrawer } from './RevisionDrawer.jsx';
 import { ReasonModal } from './ReasonModal.jsx';
 import { PksDeliveryModal, PksUploadModal } from './PksModals.jsx';
+import { ChangeAreaModal } from './ChangeAreaModal.jsx';
 import { EditPartnerDrawer } from './EditPartnerDrawer.jsx';
 import { DataPartnerTab } from './tabs/DataPartnerTab.jsx';
 import { StoresTab } from './tabs/StoresTab.jsx';
@@ -48,12 +49,13 @@ export function PartnerDetail({ id, user, onLogout }) {
   const [viewer, setViewer] = useState(null); // { doc, file }
   const [pksModal, setPksModal] = useState(null); // 'delivery' | 'upload'
   const [editing, setEditing] = useState(preset?.detail?.editing ?? false);
+  const [areaEdit, setAreaEdit] = useState(false);
 
   const load = useCallback(() => { getPartner(id).then((np) => { setP(np); setError(false); }, () => setError(true)); }, [id]);
   useEffect(() => { load(); return onDataChange(load); }, [load]);
 
   const back = () => navigate(`/partner-pipeline${lastPipelineQuery ? `?${lastPipelineQuery}` : ''}`);
-  const done = (np) => { setP(np); setAction(null); setRevision(false); setReason(null); setPksModal(null); setEditing(false); };
+  const done = (np) => { setP(np); setAction(null); setRevision(false); setReason(null); setPksModal(null); setEditing(false); setAreaEdit(false); };
 
   const shell = (children) => (
     <AdminShell active="/partner-pipeline" icon="Building2Line" title="Partner Pipeline" description="Tinjau pengajuan partner, verifikasi dokumen, catat PKS, dan ubah status partner." user={user} onLogout={onLogout}>
@@ -117,7 +119,7 @@ export function PartnerDetail({ id, user, onLogout }) {
         { value: 'data', label: 'Data Partner' }, { value: 'stores', label: `Toko (${p.stores.length})` },
         { value: 'docs', label: `Dokumen (${uploaded})` }, { value: 'pks', label: 'PKS (Privy)' }, { value: 'history', label: 'Riwayat Status' },
       ]} />
-      {tab === 'data' && <DataPartnerTab partner={p} onGoStores={() => setTab('stores')} />}
+      {tab === 'data' && <DataPartnerTab partner={p} user={user} onGoStores={() => setTab('stores')} onChangeArea={() => setAreaEdit(true)} />}
       {tab === 'stores' && <StoresTab partner={p} user={user} onSaved={setP} />}
       {tab === 'docs' && <DocumentsTab partner={p} onView={(doc, file) => setViewer({ doc, file })}
         onVerify={(doc, v) => (v === 'VALID' ? verifyDoc(doc, 'VALID') : setReason({ doc }))} />}
@@ -134,6 +136,7 @@ export function PartnerDetail({ id, user, onLogout }) {
       {viewer && <DocumentViewer doc={viewer.doc} file={viewer.file} onClose={() => setViewer(null)} />}
       {pksModal === 'delivery' && <PksDeliveryModal partner={p} user={user} onClose={() => setPksModal(null)} onDone={done} />}
       {editing && <EditPartnerDrawer partner={p} user={user} onClose={() => setEditing(false)} onDone={done} />}
+      {areaEdit && <ChangeAreaModal partner={p} user={user} onClose={() => setAreaEdit(false)} onDone={done} />}
       {pksModal === 'upload' && <PksUploadModal partner={p} user={user} onClose={() => setPksModal(null)} onDone={done} />}
     </>,
   );

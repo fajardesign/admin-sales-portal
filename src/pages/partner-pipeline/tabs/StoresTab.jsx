@@ -24,7 +24,7 @@ export function StoresTab({ partner: p, user, onSaved }) {
               <KeyValueGrid items={[
                 { label: 'Kode Toko', value: s.code ?? (s.status === 'WAITING_REFERRAL' ? 'Dibuat setelah kode referral diisi' : 'Dibuat saat partner Active') },
                 { label: 'Kode Referral', value: <ReferralCodeField key={`${s.id}-${s.referralCode}`} partnerId={p.id} partnerStatus={p.status} store={s} user={user} required={p.status === 'WAITING_PKS'} onSaved={onSaved} />, full: true },
-                { label: 'TL', value: s.tlId ? userById(s.tlId)?.fullName : '-' },
+                { label: 'TL', value: s.tlId ? userById(s.tlId)?.fullName : s.status === 'ACTIVE' ? 'Belum ada TL' : '-' },
                 { label: 'Nama Toko', value: s.name, revised: !!changed, hint: changed ? `Sebelumnya: ${changed.old}` : undefined },
                 { label: 'Alamat Toko', value: s.address, full: true },
                 { label: 'Omzet', value: formatRp(s.omzet) },

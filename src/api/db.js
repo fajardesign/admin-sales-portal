@@ -299,10 +299,11 @@ function daysFrom(from) {
 }
 
 /**
- * TL toko (PRD Scope 1 v2, keputusan 2026-10-16): TL ditetapkan per toko; partner hanya "payung" yang menghubungkan toko-tokonya
- * ke satu akun PIC. Satu partner bisa punya beberapa TL (toko berbeda); satu toko hanya satu TL dan satu SA/SR.
- * Default = TL yang mengajukan partner / menambah toko, atau TL atasan SR pengaju. Berpindah lewat pemetaan ulang APL
- * (tanggal 1–3 setiap bulan) atau saat TL dinonaktifkan (ke TL pengganti). Riwayat di `s.tlLog` [{ at, from, to }].
+ * Kursi TL toko (PRD Scope 1 v1.1 C6): partner hanya "payung" yang menghubungkan toko-tokonya ke satu akun PIC dan satu area.
+ * Setiap toko punya satu kursi TL dan satu kursi SA/SR; toko dalam satu partner boleh dipegang TL berbeda; SA/SR harus bawahan
+ * langsung TL toko itu. Kursi TL diisi saat aktivasi (TL pengaju / atasan SR pengaju bila Active, selain itu kosong = "Belum
+ * ada TL"), oleh APL di Mapping TL (1.7), atau berpindah ke TL pengganti saat TL dinonaktifkan. Toko dari Tambah Toko tanpa
+ * kursi. Riwayat di `s.tlLog` [{ at, from, to, by, source }].
  */
 export function defaultTlOf(submitterId) {
   const sub = users.find((u) => u.id === submitterId);
@@ -312,7 +313,7 @@ export function defaultTlOf(submitterId) {
 export const partnerTls = (p) => [...new Set(p.stores.map((s) => s.tlId).filter((x) => x != null))];
 
 // Riwayat pemegang (perbaikan 2026-10-14): masa lalu tetap milik orang pada tanggalnya.
-// `s.assignLog` [{ at, userId, action: 'ASSIGN' | 'RELEASE' }] dan `s.tlLog` [{ at, from, to }], terlama dulu;
+// `s.assignLog` [{ at, userId, action: 'ASSIGN' | 'RELEASE', by, source }] dan `s.tlLog` [{ at, from, to, by, source }], terlama dulu;
 // data contoh tanpa riwayat = pemegang sekarang sejak awal.
 /** SA/SR pemegang toko pada waktu `at`: pemegang sekarang dengan setiap Tugaskan/Lepas setelah `at` dibatalkan. */
 export function holdersAt(s, at) {
@@ -344,7 +345,12 @@ const LAST = ['Saputra', 'Wijaya', 'Lestari', 'Hidayat', 'Pratama', 'Kusuma', 'S
 const REJECT = ['Skor kredit tidak memenuhi syarat', 'Data penghasilan tidak sesuai', 'Dokumen identitas tidak valid', 'Pengajuan ganda'];
 
 // Pemilik partner disimpan saat data dibuat (sumber kebenaran untuk Partner Saya, penugasan, dan cakupan data TL).
-partners.forEach((p) => p.stores.forEach((s) => { s.tlId ??= defaultTlOf(s.addedBy ?? p.submittedBy); }));
+// Kursi TL data contoh: hanya partner yang pernah Active (diisi saat aktivasi); partner di pipeline belum punya kursi.
+partners.filter((p) => p.activatedAt).forEach((p) => p.stores.forEach((s) => { s.tlId ??= defaultTlOf(s.addedBy ?? p.submittedBy); }));
+// Partner Inactive melepas semua kursi (FR-013, sumber "partner nonaktif"); riwayat menjaga atribusi masa lalu.
+partners.filter((p) => p.status === 'INACTIVE').forEach((p) => p.stores.forEach((s) => {
+  if (s.tlId != null) { s.tlLog = [{ at: p.statusUpdatedAt, from: s.tlId, to: null, by: 'Sistem', source: 'partner nonaktif' }]; s.tlId = null; }
+}));
 
 /**
  * loans: aplikasi pinjaman hasil sinkronisasi CRM (read-only). status CRM disederhanakan:
@@ -354,7 +360,7 @@ export const loans = [];
 let loanSeq = 4100000;
 partners.filter((p) => p.activatedAt).forEach((p) => {
   p.stores.filter((s) => s.status !== 'WAITING_REFERRAL').forEach((s) => {
-    const tlId = s.tlId;
+    // tlId per pinjaman = TL toko pada tanggalnya (lihat tlAt di bawah).
     const start = new Date(Math.max(p.activatedAt, s.addedAt));
     const stop = p.status === 'INACTIVE' ? wibDate(p.statusUpdatedAt) : '9999';
     const rate = 0.9 + rnd() * 1.4; // rata-rata aplikasi per hari kerja
@@ -370,7 +376,7 @@ partners.filter((p) => p.activatedAt).forEach((p) => {
         const amount = between(30, 150) * 1e5;
         const updatedAt = new Date(Math.min(BASE, submittedAt.getTime() + between(2, 72) * 3600e3));
         loans.push({
-          id: `APP${++loanSeq}`, partnerId: p.id, storeId: s.id, areaId: p.areaId, channel: p.channel, salesId: s.assigned[0] ?? null, tlId,
+          id: `APP${++loanSeq}`, partnerId: p.id, storeId: s.id, areaId: p.areaId, channel: p.channel, salesId: s.assigned[0] ?? null, tlId: tlAt(s, submittedAt),
           customer: `${FIRST[between(0, FIRST.length - 1)]} ${LAST[between(0, LAST.length - 1)]}`,
           amount, units: rnd() < 0.2 ? 2 : 1, submittedAt, status,
           rejectionReason: status === 'REJECTED' ? REJECT[between(0, REJECT.length - 1)] : null,

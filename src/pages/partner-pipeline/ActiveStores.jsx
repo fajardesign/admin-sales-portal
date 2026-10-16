@@ -43,7 +43,7 @@ function ActiveStoresView({ user, onLogout, query }) {
   const columns = [
     { key: 'name', header: 'Toko', render: (r) => ({ priority: 'leading', title: r.name, description: `${r.primary ? 'Toko Utama' : 'Toko Tambahan'}${r.code ? ` · ${r.code}` : ''}` }) },
     { key: 'partner', header: 'Partner', render: (r) => ({ priority: 'regular', title: <LinkButton size="sm" onClick={() => navigate(`/partner-pipeline/${r.partnerId}`)}>{r.partnerName}</LinkButton>, description: areaName(r.areaId) }) },
-    { key: 'tl', header: 'TL', render: (r) => nowrap(r.tl ?? '-') },
+    { key: 'tl', header: 'TL', render: (r) => nowrap(r.tl ?? (r.status === 'ACTIVE' ? 'Belum ada TL' : '-')) },
     { key: 'sales', header: 'SA/SR', render: (r) => (r.status === 'WAITING_REFERRAL' ? '-' : r.sales.join(', ') || 'Belum ditugaskan') },
     { key: 'status', header: 'Status', render: (r) => ({ misc: true, children: <StatusBadge status={STORE_BADGE[r.status]}>{STORE_STATUS[r.status]}</StatusBadge> }) },
     { key: 'ref', header: 'Kode Referral', render: (r) => ({ misc: true, children: <ReferralCodeField key={`${r.id}-${r.referralCode}`} partnerId={r.partnerId} partnerStatus={r.partnerStatus} store={r} user={user} showQr={false} onSaved={() => setV((x) => x + 1)} /> }) },

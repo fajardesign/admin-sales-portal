@@ -1,12 +1,12 @@
 import { Icon, LinkButton } from '@ds/index.js';
 import { KeyValueGrid, RevisedBadge, SectionCard } from '../../../components/KeyValueGrid.jsx';
 import { PartnerStatusBadge } from '../../../components/Badges.jsx';
-import { actorLabel } from '../../../api/mockApi.js';
+import { REFERRAL_EDITABLE, actorLabel } from '../../../api/mockApi.js';
 import { BANKS, CHANNEL, ENTITY, PIC_ACCOUNT_LABEL, PIC_STATUS, areaName } from '../../../lib/constants.js';
 import { formatDateTime, formatPhone } from '../../../lib/format.js';
 
 /** Tab Data Partner (PRD §2B) — read-only. Data Rekening tanpa verifikasi terpisah (revisi stakeholder 2026-10-08). */
-export function DataPartnerTab({ partner: p, onGoStores }) {
+export function DataPartnerTab({ partner: p, user, onGoStores, onChangeArea }) {
   const sec = (k) => p.revisedSections.includes(k);
   const changed = (field) => [...p.fieldChanges].reverse().find((c) => c.field === field);
   const fv = (label, value, field, extra = {}) => {
@@ -54,7 +54,13 @@ export function DataPartnerTab({ partner: p, onGoStores }) {
 
       <SectionCard title="Info Pengajuan">
         <KeyValueGrid items={[
-          fv('Status', <PartnerStatusBadge status={p.status} />), fv('Diajukan oleh', actorLabel(p.submittedBy)), fv('Area', areaName(p.areaId)),
+          fv('Status', <PartnerStatusBadge status={p.status} />), fv('Diajukan oleh', actorLabel(p.submittedBy)), fv('Area', (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-8)', flexWrap: 'wrap' }}>
+              {areaName(p.areaId)}
+              {/* FR-021 Ubah Area Partner: Admin, Under Review s.d. Active */}
+              {user?.role === 'REVIEWER' && REFERRAL_EDITABLE.includes(p.status) && onChangeArea && <LinkButton size="sm" onClick={onChangeArea}>Ubah Area</LinkButton>}
+            </span>
+          )),
           fv('Tanggal Diajukan', formatDateTime(p.submittedAt)), fv('Tanggal Verifikasi', formatDateTime(p.verifiedAt)), fv('Tanggal Aktif', formatDateTime(p.activatedAt)),
           fv('Terakhir Diperbarui', formatDateTime(p.statusUpdatedAt)), fv('Kode Merchant', p.merchantCode),
           // PRD Scope 1 v2 C5 (FR-004): persetujuan "Konfirmasi dan Persetujuan Pendaftaran Toko" saat pengajuan pertama.
