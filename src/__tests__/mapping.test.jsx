@@ -1,11 +1,13 @@
-// 1.7 APL Mapping TL (PRD Scope 1 v1.1). File terpisah karena mengubah data contoh; urutan test penting.
+// APL Toko Aktif = Partner (B4) + 1.7 Mapping TL digabung (keputusan 2026-10-17). File terpisah karena mengubah data contoh;
+// urutan test penting.
+const PERIOD = { from: '2026-10-01', to: '2026-10-07', label: 'Okt 2026' };
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../App.jsx';
 import { DEFAULT_SCENARIO, setScenario } from '../dev/scenario.js';
 import { DEMO_PASSWORD, partners } from '../api/db.js';
-import { activateAccount, assignTl, createUser, currentVisitWeek, releaseTl, storeTlHistory, tlCandidates, tlMapping } from '../api/mockApi.js';
+import { activateAccount, aplStores, assignTl, createUser, currentVisitWeek, releaseTl, storeTlHistory, tlCandidates } from '../api/mockApi.js';
 
 const T = { timeout: 4000 };
 const admin = { userId: 1, name: 'Rina Saraswati', role: 'REVIEWER' };
@@ -17,17 +19,19 @@ const TAMALANREA = 'REG2026-0132-2';
 beforeEach(() => { setScenario(DEFAULT_SCENARIO); sessionStorage.clear(); window.location.hash = '/login'; });
 afterEach(cleanup);
 
-describe('Mapping TL (API)', () => {
-  it('AC-001/002/003: daftar hanya area APL, partner dengan toko tanpa TL di atas, ringkasan kartu', async () => {
-    const r = await tlMapping(hasan, [1]);
-    expect(r.rows.every((p) => p.areaId === 1)).toBe(true);
-    expect(r.rows[0].id).toBe('REG2026-0132');
-    expect(r.rows[0]).toMatchObject({ storeCount: 2, tlCount: 1 });
+describe('Toko Aktif APL (API)', () => {
+  it('AC-001/003: baris per toko hanya area APL, toko tanpa TL di atas, ringkasan kartu, filter', async () => {
+    const r = await aplStores(hasan, [1], PERIOD);
+    expect(r.rows.every((x) => x.partner.areaId === 1)).toBe(true);
+    expect(r.rows[0]).toMatchObject({ id: TAMALANREA, tlId: null });
+    expect(r.rows.find((x) => x.id === 'REG2026-0132-1').partner).toMatchObject({ name: 'PT Bintang Gadget Store', storeCount: 2 });
     expect(r.summary).toMatchObject({ tlUnder: 2, noTl: 1 });
-    const l = await tlMapping(lestari, [2, 5]);
+    const l = await aplStores(lestari, [2, 5], PERIOD);
     expect(l.summary.tlUnder).toBe(2);
     expect(l.summary.tlByArea.map((x) => x.count)).toEqual([1, 1]);
-    expect((await tlMapping(hasan, [1], { tl: 'none' })).rows.flatMap((p) => p.stores).map((s) => s.id)).toEqual([TAMALANREA]);
+    expect((await aplStores(hasan, [1], PERIOD, { tl: 'none' })).rows.map((x) => x.id)).toEqual([TAMALANREA]);
+    expect((await aplStores(hasan, [1], PERIOD, { partner: 'REG2026-0139' })).rows.every((x) => x.partner.id === 'REG2026-0139')).toBe(true);
+    expect((await aplStores(hasan, [1], PERIOD, { q: 'sudiang' })).rows.map((x) => x.name)).toEqual(['Jaya Abadi Cellular Sudiang']);
   });
 
   it('AC-007: kandidat hanya TL Active di area toko; TL area lain dan toko area lain ditolak', async () => {
@@ -66,7 +70,7 @@ describe('Mapping TL (API)', () => {
   });
 });
 
-describe('Mapping TL (UI)', () => {
+describe('Toko Aktif APL (UI)', () => {
   it('pilih toko tanpa TL, Tugaskan TL lewat bilah pilihan, toast', async () => {
     await releaseTl('REG2026-0139-1', hasan); // test API di atas sudah mengisi semua toko contoh
     const user = userEvent.setup();
@@ -75,7 +79,7 @@ describe('Mapping TL (UI)', () => {
     await user.type(screen.getByPlaceholderText('••••••••'), DEMO_PASSWORD);
     await user.click(screen.getByRole('button', { name: 'Masuk' }));
     await screen.findByText(/Penjualan ·/, {}, T);
-    window.location.hash = '/apl/mapping-tl?tl=none';
+    window.location.hash = '/apl/toko-aktif?tl=none';
     expect(await screen.findByText('Toko belum ada TL', {}, T)).toBeTruthy();
     const pick = await screen.findByLabelText('Pilih Jaya Abadi Cellular', {}, T);
     await user.click(within(pick).getByRole('checkbox'));

@@ -494,13 +494,14 @@ describe('APL', () => {
     expect((await screen.findAllByText(/Minggu /, {}, T)).length).toBeGreaterThan(0);
   });
 
-  it('Partner hanya area APL, bisa dibuka ke toko', async () => {
+  it('Toko Aktif APL: per toko hanya area APL, drawer toko berisi partner dan Riwayat TL', async () => {
     const user = await start('hasan.basri');
-    go('/apl/partner');
-    expect(await screen.findByText('Jaya Abadi Cellular', {}, T)).toBeTruthy();
-    expect(screen.queryByText(/Galaxy Phone Center/)).toBeNull();
-    await user.click(screen.getByRole('button', { name: 'Buka toko Jaya Abadi Cellular' }));
+    go('/apl/toko-aktif');
     expect(await screen.findByText('Jaya Abadi Cellular Sudiang', {}, T)).toBeTruthy();
+    expect(screen.queryByText(/Galaxy Phone Center/)).toBeNull();
+    await user.click(screen.getByText('Jaya Abadi Cellular Sudiang'));
+    expect(await screen.findByText('Riwayat TL', {}, T)).toBeTruthy();
+    expect(screen.getByText('Nama PIC')).toBeTruthy();
   });
 
   it('Tim dan Insentif (TL, SA/SR, Partner)', async () => {
@@ -553,7 +554,7 @@ describe('Super Admin', () => {
 describe('Tidak ada layar buntu', () => {
   it.each([
     ['rina.saraswati', ['/beranda', '/partner-pipeline', '/partner-pipeline/REG2026-0133', '/account-management']],
-    ['lestari.wulandari', ['/apl', '/apl/kinerja', '/apl/produktivitas', '/apl/partner', '/apl/tim', '/apl/insentif']],
+    ['lestari.wulandari', ['/apl', '/apl/kinerja', '/apl/produktivitas', '/apl/toko-aktif', '/apl/tim', '/apl/insentif']],
     ['hendra.wijaya', ['/skema-insentif', '/hasil-perhitungan']],
   ])('%s: setiap layar punya navigasi sidebar dan Keluar', async (id, paths) => {
     await start(id);

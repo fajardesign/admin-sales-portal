@@ -602,10 +602,12 @@ const storeOf = (storeId) => { const p = partners.find((x) => x.stores.some((s) 
 const tlSince = (p, s) => [...(s.tlLog ?? [])].reverse().find((e) => e.to === s.tlId)?.at ?? p.activatedAt;
 
 /**
- * FR-002/FR-003: toko Active partner Active di area APL, dikelompokkan per partner (partner yang punya toko tanpa TL di atas).
- * f.tl: '' semua | 'none' belum ada TL | id TL; f.q: partner, toko, atau kode. Ringkasan dihitung dari area terpilih tanpa filter.
+ * APL Toko Aktif (keputusan user 2026-10-17: menu Partner B4 + Mapping TL 1.7 digabung, sudut pandang toko seperti Toko Aktif
+ * Admin; konflik dengan PRD dicatat). Baris per toko Active partner Active di area terpilih. f: partner, tl ('none' = belum ada
+ * TL, atau id TL), channel, q (toko, partner, kode). Ringkasan (FR-003) dihitung dari area terpilih tanpa filter lain; cair = nominal
+ * pinjaman Dicairkan yang diajukan dalam periode.
  */
-export async function tlMapping(apl, areaIds, f = {}, { retry = false } = {}) {
+export async function aplStores(apl, areaIds, period, f = {}, { retry = false } = {}) {
   const empty = await listGate(retry);
   const all = partners.filter((p) => p.status === 'ACTIVE' && areaIds.includes(p.areaId))
     .flatMap((p) => p.stores.filter((s) => s.status === 'ACTIVE').map((s) => ({ p, s })));
@@ -620,21 +622,26 @@ export async function tlMapping(apl, areaIds, f = {}, { retry = false } = {}) {
     noSales: all.filter(({ s }) => s.tlId != null && s.assigned.length === 0).length,
   };
   const term = (f.q ?? '').trim().toLowerCase();
-  const rows = all.filter(({ p, s }) => (f.tl === 'none' ? s.tlId == null : f.tl ? s.tlId === Number(f.tl) : true)
-    && (!term || [p.partnerName, s.name, s.referralCode ?? ''].some((v) => v.toLowerCase().includes(term))));
-  const groups = new Map();
-  rows.forEach(({ p, s }) => {
-    const g = groups.get(p.id) ?? { id: p.id, name: p.partnerName, areaId: p.areaId, storeCount: p.stores.filter((x) => x.status === 'ACTIVE').length, tlCount: partnerTls(p).length, stores: [] };
-    g.stores.push({
-      id: s.id, name: s.name, code: s.code, primary: s.primary, referralCode: s.referralCode, areaId: p.areaId, partnerName: p.partnerName,
+  const paid = (storeId) => loans.filter((l) => l.storeId === storeId && l.status === 'PAID_OUT' && inP(wibDate(l.submittedAt), period)).reduce((a, l) => a + l.amount, 0);
+  const rows = all.filter(({ p, s }) => (!f.partner || p.id === f.partner)
+    && (f.tl === 'none' ? s.tlId == null : f.tl ? s.tlId === Number(f.tl) : true)
+    && (!f.channel || p.channel === f.channel)
+    && (!term || [s.name, p.partnerName, s.referralCode ?? '', s.code ?? ''].some((v) => v.toLowerCase().includes(term))))
+    .sort((x, y) => (x.s.tlId != null) - (y.s.tlId != null) || x.p.partnerName.localeCompare(y.p.partnerName) || x.s.id.localeCompare(y.s.id))
+    .map(({ p, s }) => ({
+      id: s.id, name: s.name, code: s.code, primary: s.primary, referralCode: s.referralCode, address: s.address, lat: s.lat, lng: s.lng,
+      activeSince: new Date(Math.max(p.activatedAt, s.addedAt)), paidOutAmount: paid(s.id),
       tlId: s.tlId, tl: userById(s.tlId)?.fullName ?? null, tlSince: s.tlId != null ? tlSince(p, s) : null,
       sales: s.assigned.map((id) => userById(id)).filter(Boolean).map((u) => `${u.fullName} (${u.role})`),
-    });
-    groups.set(p.id, g);
-  });
-  const list = [...groups.values()].sort((a, b) => (b.stores.some((x) => x.tlId == null) - a.stores.some((x) => x.tlId == null)) || a.name.localeCompare(b.name));
+      partner: {
+        id: p.id, name: p.partnerName, areaId: p.areaId, channel: p.channel, entity: p.businessEntityType, activatedAt: p.activatedAt,
+        address: `${p.address}, ${p.village}, ${p.district}, ${p.city}`, picName: p.pic.name, picEmail: p.pic.email, picPhone: p.pic.phone,
+        storeCount: p.stores.filter((x) => x.status === 'ACTIVE').length, tls: partnerTls(p).map((id) => userById(id)?.fullName).filter(Boolean),
+      },
+    }));
+  const partnerOptions = [...new Map(all.map(({ p }) => [p.id, { value: p.id, label: p.partnerName }])).values()].sort((x, y) => x.label.localeCompare(y.label));
   const tlOptions = activeTls.map((u) => ({ value: String(u.id), label: u.fullName }));
-  return { rows: empty ? [] : list, summary, tlOptions };
+  return { rows: empty ? [] : rows, summary, partnerOptions, tlOptions };
 }
 
 /** FR-004: calon TL untuk toko terpilih — TL Active di area partner; null area = toko dari lebih dari satu area. */
@@ -1177,31 +1184,6 @@ export async function visitDetail(userId, period) {
     return { ...clone(v), storeName: p.stores.find((x) => x.id === v.storeId).name, partnerName: p.partnerName };
   });
   return { rows, weeks: visitWeeks(userId, period), thisWeek: visitWeekStores(userId, mondayOf(todayDate())) };
-}
-
-// ------------------------------------------------------------------ APL B4 Partner
-/** Baris Partner APL: partner aktif + toko aktif dengan TL toko dan SA/SR (TL per toko, PRD Scope 1 v2). */
-function aplPartnerRow(p, period) {
-  const paid = (storeId) => loans.filter((l) => l.partnerId === p.id && (!storeId || l.storeId === storeId) && l.status === 'PAID_OUT' && (!period || inP(wibDate(l.submittedAt), period))).reduce((a, l) => a + l.amount, 0);
-  return {
-    id: p.id, name: p.partnerName, areaId: p.areaId, channel: p.channel, entity: p.businessEntityType, tls: partnerTls(p).map((id) => userById(id)?.fullName).filter(Boolean),
-    activatedAt: p.activatedAt, paidOutAmount: paid(),
-    picName: p.pic.name, picEmail: p.pic.email, picPhone: p.pic.phone, address: `${p.address}, ${p.village}, ${p.district}, ${p.city}`,
-    stores: p.stores.filter((s) => s.status === 'ACTIVE').map((s) => ({
-      id: s.id, name: s.name, code: s.code, referralCode: s.referralCode, primary: s.primary, address: s.address, lat: s.lat, lng: s.lng, activeSince: new Date(Math.max(p.activatedAt, s.addedAt)),
-      tlId: s.tlId, tl: userById(s.tlId)?.fullName ?? null,
-      sales: s.assigned.map((id) => userById(id)).filter(Boolean).map((u) => `${u.fullName} (${u.role})`), paidOutAmount: paid(s.id),
-    })),
-  };
-}
-export async function aplPartners(areaIds, period, f = {}, { retry = false } = {}) {
-  const empty = await listGate(retry);
-  if (empty) return [];
-  const term = (f.q ?? '').trim().toLowerCase();
-  return partners.filter((p) => p.status === 'ACTIVE' && inArea(areaIds, p.areaId) && (!f.channel || p.channel === f.channel) && (!f.tl || p.stores.some((s) => s.tlId === Number(f.tl))))
-    .map((p) => aplPartnerRow(p, period))
-    .filter((p) => !term || p.name.toLowerCase().includes(term) || p.stores.some((s) => s.name.toLowerCase().includes(term)))
-    .sort((a, b) => b.paidOutAmount - a.paidOutAmount);
 }
 
 // ------------------------------------------------------------------ APL B5 Tim
