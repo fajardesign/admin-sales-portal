@@ -8,8 +8,8 @@ const NAV = [
     { label: 'Dashboard', value: '/apl', icon: 'Dashboard3Line', feature: 'SALES_PERFORMANCE' },
     { label: 'Kinerja Penjualan', value: '/apl/kinerja', icon: 'BarChartLine', feature: 'SALES_PERFORMANCE' },
     { label: 'Produktivitas', value: '/apl/produktivitas', icon: 'TimeLine', feature: 'PRODUCTIVITY_PERFORMANCE_CHECK_IN' },
-    { label: 'Partner', value: '/apl/partner', icon: 'Building2Line', feature: 'PARTNER_VIEW' },
-    { label: 'Mapping TL', value: '/apl/mapping-tl', icon: 'UserAddLine', feature: 'TL_ASSIGNMENT' },
+    // APL (keputusan 2026-10-17): Partner + Mapping TL digabung menjadi Toko Aktif (sudut pandang toko).
+    { label: 'Toko Aktif', value: '/apl/toko-aktif', icon: 'ShoppingBagLine', feature: 'PARTNER_VIEW' },
     { label: 'Tim', value: '/apl/tim', icon: 'TeamLine', feature: 'TEAM_VIEW' },
     { label: 'Insentif', value: '/apl/insentif', icon: 'HandCoinLine', feature: 'INCENTIVE_ESTIMATION' },
     { label: 'Skema Insentif', value: '/skema-insentif', icon: 'CoinsLine', feature: 'INCENTIVE_SCHEME' },
