@@ -117,7 +117,7 @@ export const FEATURE_LABEL = {
   INCENTIVE_ESTIMATION: 'Estimasi insentif', PARTNER_VIEW: 'Lihat partner', TEAM_VIEW: 'Lihat tim', PARTNER_ACQUISITION: 'Pendaftaran partner',
   SALES_ASSIGNMENT: 'Penugasan SA/SR', VISIT_PLAN_MANAGEMENT: 'Atur kunjungan', ATTENDANCE: 'Absensi', VISIT_EXECUTION: 'Kunjungan',
   LOAN_TRACKING: 'Pantau pinjaman', PARTNER_SALES_DASHBOARD: 'Penjualan partner', PARTNER_COMMISSION: 'Komisi partner', PARTNER_PROFILE: 'Profil partner',
-  TRANSACTION_INQUIRY: 'Cek transaksi', DOCUMENT_REPOSITORY: 'Dokumen', INCENTIVE_SCHEME: 'Skema insentif', TL_ASSIGNMENT: 'Mapping TL',
+  TRANSACTION_INQUIRY: 'Cek transaksi', DOCUMENT_REPOSITORY: 'Dokumen', INCENTIVE_SCHEME: 'Skema insentif', TL_ASSIGNMENT: 'Penugasan TL toko',
 };
 export const ROLES = {
   REVIEWER: { label: 'Admin (Reviewer)', short: 'Admin', realm: 'ADMIN', platform: 'web-access', features: ['DASHBOARD', 'PARTNER_PIPELINE', 'ACCOUNT_CREATION'] },
