@@ -628,7 +628,8 @@ export async function aplStores(apl, areaIds, period, f = {}, { retry = false } 
   const rows = all.filter(({ p, s }) => (!f.partner || p.id === f.partner)
     && (f.tl === 'none' ? s.tlId == null : f.tl ? s.tlId === Number(f.tl) : true)
     && (!f.channel || p.channel === f.channel)
-    && (!term || [s.name, p.partnerName, s.referralCode ?? '', s.code ?? ''].some((v) => v.toLowerCase().includes(term))))
+    // Keputusan 2026-10-20: filter partner dan TL diganti pencarian (nama toko, partner, kode, TL, SA/SR).
+    && (!term || [s.name, p.partnerName, s.referralCode ?? '', s.code ?? '', userById(s.tlId)?.fullName ?? '', ...s.assigned.map((id) => userById(id)?.fullName ?? '')].some((v) => v.toLowerCase().includes(term))))
     .sort((x, y) => (x.s.tlId != null) - (y.s.tlId != null) || x.p.partnerName.localeCompare(y.p.partnerName) || x.s.id.localeCompare(y.s.id))
     .map(({ p, s }) => ({
       id: s.id, name: s.name, code: s.code, primary: s.primary, referralCode: s.referralCode, address: s.address, lat: s.lat, lng: s.lng,
@@ -913,15 +914,16 @@ export async function updateStoreLocation(pid, storeId, lat, lng, reason, sessio
 }
 
 /**
- * Toko Aktif (keputusan 2026-10-16/17): sudut pandang toko untuk partner Active — toko aktif dan toko baru yang menunggu kode
- * referral (OQ-25). Filter: partner, nama toko, status kode referral ('belum' | 'sudah'). Ringkasan dihitung dari semua toko
- * (tanpa filter): jumlah toko, jumlah TL, toko aktif yang belum ditugaskan ke SA/SR, toko menunggu kode referral.
+ * Toko Aktif (keputusan 2026-10-16/17, 2026-10-19/20): sudut pandang toko untuk partner Active. f.tab: '' = "Semua Toko Aktif"
+ * (toko aktif saja), 'permintaan' = "Permintaan Tambah Toko" (toko baru menunggu kode referral, OQ-25). f.q mencari nama toko,
+ * partner, kode, kode referral, TL, dan SA/SR. Ringkasan (tanpa filter): jumlah toko aktif, jumlah TL, toko aktif yang belum
+ * ditugaskan ke SA/SR, toko menunggu kode referral.
  */
 export async function activeStores(f = {}, { retry = false } = {}) {
   const empty = await listGate(retry);
   const all = partners.filter((p) => p.status === 'ACTIVE').flatMap((p) => p.stores.filter((s) => ['ACTIVE', 'WAITING_REFERRAL'].includes(s.status)).map((s) => ({ p, s })));
   const summary = {
-    stores: all.length,
+    stores: all.filter(({ s }) => s.status === 'ACTIVE').length,
     tls: new Set(all.map(({ s }) => s.tlId).filter((x) => x != null)).size,
     unassigned: all.filter(({ s }) => s.status === 'ACTIVE' && s.assigned.length === 0).length,
     waiting: all.filter(({ s }) => s.status === 'WAITING_REFERRAL').length,
@@ -930,13 +932,15 @@ export async function activeStores(f = {}, { retry = false } = {}) {
   // Keputusan 2026-10-19: tab "Permintaan tambah toko" (toko menunggu kode) dan "Semua toko"; cari nama toko, partner, TL, SA/SR.
   const term = (f.q ?? '').trim().toLowerCase();
   const names = (s) => [userById(s.tlId)?.fullName ?? '', ...s.assigned.map((id) => userById(id)?.fullName ?? '')];
-  const rows = all.filter(({ p, s }) => (f.tab !== 'permintaan' || s.status === 'WAITING_REFERRAL')
+  const rows = all.filter(({ p, s }) => (f.tab === 'permintaan' ? s.status === 'WAITING_REFERRAL' : s.status === 'ACTIVE')
     && (!term || [s.name, p.partnerName, s.code ?? '', s.referralCode ?? '', ...names(s)].some((v) => v.toLowerCase().includes(term)))
     && (f.ref === 'belum' ? !s.referralCode : f.ref === 'sudah' ? !!s.referralCode : true))
     .sort((x, y) => (y.s.status === 'WAITING_REFERRAL') - (x.s.status === 'WAITING_REFERRAL') || x.p.partnerName.localeCompare(y.p.partnerName) || x.s.id.localeCompare(y.s.id))
     .map(({ p, s }) => ({
       id: s.id, name: s.name, code: s.code, primary: s.primary, status: s.status, referralCode: s.referralCode, referralQr: s.referralQr ?? null, areaId: p.areaId,
-      partnerId: p.id, partnerName: p.partnerName, partnerStatus: p.status, addedAt: s.addedAt, addedBy: actorLabel(s.addedBy),
+      partnerId: p.id, partnerName: p.partnerName, partnerStatus: p.status, channel: p.channel, addedAt: s.addedAt, addedBy: actorLabel(s.addedBy),
+      address: s.address, lat: s.lat, lng: s.lng, lastLocationChange: s.locationLog?.at(-1) ?? null,
+      tlId: s.tlId, tlSince: s.tlId != null ? tlSince(p, s) : null,
       tl: userById(s.tlId)?.fullName ?? null, sales: s.assigned.map((id) => userById(id)).filter(Boolean).map((u) => `${u.fullName} (${u.role})`),
     }));
   return { rows: empty ? [] : rows, summary };
@@ -1212,7 +1216,10 @@ export const subordinateOptions = (areaIds, roles = ['TL', 'SR', 'SA']) => field
 /** Per orang: absensi & kunjungan pada periode. f: { tl, role }. */
 export async function aplProductivity(areaIds, period, f = {}, { retry = false } = {}) {
   const empty = await listGate(retry);
-  const people = empty ? [] : fieldUsers(areaIds).filter((u) => (!f.role || u.role === f.role) && (!f.tl || u.id === Number(f.tl) || u.supervisorId === Number(f.tl)));
+  // Keputusan 2026-10-20: filter TL diganti pencarian — nama orang atau nama TL atasannya (TL juga cocok dengan namanya sendiri).
+  const term = (f.q ?? '').trim().toLowerCase();
+  const people = empty ? [] : fieldUsers(areaIds).filter((u) => (!f.role || u.role === f.role) && (!f.tl || u.id === Number(f.tl) || u.supervisorId === Number(f.tl))
+    && (!term || [u.fullName, userById(u.supervisorId)?.fullName ?? ''].some((v) => v.toLowerCase().includes(term))));
   return people.map((u) => {
     const area = AREAS.find((a) => a.id === u.areaIds[0]);
     const att = attendance.filter((a) => a.userId === u.id && inP(a.date, period));
@@ -1263,7 +1270,7 @@ export async function aplTeam(areaIds, f = {}, { retry = false } = {}) {
   const today = todayDate();
   const term = (f.q ?? '').trim().toLowerCase();
   return fieldUsers(areaIds)
-    .filter((u) => (!f.role || u.role === f.role) && (!term || [u.fullName, u.email].some((v) => v.toLowerCase().includes(term))))
+    .filter((u) => (!f.role || u.role === f.role) && (!term || [u.fullName, u.email, userById(u.supervisorId)?.fullName ?? ''].some((v) => v.toLowerCase().includes(term))))
     .map((u) => {
       const a = attendance.find((x) => x.userId === u.id && x.date === today);
       const ps = u.role === 'TL' ? partners.filter((p) => p.status === 'ACTIVE' && p.stores.some((s) => s.status === 'ACTIVE' && s.tlId === u.id)) : partners.filter((p) => p.stores.some((s) => s.assigned.includes(u.id) && s.status === 'ACTIVE'));

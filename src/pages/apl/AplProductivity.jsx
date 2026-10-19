@@ -1,36 +1,34 @@
 import { useEffect, useState } from 'react';
-import { Select, StatusBadge, TabMenuHorizontal } from '@ds/index.js';
-import { AdminShell } from '../../components/AdminShell.jsx';
+import { StatusBadge } from '@ds/index.js';
 import { DataTable } from '../../components/DataTable.jsx';
 import { ListCard } from '../../components/ListCard.jsx';
-import { aplProductivity, attendanceWeekLabel, subordinateOptions, weekStatusLabel } from '../../api/mockApi.js';
-import { useScenario } from '../../dev/scenario.js';
+import { aplProductivity, attendanceWeekLabel, weekStatusLabel } from '../../api/mockApi.js';
 import { nowrap } from '../../lib/cells.jsx';
 import { ATTENDANCE_LABEL, TL_LEVEL, areaName } from '../../lib/constants.js';
 import { navigate, withQuery } from '../../lib/router.js';
-import { PeriodFilter } from './aplCommon.jsx';
-import { useAplScope, usePeriod } from './aplPeriod.js';
 import { ProductivityDrawer } from './ProductivityDrawer.jsx';
 
 const n = (v) => String(v);
+const ABSENSI_NOTE = 'Setiap hari adalah hari kerja, termasuk akhir pekan, hari libur, dan cuti. Target 6 check-in per minggu (Senin–Minggu), hari apa saja; minggu tercapai = minggu yang sudah selesai dengan minimal 6 check-in. Check in dengan selfie dan lokasi dalam radius 3 km dari titik lokasi kantor atau toko partner yang terdaftar. Check in setelah 10:00 waktu setempat sesuai lokasi check-in (WIB/WITA/WIT) dihitung Terlambat; hari tanpa check-in dihitung Absen. Batas check out 23:59. TL dapat mengoreksi absensi sampai akhir minggu berikutnya dengan alasan.';
+const KUNJUNGAN_NOTE = 'Target per minggu (Senin–Minggu) = setiap toko yang ditugaskan dikunjungi sekali (TL: toko yang ia pegang), hari apa saja; boleh lebih dari satu toko per hari. Target dikunci Senin 00:00 WIB: toko yang pindah di tengah minggu tetap menjadi target pemegang lama minggu itu, pemegang baru mulai minggu berikutnya; kunjungan dihitung untuk orang yang melakukannya. Check in kunjungan mulai 12:00 waktu setempat sesuai lokasi check-in, dalam radius 3 km dari titik lokasi toko yang terdaftar; check-out kunjungan opsional. Minggu lengkap = minggu yang sudah selesai dengan semua toko dikunjungi; minggu masuk periode yang memuat hari Seninnya.';
 
-/** B3 · Produktivitas (PRD v3): tab Absensi & Kunjungan per orang; klik baris untuk detail harian/mingguan/bulanan. */
-export function AplProductivity(props) {
-  const { tableState } = useScenario();
-  return <AplProductivityView key={tableState} {...props} />;
+/**
+ * B3 · Produktivitas (PRD v3) — sejak 2026-10-20 digabung ke menu Tim sebagai tab "Absensi" dan "Kunjungan" (konflik dengan PRD yang
+ * memisahkan B3 dan B5 dicatat). Rute lama /apl/produktivitas dialihkan ke /apl/tim?tab=absensi|kunjungan.
+ */
+export function AplProductivity({ query }) {
+  const q = Object.fromEntries(query.entries());
+  useEffect(() => { navigate(withQuery('/apl/tim', { ...q, tab: q.tab === 'kunjungan' ? 'kunjungan' : 'absensi' })); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  return null;
 }
 
-function AplProductivityView({ user, onLogout, query }) {
-  const q = Object.fromEntries(query.entries());
-  const period = usePeriod(query);
-  const areaIds = useAplScope(user, query);
-  const tab = q.tab === 'kunjungan' ? 'kunjungan' : 'absensi';
+/** Daftar absensi atau kunjungan per orang (tab di menu Tim); klik baris untuk detail harian/mingguan/bulanan. Filter: role, cari nama atau TL. */
+export function ProductivityList({ areaIds, period, tab, role, search }) {
   const [rows, setRows] = useState([]);
   const [view, setView] = useState('loading');
   const [person, setPerson] = useState(null);
-  const set = (patch) => navigate(withQuery('/apl/produktivitas', { ...q, ...patch }));
-  const key = JSON.stringify({ period, areaIds, tl: q.tl, role: q.role });
-  const load = (retry) => { setView('loading'); aplProductivity(areaIds, period, { tl: q.tl, role: q.role }, { retry }).then((r) => { setRows(r); setView(r.length ? 'data' : 'empty'); }, () => setView('error')); };
+  const key = JSON.stringify({ period, areaIds, role, search });
+  const load = (retry) => { setView('loading'); aplProductivity(areaIds, period, { role, q: search }, { retry }).then((r) => { setRows(r); setView(r.length ? 'data' : 'empty'); }, () => setView('error')); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(false); }, [key]);
 
@@ -51,25 +49,14 @@ function AplProductivityView({ user, onLogout, query }) {
     { key: 'weeks', header: 'Minggu lengkap', align: 'right', render: (r) => ({ priority: 'leading', title: r.visits.weeks ? `${r.visits.weeksComplete}/${r.visits.weeks}` : '-' }) },
   ];
   return (
-    <AdminShell active="/apl/produktivitas" icon="TimeLine" title="Produktivitas" description="Absensi dan pencapaian kunjungan TL, SR, dan SA di area Anda." user={user} onLogout={onLogout}>
-      <PeriodFilter path="/apl/produktivitas" query={query} user={user} period={period}>
-        <div style={{ width: 220 }}>
-          <Select size="sm" value={q.tl ?? ''} placeholder="Semua TL" onChange={(v) => set({ tl: v })} options={[{ value: '', label: 'Semua TL' }, ...subordinateOptions(areaIds, ['TL'])]} />
-        </div>
-        <div style={{ width: 150 }}>
-          <Select size="sm" value={q.role ?? ''} placeholder="Semua role" onChange={(v) => set({ role: v })} options={[{ value: '', label: 'Semua role' }, { value: 'TL', label: 'TL' }, { value: 'SR', label: 'SR' }, { value: 'SA', label: 'SA' }]} />
-        </div>
-      </PeriodFilter>
-      <TabMenuHorizontal value={tab} onChange={(v) => set({ tab: v === 'absensi' ? '' : v })} items={[{ value: 'absensi', label: 'Absensi' }, { value: 'kunjungan', label: 'Kunjungan' }]} />
-      <ListCard view={view} onRetry={() => load(true)} emptyMessage="Belum ada anggota tim yang sesuai dengan filter.">
+    <>
+      <ListCard view={view} onRetry={() => load(true)} emptyMessage={search || role ? 'Tidak ada anggota tim yang sesuai dengan pencarian atau filter.' : 'Belum ada anggota tim aktif.'}>
         {(view === 'data' || view === 'loading') && <DataTable loading={view === 'loading'} rows={rows} columns={columns} minWidth={1000} onRowClick={setPerson} />}
       </ListCard>
       <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>
-        {tab === 'absensi'
-          ? 'Setiap hari adalah hari kerja, termasuk akhir pekan, hari libur, dan cuti. Target 6 check-in per minggu (Senin–Minggu), hari apa saja; minggu tercapai = minggu yang sudah selesai dengan minimal 6 check-in. Check in dengan selfie dan lokasi dalam radius 3 km dari titik lokasi kantor atau toko partner yang terdaftar. Check in setelah 10:00 waktu setempat sesuai lokasi check-in (WIB/WITA/WIT) dihitung Terlambat; hari tanpa check-in dihitung Absen. Batas check out 23:59. TL dapat mengoreksi absensi sampai akhir minggu berikutnya dengan alasan.'
-          : 'Target per minggu (Senin–Minggu) = setiap toko yang ditugaskan dikunjungi sekali (TL: toko yang ia pegang), hari apa saja; boleh lebih dari satu toko per hari. Target dikunci Senin 00:00 WIB: toko yang pindah di tengah minggu tetap menjadi target pemegang lama minggu itu, pemegang baru mulai minggu berikutnya; kunjungan dihitung untuk orang yang melakukannya. Check in kunjungan mulai 12:00 waktu setempat sesuai lokasi check-in, dalam radius 3 km dari titik lokasi toko yang terdaftar; check-out kunjungan opsional. Minggu lengkap = minggu yang sudah selesai dengan semua toko dikunjungi; minggu masuk periode yang memuat hari Seninnya.'}
+        {tab === 'absensi' ? ABSENSI_NOTE : KUNJUNGAN_NOTE}
       </span>
       {person && <ProductivityDrawer person={person} tab={tab} period={period} onClose={() => setPerson(null)} />}
-    </AdminShell>
+    </>
   );
 }

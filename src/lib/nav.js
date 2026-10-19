@@ -7,9 +7,9 @@ const NAV = [
     { label: 'Beranda', value: '/beranda', icon: 'HomeSmile2Line', feature: 'DASHBOARD' },
     { label: 'Dashboard', value: '/apl', icon: 'Dashboard3Line', feature: 'SALES_PERFORMANCE' },
     { label: 'Kinerja Penjualan', value: '/apl/kinerja', icon: 'BarChartLine', feature: 'SALES_PERFORMANCE' },
-    { label: 'Produktivitas', value: '/apl/produktivitas', icon: 'TimeLine', feature: 'PRODUCTIVITY_PERFORMANCE_CHECK_IN' },
     // APL (keputusan 2026-10-17): Partner + Mapping TL digabung menjadi Toko Aktif (sudut pandang toko).
     { label: 'Toko Aktif', value: '/apl/toko-aktif', icon: 'ShoppingBagLine', feature: 'PARTNER_VIEW' },
+    // APL (keputusan 2026-10-20): Produktivitas digabung ke Tim (tab Anggota Tim · Absensi · Kunjungan).
     { label: 'Tim', value: '/apl/tim', icon: 'TeamLine', feature: 'TEAM_VIEW' },
     { label: 'Insentif', value: '/apl/insentif', icon: 'HandCoinLine', feature: 'INCENTIVE_ESTIMATION' },
     { label: 'Skema Insentif', value: '/skema-insentif', icon: 'CoinsLine', feature: 'INCENTIVE_SCHEME' },
@@ -31,9 +31,13 @@ export function navFor(session) {
   return NAV.map((s) => ({ ...s, items: s.items.filter((i) => f.includes(i.feature)) })).filter((s) => s.items.length);
 }
 
+/** Rute lama tanpa menu: tetap dikenal agar tautan lama dialihkan, bukan ke halaman tidak dikenal. */
+const ALIASES = { '/apl/produktivitas': 'PRODUCTIVITY_PERFORMANCE_CHECK_IN' };
+
 /** Feature yang dibutuhkan rute (null = rute tidak dikenal). */
 export function featureForPath(path) {
   if (path.startsWith('/partner-pipeline/')) return 'PARTNER_PIPELINE';
+  if (ALIASES[path]) return ALIASES[path];
   return NAV.flatMap((s) => s.items).find((i) => i.value === path)?.feature ?? null;
 }
 

@@ -65,3 +65,33 @@ describe('APL', () => {
     expect(screen.getByText(/Absen menjadi Tepat Waktu/)).toBeTruthy();
   });
 });
+
+describe('Toko Aktif (2026-10-20)', () => {
+  it('Semua Toko Aktif: kolom Aksi, klik baris membuka detail toko dengan Riwayat TL', async () => {
+    const user = await start('rina.saraswati');
+    await screen.findByText(/Menunggu review/, {}, T);
+    window.location.hash = '/toko-aktif';
+    expect(await screen.findByText('Semua Toko Aktif', {}, T)).toBeTruthy();
+    expect(screen.queryByText('Jaya Abadi Cellular Antang')).toBeNull(); // toko yang menunggu kode hanya di tab permintaan
+    const cell = await screen.findByText('Jaya Abadi Cellular Sudiang', {}, T);
+    expect(within(cell.closest('tr')).getByRole('button', { name: 'Ubah kode & QR' })).toBeTruthy();
+    await user.click(cell);
+    expect(await screen.findByText('Lihat detail partner', {}, T)).toBeTruthy();
+    expect(await screen.findByText('Riwayat TL', {}, T)).toBeTruthy();
+  });
+});
+
+describe('APL Toko Aktif (2026-10-20)', () => {
+  it('tanpa filter partner dan TL; pencarian mencakup nama TL', async () => {
+    const user = await start('hasan.basri');
+    await screen.findByText(/Penjualan dan produktivitas di area Anda/, {}, T);
+    window.location.hash = '/apl/toko-aktif';
+    const search = await screen.findByPlaceholderText('Cari toko, partner, TL, SA/SR, atau kode', {}, T);
+    expect(screen.queryByRole('button', { name: 'Semua partner' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Semua TL' })).toBeNull();
+    await user.type(search, 'Andi Pratama');
+    await waitFor(() => expect(window.location.hash).toContain('q=Andi'));
+    const rows = await screen.findAllByText('Andi Pratama', {}, T);
+    expect(rows.length).toBeGreaterThan(0);
+  });
+});

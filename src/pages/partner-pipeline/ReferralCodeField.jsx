@@ -24,19 +24,20 @@ export function QrThumb({ qr, size = 40 }) {
 /**
  * SCR-07 Kode Referral + QR per toko (PRD Scope 1 v1.1 FR-019): tampilan kode + QR dan tombol yang membuka modal. Hanya Admin;
  * Under Review s.d. Active (Rejected, Cancelled, Inactive: hanya baca). Kosong → "Belum diisi" (chip "Kode referral wajib diisi"
- * saat aktivasi menunggu).
+ * saat aktivasi menunggu). variant: 'full' (kode + tombol), 'value' (kode saja, untuk kolom Kode Referral), 'action' (tombol saja,
+ * untuk kolom Aksi — keputusan 2026-10-20).
  */
-export function ReferralCodeField({ partnerId, partnerStatus, store, user, required = false, showQr = true, onSaved }) {
+export function ReferralCodeField({ partnerId, partnerStatus, store, user, required = false, showQr = true, variant = 'full', onSaved }) {
   const [open, setOpen] = useState(false);
   const canEdit = user?.role === 'REVIEWER' && REFERRAL_EDITABLE.includes(partnerStatus);
   const waiting = store.status === 'WAITING_REFERRAL';
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-8)', flexWrap: 'wrap' }}>
-      {store.referralCode
+      {variant !== 'action' && (store.referralCode
         ? <span style={{ font: 'var(--label-sm)', color: 'var(--text-strong-950)' }}>{store.referralCode}</span>
-        : <StatusBadge status={required ? 'failed' : 'pending'}>{required ? 'Kode referral wajib diisi' : 'Belum diisi'}</StatusBadge>}
-      {showQr && store.referralCode && <QrThumb qr={store.referralQr} size={32} />}
-      {canEdit && (
+        : <StatusBadge status={required ? 'failed' : 'pending'}>{required ? 'Kode referral wajib diisi' : 'Belum diisi'}</StatusBadge>)}
+      {variant !== 'action' && showQr && store.referralCode && <QrThumb qr={store.referralQr} size={32} />}
+      {canEdit && variant !== 'value' && (
         <Button size="2xs" variant={waiting ? 'filled' : 'stroke'} tone={waiting ? 'primary' : 'neutral'} onClick={() => setOpen(true)}>
           {waiting ? 'Isi kode & aktifkan' : store.referralCode ? 'Ubah kode & QR' : 'Isi kode & QR'}
         </Button>
