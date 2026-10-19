@@ -270,7 +270,8 @@ export async function changeStatus(pid, to, opts, session) {
   }
   if (to === 'INACTIVE') {
     // C6 FR-013: semua kursi (TL dan SA/SR) di semua toko dilepas, sumber "partner nonaktif".
-    p.stores.forEach((s) => { releaseTlSeat(p, s, 'Sistem', 'partner nonaktif'); s.status = 'INACTIVE'; });
+    // Toko yang masih menunggu kode referral otomatis dibatalkan (keputusan 2026-10-19, Q4).
+    p.stores.forEach((s) => { releaseTlSeat(p, s, 'Sistem', 'partner nonaktif'); s.status = s.status === 'WAITING_REFERRAL' ? 'CANCELLED' : 'INACTIVE'; });
     const u = users.find((x) => x.partnerId === p.id);
     if (u && u.status !== 'DISABLED') {
       Object.assign(u, { status: 'DISABLED', disabledAt: now(), disabledBy: 'Sistem (partner Inactive)', disabledReason: 'Partner dinonaktifkan di Partner Pipeline' });
@@ -587,8 +588,9 @@ export async function disableUser(id, reason, session, opts = {}) {
 export async function moveSubordinates(tlId, moves, reason, session) {
   await wait(500);
   const u = userById(tlId);
-  if (u.role !== 'TL' || accountStatus(u) !== 'ACTIVE' || subsOf(tlId).length === 0 || !Object.keys(moves).length) throw new ApiError('CONFLICT');
-  if (!Object.keys(moves).every((sid) => subsOf(tlId).some((x) => String(x.id) === String(sid)))) throw new ApiError('CONFLICT');
+  if (u.role !== 'TL' || accountStatus(u) !== 'ACTIVE' || !Object.keys(moves).length) throw new ApiError('CONFLICT');
+  // Stale: bawahan yang dipilih sudah tidak di bawah TL ini (dipindah orang lain setelah modal dibuka).
+  if (!Object.keys(moves).every((sid) => subsOf(tlId).some((x) => String(x.id) === String(sid)))) throw new ApiError('STALE');
   const actor = actorOf(session);
   const r = applyHandover(u, 'move', moves, null, reason, actor);
   u.log.push({ at: now(), text: `${r.moved} bawahan dipindahkan oleh ${actor}${r.released ? `, ${r.released} penugasan toko dilepas` : ''}: ${reason}` });
@@ -670,15 +672,22 @@ export async function assignTl(storeIds, tlId, session) {
 }
 
 /** FR-005 Lepas TL: kursi TL dilepas (sumber "dilepas APL") dan SA/SR di toko itu ikut dilepas (sumber "TL dilepas"). */
-export async function releaseTl(storeId, session) {
+export async function releaseTl(storeId, session, expectedTlId) {
   await wait(400);
   const { p, s } = storeOf(storeId);
   if (!s || !aplHolds(session, p.areaId)) throw new ApiError('FORBIDDEN');
-  if (s.tlId == null) throw new ApiError('STALE', s.name);
+  // Stale (keputusan 2026-10-19, Designer 2): TL sudah dilepas/diganti APL lain setelah modal dibuka.
+  if (s.tlId == null || (expectedTlId !== undefined && s.tlId !== expectedTlId)) throw new ApiError('STALE', s.name);
   const by = actorOf(session);
   [...s.assigned].forEach((x) => systemRelease(p, s, x, 'TL dilepas', by));
   releaseTlSeat(p, s, by, 'dilepas APL');
   return { store: s.name };
+}
+
+/** Riwayat TL lewat API (memuat/galat bisa disimulasikan dari DevToolbar, keputusan 2026-10-19 Designer 2). */
+export async function loadStoreTlHistory(storeId, { retry = false } = {}) {
+  const empty = await listGate(retry);
+  return empty ? [] : storeTlHistory(storeId);
 }
 
 /** FR-007 Riwayat TL satu toko: penugasan & pelepasan TL dan SA/SR, terbaru di atas. */
@@ -809,11 +818,14 @@ export function referralTaken(code, exceptStoreId) {
  * ("Belum ada TL" untuk APL area itu, C6).
  * Error: FORBIDDEN | CONFLICT | FORMAT | DUPLICATE | QR_REQUIRED | QR_NEW_REQUIRED | QR_TYPE | QR_SIZE | REASON_REQUIRED.
  */
-export async function setStoreReferral(pid, storeId, code, qr, reason, session) {
+export async function setStoreReferral(pid, storeId, code, qr, reason, session, expected) {
   await wait(400);
   if (session.role !== 'REVIEWER') throw new ApiError('FORBIDDEN');
   const p = findP(pid); const s = p?.stores.find((x) => x.id === storeId);
   if (!s || !REFERRAL_EDITABLE.includes(p.status)) throw new ApiError('CONFLICT');
+  // Cek versi (keputusan 2026-10-19, Designer 2): kode yang dilihat saat modal dibuka harus masih sama.
+  if (expected !== undefined && (s.referralCode ?? null) !== (expected ?? null)) throw new ApiError('STALE');
+  if (s.status === 'CANCELLED') throw new ApiError('STALE');
   const c = (code || '').trim().toUpperCase();
   if (validateReferralCode(c)) throw new ApiError('FORMAT');
   if (referralTaken(c, s.id)) throw new ApiError('DUPLICATE');
@@ -867,6 +879,40 @@ export async function changePartnerArea(pid, areaId, reason, session) {
 export const storesWithoutReferral = (p) => p.stores.filter((s) => !s.referralCode || !s.referralQr);
 
 /**
+ * Batalkan permintaan tambah toko (keputusan 2026-10-19, Q4): hanya Admin, alasan wajib; toko "Menunggu kode referral" menjadi
+ * "Dibatalkan" (tidak aktif, tanpa kode). Error: FORBIDDEN | STALE (toko tidak lagi menunggu kode) | REASON_REQUIRED.
+ */
+export async function cancelStoreRequest(pid, storeId, reason, session) {
+  await wait(400);
+  if (session.role !== 'REVIEWER') throw new ApiError('FORBIDDEN');
+  const p = findP(pid); const s = p?.stores.find((x) => x.id === storeId);
+  if (!s || s.status !== 'WAITING_REFERRAL') throw new ApiError('STALE');
+  if (!(reason || '').trim()) throw new ApiError('REASON_REQUIRED');
+  s.status = 'CANCELLED';
+  log(p, { from: null, to: null, by: actorOf(session), reason: `Permintaan tambah toko ${s.name} dibatalkan: ${reason.trim()}` });
+  return enrich(p);
+}
+
+/**
+ * Ubah lokasi toko oleh Admin setelah partner Active (keputusan 2026-10-19, Q8): koordinat baru langsung dipakai sebagai titik
+ * radius check-in; riwayat di `s.locationLog`. Error: FORBIDDEN | CONFLICT | INVALID (koordinat) | REASON_REQUIRED.
+ */
+export async function updateStoreLocation(pid, storeId, lat, lng, reason, session) {
+  await wait(400);
+  if (session.role !== 'REVIEWER') throw new ApiError('FORBIDDEN');
+  const p = findP(pid); const s = p?.stores.find((x) => x.id === storeId);
+  if (!s || p.status !== 'ACTIVE' || s.status !== 'ACTIVE') throw new ApiError('CONFLICT');
+  const la = Number(lat); const ln = Number(lng);
+  if (!Number.isFinite(la) || !Number.isFinite(ln) || la < -11 || la > 6 || ln < 94 || ln > 142) throw new ApiError('INVALID');
+  if (!(reason || '').trim()) throw new ApiError('REASON_REQUIRED');
+  const old = { lat: s.lat, lng: s.lng };
+  s.locationLog = [...(s.locationLog ?? []), { at: now(), by: actorOf(session), from: old, to: { lat: la, lng: ln }, reason: reason.trim() }];
+  Object.assign(s, { lat: +la.toFixed(6), lng: +ln.toFixed(6) });
+  log(p, { from: null, to: null, by: actorOf(session), reason: `Lokasi ${s.name} diubah dari ${old.lat}, ${old.lng} ke ${s.lat}, ${s.lng}: ${reason.trim()}` });
+  return enrich(p);
+}
+
+/**
  * Toko Aktif (keputusan 2026-10-16/17): sudut pandang toko untuk partner Active — toko aktif dan toko baru yang menunggu kode
  * referral (OQ-25). Filter: partner, nama toko, status kode referral ('belum' | 'sudah'). Ringkasan dihitung dari semua toko
  * (tanpa filter): jumlah toko, jumlah TL, toko aktif yang belum ditugaskan ke SA/SR, toko menunggu kode referral.
@@ -881,18 +927,19 @@ export async function activeStores(f = {}, { retry = false } = {}) {
     waiting: all.filter(({ s }) => s.status === 'WAITING_REFERRAL').length,
     noCode: all.filter(({ s }) => !s.referralCode).length,
   };
-  const partnerOptions = [...new Map(all.map(({ p }) => [p.id, { value: p.id, label: p.partnerName }])).values()].sort((a, b) => a.label.localeCompare(b.label));
+  // Keputusan 2026-10-19: tab "Permintaan tambah toko" (toko menunggu kode) dan "Semua toko"; cari nama toko, partner, TL, SA/SR.
   const term = (f.q ?? '').trim().toLowerCase();
-  const rows = all.filter(({ p, s }) => (!f.partner || p.id === f.partner)
-    && (!term || [s.name, s.code ?? '', s.referralCode ?? ''].some((v) => v.toLowerCase().includes(term)))
+  const names = (s) => [userById(s.tlId)?.fullName ?? '', ...s.assigned.map((id) => userById(id)?.fullName ?? '')];
+  const rows = all.filter(({ p, s }) => (f.tab !== 'permintaan' || s.status === 'WAITING_REFERRAL')
+    && (!term || [s.name, p.partnerName, s.code ?? '', s.referralCode ?? '', ...names(s)].some((v) => v.toLowerCase().includes(term)))
     && (f.ref === 'belum' ? !s.referralCode : f.ref === 'sudah' ? !!s.referralCode : true))
     .sort((x, y) => (y.s.status === 'WAITING_REFERRAL') - (x.s.status === 'WAITING_REFERRAL') || x.p.partnerName.localeCompare(y.p.partnerName) || x.s.id.localeCompare(y.s.id))
     .map(({ p, s }) => ({
       id: s.id, name: s.name, code: s.code, primary: s.primary, status: s.status, referralCode: s.referralCode, referralQr: s.referralQr ?? null, areaId: p.areaId,
-      partnerId: p.id, partnerName: p.partnerName, partnerStatus: p.status,
+      partnerId: p.id, partnerName: p.partnerName, partnerStatus: p.status, addedAt: s.addedAt, addedBy: actorLabel(s.addedBy),
       tl: userById(s.tlId)?.fullName ?? null, sales: s.assigned.map((id) => userById(id)).filter(Boolean).map((u) => `${u.fullName} (${u.role})`),
     }));
-  return { rows: empty ? [] : rows, summary, partnerOptions };
+  return { rows: empty ? [] : rows, summary };
 }
 
 const EDITABLE = {

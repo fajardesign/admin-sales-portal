@@ -61,7 +61,7 @@ export const SCALE = { MODERN: 'Modern', TRADITIONAL: 'Tradisional' };
 export const PRODUCT_SOLD = { BRAND_NEW: 'Baru', USED: 'Bekas', BLENDED: 'Campuran' };
 export const STORE_LOCATION = { SEPARATE: 'Terpisah', PINGGIR_JALAN: 'Pinggir Jalan', MALL: 'Mall' };
 export const PRODUCT_TYPE = { GADGET: 'Gadget', NON_GADGET: 'Non-Gadget' };
-export const STORE_STATUS = { PENDING: 'Menunggu partner Active', WAITING_REFERRAL: 'Menunggu kode referral', ACTIVE: 'Aktif', INACTIVE: 'Nonaktif' };
+export const STORE_STATUS = { PENDING: 'Menunggu partner Active', WAITING_REFERRAL: 'Menunggu kode referral', ACTIVE: 'Aktif', INACTIVE: 'Nonaktif', CANCELLED: 'Dibatalkan' };
 
 export const BANKS = { BCA: 'BCA', BRI: 'BRI', MANDIRI: 'Mandiri', BNI: 'BNI', BTN: 'BTN', BSI: 'BSI', CIMB: 'CIMB Niaga', PERMATA: 'Permata' };
 

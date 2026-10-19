@@ -9,7 +9,7 @@ import { MapPreview } from '../../components/MapPreview.jsx';
 import { SearchField } from '../../components/FilterBar.jsx';
 import { StatCard, StatGrid } from '../../components/StatCard.jsx';
 import { useToast } from '../../components/Toaster.jsx';
-import { ApiError, aplStores, assignTl, releaseTl, storeTlHistory, tlCandidates } from '../../api/mockApi.js';
+import { ApiError, aplStores, assignTl, loadStoreTlHistory, releaseTl, tlCandidates } from '../../api/mockApi.js';
 import { useScenario } from '../../dev/scenario.js';
 import { nowrap } from '../../lib/cells.jsx';
 import { CHANNEL, ENTITY, areaName } from '../../lib/constants.js';
@@ -154,12 +154,12 @@ function ReleaseTlModal({ store, user, onClose, onDone }) {
   async function save() {
     setBusy(true);
     try {
-      await releaseTl(store.id, user);
+      await releaseTl(store.id, user, store.tlId);
       toast('success', 'TL dilepas. Toko kembali ke daftar Belum ada TL.');
       onDone();
-    } catch {
+    } catch (e) {
       setBusy(false);
-      toast('error', 'Gagal melepas TL. Coba lagi.');
+      if (e instanceof ApiError && e.code === 'STALE') { toast('error', `TL ${store.name} sudah diubah. Daftar dimuat ulang.`); onDone(); } else toast('error', 'Gagal melepas TL. Coba lagi.');
     }
   }
   const sales = store.sales.map((x) => x.replace(/ \((SA|SR)\)$/, '')).join(', ');
@@ -176,7 +176,11 @@ function ReleaseTlModal({ store, user, onClose, onDone }) {
 /** Detail toko: data toko + peta, profil partner (PIC, kontak, alamat), dan Riwayat TL (SCR-TM-04). */
 function StoreDrawer({ store: s, period, onClose }) {
   const p = s.partner;
-  const history = storeTlHistory(s.id);
+  const [history, setHistory] = useState(null);
+  const [histErr, setHistErr] = useState(false);
+  const loadHistory = (retry) => { setHistErr(false); setHistory(null); loadStoreTlHistory(s.id, { retry }).then(setHistory, () => setHistErr(true)); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { loadHistory(false); }, [s.id]);
   return (
     <Drawer open width={640} onClose={onClose} header={<DrawerHeader size="lg" title={s.name} description={`${p.name} · ${areaName(p.areaId)}`} icon="ShoppingBagLine" onClose={onClose} />}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-16)', padding: 'var(--space-16) var(--space-24) var(--space-24)' }}>
@@ -199,7 +203,11 @@ function StoreDrawer({ store: s, period, onClose }) {
           ]} />
         </SectionCard>
         <SectionCard title="Riwayat TL">
-          {history.length === 0 ? <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>Belum ada riwayat TL.</span> : history.map((e, i) => (
+          {histErr ? (
+            <Alert status="error" size="sm" title="Gagal memuat riwayat TL." actionLabel="Coba lagi" onAction={() => loadHistory(true)} />
+          ) : history == null ? (
+            <span role="status" style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>Memuat riwayat TL...</span>
+          ) : history.length === 0 ? <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>Belum ada riwayat TL.</span> : history.map((e, i) => (
             <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', padding: 'var(--space-10) var(--space-12)', borderRadius: 'var(--rounded-10)', boxShadow: 'var(--shadow-stroke)' }}>
               <span style={{ font: 'var(--label-sm)', color: 'var(--text-strong-950)' }}>{e.text}</span>
               <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>{e.by} · {formatDateTime(e.at)} · {e.source}</span>
