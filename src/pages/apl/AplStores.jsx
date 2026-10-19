@@ -6,14 +6,15 @@ import { DataTable } from '../../components/DataTable.jsx';
 import { ListCard } from '../../components/ListCard.jsx';
 import { KeyValueGrid, SectionCard } from '../../components/KeyValueGrid.jsx';
 import { MapPreview } from '../../components/MapPreview.jsx';
+import { TlHistory } from '../../components/TlHistory.jsx';
 import { SearchField } from '../../components/FilterBar.jsx';
 import { StatCard, StatGrid } from '../../components/StatCard.jsx';
 import { useToast } from '../../components/Toaster.jsx';
-import { ApiError, aplStores, assignTl, loadStoreTlHistory, releaseTl, tlCandidates } from '../../api/mockApi.js';
+import { ApiError, aplStores, assignTl, releaseTl, tlCandidates } from '../../api/mockApi.js';
 import { useScenario } from '../../dev/scenario.js';
 import { nowrap } from '../../lib/cells.jsx';
 import { CHANNEL, ENTITY, areaName } from '../../lib/constants.js';
-import { formatDate, formatDateTime, formatPhone, formatRp } from '../../lib/format.js';
+import { formatDate, formatPhone, formatRp } from '../../lib/format.js';
 import { navigate, withQuery } from '../../lib/router.js';
 import { PeriodFilter } from './aplCommon.jsx';
 import { useAplScope, usePeriod } from './aplPeriod.js';
@@ -24,6 +25,7 @@ const openMap = (lat, lng) => window.open(`https://www.google.com/maps?q=${lat},
  * APL · Toko Aktif (keputusan user 2026-10-17): menu Partner (B4) dan Mapping TL (1.7) digabung, sudut pandang toko seperti Toko
  * Aktif Admin; konflik dengan PRD (dua layar, daftar per partner) dicatat. Satu baris per toko dengan partner sebagai kolom;
  * APL menugaskan TL ke satu/banyak toko dan melepas TL. Klik baris: drawer toko (toko, partner, Riwayat TL). Filter di URL.
+ * 2026-10-20: filter partner dan TL dihapus, diganti pencarian; "Belum ada TL" lewat kartu dan pengingat (?tl=none).
  */
 export function AplStores(props) {
   const { tableState } = useScenario();
@@ -90,11 +92,9 @@ function AplStoresView({ user, onLogout, query }) {
         </Alert>
       )}
       <PeriodFilter path="/apl/toko-aktif" query={query} user={user} period={period}>
-        <div style={{ width: 220 }}><Select size="sm" value={q.partner ?? ''} placeholder="Semua partner" onChange={(x) => set({ partner: x })} options={[{ value: '', label: 'Semua partner' }, ...(data?.partnerOptions ?? [])]} /></div>
-        <div style={{ width: 200 }}><Select size="sm" value={q.tl ?? ''} placeholder="Semua TL" onChange={(x) => set({ tl: x })} options={[{ value: '', label: 'Semua TL' }, { value: 'none', label: 'Belum ada TL' }, ...(data?.tlOptions ?? [])]} /></div>
         <div style={{ width: 160 }}><Select size="sm" value={q.channel ?? ''} placeholder="Semua channel" onChange={(x) => set({ channel: x })} options={[{ value: '', label: 'Semua channel' }, ...Object.entries(CHANNEL).map(([value, label]) => ({ value, label }))]} /></div>
       </PeriodFilter>
-      <SearchField placeholder="Cari toko, partner, atau kode" value={q.q ?? ''} onChange={(x) => set({ q: x })} />
+      <SearchField placeholder="Cari toko, partner, TL, SA/SR, atau kode" value={q.q ?? ''} onChange={(x) => set({ q: x })} />
       {picked.size > 0 && (
         <div role="region" aria-label="Toko dipilih" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-12)', padding: 'var(--space-10) var(--space-16)', borderRadius: 'var(--rounded-12)', background: 'var(--bg-weak-50)', boxShadow: 'var(--shadow-stroke)' }}>
           <span style={{ flex: 1, font: 'var(--label-sm)', color: 'var(--text-strong-950)' }}>{picked.size} toko dipilih</span>
@@ -103,7 +103,7 @@ function AplStoresView({ user, onLogout, query }) {
         </div>
       )}
       <ListCard view={view} onRetry={() => load(true)}
-        emptyMessage={q.q || q.tl || q.partner || q.channel ? 'Tidak ada toko yang sesuai dengan pencarian atau filter.' : 'Belum ada toko aktif di area Anda.'}
+        emptyMessage={q.q || q.tl || q.channel ? 'Tidak ada toko yang sesuai dengan pencarian atau filter.' : 'Belum ada toko aktif di area Anda.'}
         footer={view === 'data' && <span style={{ display: 'block', padding: 'var(--space-12) var(--space-4) var(--space-4)', font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>{data.rows.length} toko · cair periode: {period.label}</span>}>
         {(view === 'data' || view === 'loading') && (
           <DataTable loading={view === 'loading'} rows={view === 'data' ? data.rows : []} columns={columns} minWidth={1200} onRowClick={setDetail} />
@@ -176,11 +176,6 @@ function ReleaseTlModal({ store, user, onClose, onDone }) {
 /** Detail toko: data toko + peta, profil partner (PIC, kontak, alamat), dan Riwayat TL (SCR-TM-04). */
 function StoreDrawer({ store: s, period, onClose }) {
   const p = s.partner;
-  const [history, setHistory] = useState(null);
-  const [histErr, setHistErr] = useState(false);
-  const loadHistory = (retry) => { setHistErr(false); setHistory(null); loadStoreTlHistory(s.id, { retry }).then(setHistory, () => setHistErr(true)); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { loadHistory(false); }, [s.id]);
   return (
     <Drawer open width={640} onClose={onClose} header={<DrawerHeader size="lg" title={s.name} description={`${p.name} · ${areaName(p.areaId)}`} icon="ShoppingBagLine" onClose={onClose} />}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-16)', padding: 'var(--space-16) var(--space-24) var(--space-24)' }}>
@@ -202,18 +197,7 @@ function StoreDrawer({ store: s, period, onClose }) {
             { label: 'Alamat', value: p.address, full: true },
           ]} />
         </SectionCard>
-        <SectionCard title="Riwayat TL">
-          {histErr ? (
-            <Alert status="error" size="sm" title="Gagal memuat riwayat TL." actionLabel="Coba lagi" onAction={() => loadHistory(true)} />
-          ) : history == null ? (
-            <span role="status" style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>Memuat riwayat TL...</span>
-          ) : history.length === 0 ? <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>Belum ada riwayat TL.</span> : history.map((e, i) => (
-            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', padding: 'var(--space-10) var(--space-12)', borderRadius: 'var(--rounded-10)', boxShadow: 'var(--shadow-stroke)' }}>
-              <span style={{ font: 'var(--label-sm)', color: 'var(--text-strong-950)' }}>{e.text}</span>
-              <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>{e.by} · {formatDateTime(e.at)} · {e.source}</span>
-            </div>
-          ))}
-        </SectionCard>
+        <TlHistory storeId={s.id} />
       </div>
     </Drawer>
   );

@@ -104,8 +104,13 @@ describe('Toko Aktif (UI)', () => {
     await waitFor(() => expect(window.location.hash).toContain('tab=permintaan'));
     expect(await screen.findByText('Galaxy Phone Center Kemang', {}, T)).toBeTruthy();
     expect(screen.getAllByText(/1 permintaan/).length).toBeGreaterThan(0);
-    expect(screen.queryByText('Jumlah toko')).toBeNull();
+    expect(screen.getByText('Jumlah toko')).toBeTruthy(); // ringkasan di atas tab (2026-10-20)
     const row = screen.getByText('Galaxy Phone Center Kemang').closest('tr');
+    expect(within(row).getByText('Belum diisi')).toBeTruthy(); // kolom Kode Referral
+    // Tab di atas pencarian; jumlah permintaan dalam badge.
+    const tabEl = screen.getByText('Permintaan Tambah Toko');
+    const search = screen.getByPlaceholderText('Cari toko atau partner');
+    expect(tabEl.compareDocumentPosition(search) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     await user.click(within(row).getByRole('button', { name: 'Isi kode & aktifkan' }));
     const dlg = await screen.findByRole('dialog', {}, T);
     expect(within(dlg).getByText('Isi kode referral dan aktifkan toko')).toBeTruthy();

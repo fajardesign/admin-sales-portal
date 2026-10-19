@@ -58,7 +58,7 @@ function AplDashboardView({ user, onLogout, query }) {
             <StatGrid min={230}>
               {PROD.map((m) => <StatCard key={m.key} icon={m.icon} color={m.color} label={m.label} value={ld ? '…' : m.value ? m.value(d.productivity.cur) : formatPct(d.productivity.cur[m.key])}
                 hint={ld ? m.hint : <span style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', alignItems: 'flex-start' }}>{m.hint}<DeltaBadge d={delta(d.productivity.cur[m.key], d.productivity.prev[m.key])} /></span>}
-                onClick={() => go('/apl/produktivitas', { tab: m.key === 'visitRate' ? 'kunjungan' : '' })} />)}
+                onClick={() => go('/apl/tim', { tab: m.key === 'visitRate' ? 'kunjungan' : 'absensi' })} />)}
             </StatGrid>
           </SectionCard>
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 3fr) minmax(0, 2fr)', gap: 'var(--space-16)' }}>

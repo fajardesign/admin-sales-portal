@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Avatar, Drawer, DrawerHeader, Select, StatusBadge } from '@ds/index.js';
+import { Avatar, Drawer, DrawerHeader, Select, StatusBadge, TabMenuHorizontal } from '@ds/index.js';
 import { AdminShell } from '../../components/AdminShell.jsx';
 import { DataTable } from '../../components/DataTable.jsx';
 import { ListCard } from '../../components/ListCard.jsx';
@@ -13,10 +13,15 @@ import { formatDate, formatNumber, formatPct, formatPhone, formatRp } from '../.
 import { navigate, withQuery } from '../../lib/router.js';
 import { PeriodFilter } from './aplCommon.jsx';
 import { useAplScope, usePeriod } from './aplPeriod.js';
+import { ProductivityList } from './AplProductivity.jsx';
 
 const TODAY_BADGE = { ON_TIME: 'completed', LATE: 'pending', CHECKED_OUT: 'information', NONE: 'disabled' };
 
-/** B5 · Tim (PRD v3): TL dan SA/SR aktif di area APL dengan atasan, partner, dan absensi hari ini; klik untuk detail orang. */
+/**
+ * B5 · Tim (PRD v3) + B3 Produktivitas digabung (keputusan 2026-10-20; konflik dengan PRD yang memisahkan keduanya dicatat).
+ * Tab: "Anggota Tim" (TL dan SA/SR aktif dengan atasan, partner, absensi hari ini; klik untuk detail orang), "Absensi", dan
+ * "Kunjungan" (per orang pada periode). Filter bersama: periode, area, role; pencarian nama, email, atau TL. Semua di URL.
+ */
 export function AplTeam(props) {
   const { tableState } = useScenario();
   return <AplTeamView key={tableState} {...props} />;
@@ -26,14 +31,15 @@ function AplTeamView({ user, onLogout, query }) {
   const q = Object.fromEntries(query.entries());
   const period = usePeriod(query);
   const areaIds = useAplScope(user, query);
+  const tab = ['absensi', 'kunjungan'].includes(q.tab) ? q.tab : 'anggota';
   const [rows, setRows] = useState([]);
   const [view, setView] = useState('loading');
   const [person, setPerson] = useState(null);
   const set = (patch) => navigate(withQuery('/apl/tim', { ...q, ...patch }));
-  const key = JSON.stringify({ areaIds, role: q.role, s: q.q });
+  const key = JSON.stringify({ areaIds, role: q.role, s: q.q, tab });
   const load = (retry) => { setView('loading'); aplTeam(areaIds, { q: q.q, role: q.role }, { retry }).then((r) => { setRows(r); setView(r.length ? 'data' : 'empty'); }, () => setView('error')); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { load(false); }, [key]);
+  useEffect(() => { if (tab === 'anggota') load(false); }, [key]);
 
   const columns = [
     { key: 'name', header: 'Nama', render: (r) => ({ priority: 'leading', media: <Avatar size={40} color={0} name={r.name} />, title: nowrap(r.name), description: r.leader ? `Atasan: ${r.leader}` : undefined }) },
@@ -45,15 +51,19 @@ function AplTeamView({ user, onLogout, query }) {
     { key: 'today', header: 'Absensi hari ini', render: (r) => ({ misc: true, children: <StatusBadge status={TODAY_BADGE[r.today]}>{ATTENDANCE_TODAY[r.today]}</StatusBadge> }) },
   ];
   return (
-    <AdminShell active="/apl/tim" icon="TeamLine" title="Tim" description="TL dan SA/SR aktif di area Anda." user={user} onLogout={onLogout}>
+    <AdminShell active="/apl/tim" icon="TeamLine" title="Tim" description="Anggota tim, absensi, dan kunjungan TL, SR, dan SA di area Anda." user={user} onLogout={onLogout}>
+      <TabMenuHorizontal value={tab} onChange={(v) => set({ tab: v === 'anggota' ? '' : v })} items={[
+        { value: 'anggota', label: 'Anggota Tim' }, { value: 'absensi', label: 'Absensi' }, { value: 'kunjungan', label: 'Kunjungan' },
+      ]} />
       <PeriodFilter path="/apl/tim" query={query} user={user} period={period}>
         <div style={{ width: 150 }}><Select size="sm" value={q.role ?? ''} placeholder="Semua role" onChange={(v) => set({ role: v })} options={[{ value: '', label: 'Semua role' }, { value: 'TL', label: 'TL' }, { value: 'SR', label: 'SR' }, { value: 'SA', label: 'SA' }]} /></div>
       </PeriodFilter>
-      <SearchField placeholder="Cari nama atau email" value={q.q ?? ''} onChange={(v) => set({ q: v })} />
-      <ListCard view={view} onRetry={() => load(true)} emptyMessage={q.q || q.role ? 'Tidak ada anggota tim yang sesuai dengan pencarian atau filter.' : 'Belum ada anggota tim aktif.'}
+      <SearchField placeholder={tab === 'anggota' ? 'Cari nama, email, atau TL' : 'Cari nama atau TL'} value={q.q ?? ''} onChange={(v) => set({ q: v })} />
+      {tab !== 'anggota' && <ProductivityList areaIds={areaIds} period={period} tab={tab} role={q.role} search={q.q} />}
+      {tab === 'anggota' && <ListCard view={view} onRetry={() => load(true)} emptyMessage={q.q || q.role ? 'Tidak ada anggota tim yang sesuai dengan pencarian atau filter.' : 'Belum ada anggota tim aktif.'}
         footer={view === 'data' && <span style={{ display: 'block', padding: 'var(--space-12) var(--space-4) var(--space-4)', font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>{rows.length} anggota aktif · periode ringkasan: {period.label}</span>}>
         {(view === 'data' || view === 'loading') && <DataTable loading={view === 'loading'} rows={rows} columns={columns} minWidth={1200} onRowClick={setPerson} />}
-      </ListCard>
+      </ListCard>}
       {person && <PersonDrawer person={person} period={period} onClose={() => setPerson(null)} />}
     </AdminShell>
   );

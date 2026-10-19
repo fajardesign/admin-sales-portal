@@ -485,9 +485,14 @@ describe('APL', () => {
     expect((await screen.findAllByText(/APP-••••\d{4}/, {}, T)).length).toBeGreaterThan(0);
   });
 
-  it('Produktivitas absensi & kunjungan dengan detail per orang', async () => {
+  it('Tim: tab Absensi (gabungan Produktivitas, rute lama dialihkan) dengan detail per orang; cari nama TL', async () => {
     const user = await start('hasan.basri');
     go('/apl/produktivitas');
+    await waitFor(() => expect(window.location.hash).toContain('/apl/tim?tab=absensi'), T);
+    expect(screen.queryByRole('button', { name: 'Produktivitas' })).toBeNull();
+    await user.type(await screen.findByPlaceholderText('Cari nama atau TL', {}, T), 'Andi');
+    expect(await screen.findByText('Eko Saputra', {}, T)).toBeTruthy(); // bawahan Andi
+    await user.clear(screen.getByPlaceholderText('Cari nama atau TL'));
     await user.click(await screen.findByText('Eko Saputra', {}, T));
     expect(await screen.findByText(/Absensi · Oktober 2026/, {}, T)).toBeTruthy();
     await user.click(screen.getByRole('tab', { name: 'Mingguan' }));
@@ -554,7 +559,7 @@ describe('Super Admin', () => {
 describe('Tidak ada layar buntu', () => {
   it.each([
     ['rina.saraswati', ['/beranda', '/partner-pipeline', '/partner-pipeline/REG2026-0133', '/account-management']],
-    ['lestari.wulandari', ['/apl', '/apl/kinerja', '/apl/produktivitas', '/apl/toko-aktif', '/apl/tim', '/apl/insentif']],
+    ['lestari.wulandari', ['/apl', '/apl/kinerja', '/apl/tim?tab=absensi', '/apl/toko-aktif', '/apl/tim', '/apl/insentif']],
     ['hendra.wijaya', ['/skema-insentif', '/hasil-perhitungan']],
   ])('%s: setiap layar punya navigasi sidebar dan Keluar', async (id, paths) => {
     await start(id);
