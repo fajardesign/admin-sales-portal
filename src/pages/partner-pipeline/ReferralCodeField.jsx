@@ -72,11 +72,12 @@ function ReferralModal({ partnerId, partnerStatus, store, user, onClose, onSaved
     setBusy(true); setErrs({});
     try {
       const qr = file ? { name: file.name, size: file.size, type: file.type, url: await readAsUrl(file) } : null;
-      const p = await setStoreReferral(partnerId, store.id, code, qr, reason, user);
+      const p = await setStoreReferral(partnerId, store.id, code, qr, reason, user, store.referralCode ?? null);
       toast('success', waiting ? 'Toko aktif. Menunggu penugasan TL oleh APL.' : 'Kode referral dan QR disimpan.');
       onSaved(p);
     } catch (e) {
       setBusy(false);
+      if (e instanceof ApiError && e.code === 'STALE') { toast('error', 'Kode referral toko ini sudah diubah. Muat ulang lalu coba lagi.'); onClose(); return; }
       if (e instanceof ApiError && ERR[e.code]) setErrs({ [ERR[e.code][0]]: ERR[e.code][1] });
       else toast('error', 'Gagal menyimpan kode referral. Coba lagi.');
     }

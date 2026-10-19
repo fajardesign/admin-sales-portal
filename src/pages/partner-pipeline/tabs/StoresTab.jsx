@@ -1,25 +1,31 @@
-import { StatusBadge } from '@ds/index.js';
+import { useState } from 'react';
+import { Button, Icon, StatusBadge } from '@ds/index.js';
 import { KeyValueGrid, RevisedBadge, SectionCard } from '../../../components/KeyValueGrid.jsx';
 import { MapPreview } from '../../../components/MapPreview.jsx';
 import { actorLabel, userById } from '../../../api/mockApi.js';
 import { CHANNEL_OFFLINE, PRODUCT_SOLD, PRODUCT_TYPE, SCALE, STORE_LOCATION, STORE_STATUS, STORE_TYPE } from '../../../lib/constants.js';
 import { formatDateTime, formatRp } from '../../../lib/format.js';
 import { ReferralCodeField } from '../ReferralCodeField.jsx';
+import { ChangeLocationModal } from '../ChangeLocationModal.jsx';
 
-const STATUS_BADGE = { PENDING: 'pending', WAITING_REFERRAL: 'pending', ACTIVE: 'completed', INACTIVE: 'disabled' };
+const STATUS_BADGE = { PENDING: 'pending', WAITING_REFERRAL: 'pending', ACTIVE: 'completed', INACTIVE: 'disabled', CANCELLED: 'failed' };
 
 /**
  * Tab Toko (PRD §2B): satu kartu per toko — Toko Utama dari pengajuan, Toko Tambahan dari mobile. PRD Scope 1 v2: setiap toko
- * punya Kode Referral sendiri (diisi Admin, FR-019) dan TL sendiri (keputusan 2026-10-16).
+ * punya Kode Referral sendiri (diisi Admin, FR-019) dan TL sendiri (keputusan 2026-10-16). Admin bisa "Ubah lokasi" toko aktif
+ * setelah partner Active (keputusan 2026-10-19, Q8).
  */
 export function StoresTab({ partner: p, user, onSaved }) {
+  const [moving, setMoving] = useState(null);
+  const canMove = (s) => user?.role === 'REVIEWER' && p.status === 'ACTIVE' && s.status === 'ACTIVE';
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-16)' }}>
       {p.stores.map((s, i) => {
         const changed = i === 0 && p.fieldChanges.find((c) => c.section === 'store' && c.field === 'name');
         return (
           <SectionCard key={s.id} title={s.primary ? 'Toko Utama' : 'Toko Tambahan'}
-            badge={<>{i === 0 && p.revisedSections.includes('store') && <RevisedBadge />}<StatusBadge status={STATUS_BADGE[s.status]} dot>{STORE_STATUS[s.status]}</StatusBadge></>}>
+            badge={<>{i === 0 && p.revisedSections.includes('store') && <RevisedBadge />}<StatusBadge status={STATUS_BADGE[s.status]} dot>{STORE_STATUS[s.status]}</StatusBadge></>}
+            actions={canMove(s) && <Button size="xs" variant="stroke" tone="neutral" leftIcon={<Icon name="MapPinLine" size={16} />} onClick={() => setMoving(s)}>Ubah lokasi</Button>}>
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(240px, 1fr)', gap: 'var(--space-24)' }}>
               <KeyValueGrid items={[
                 { label: 'Kode Toko', value: s.code ?? (s.status === 'WAITING_REFERRAL' ? 'Dibuat setelah kode referral diisi' : 'Dibuat saat partner Active') },
@@ -37,11 +43,19 @@ export function StoresTab({ partner: p, user, onSaved }) {
                 { label: 'Ditambahkan oleh', value: `${actorLabel(s.addedBy)} · ${formatDateTime(s.addedAt)}` },
                 { label: 'SA/SR ditugaskan', value: s.assigned.length ? s.assigned.map((id) => { const u = userById(id); return `${u.fullName} (${u.role})`; }).join(', ') : 'Belum ditugaskan' },
               ]} />
-              <MapPreview lat={s.lat} lng={s.lng} label={s.name} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
+                <MapPreview lat={s.lat} lng={s.lng} label={s.name} />
+                {s.locationLog?.length > 0 && (
+                  <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>
+                    Lokasi diubah {formatDateTime(s.locationLog.at(-1).at)} oleh {actorLabel(s.locationLog.at(-1).by)}. Sebelumnya: {s.locationLog.at(-1).from.lat}, {s.locationLog.at(-1).from.lng}
+                  </span>
+                )}
+              </div>
             </div>
           </SectionCard>
         );
       })}
+      {moving && <ChangeLocationModal partnerId={p.id} store={moving} user={user} onClose={() => setMoving(null)} onSaved={(np) => { setMoving(null); onSaved?.(np); }} />}
     </div>
   );
 }

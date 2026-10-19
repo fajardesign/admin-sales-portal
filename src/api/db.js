@@ -289,8 +289,9 @@ const DAY_MS = 864e5;
 export const wibDate = (d) => new Date(new Date(d).getTime() + 7 * 3600e3).toISOString().slice(0, 10);
 /** Date dari tanggal WIB + jam:menit WIB. */
 const atWib = (ymd, h, m = 0) => new Date(`${ymd}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00+07:00`);
-const isWorkday = (ymd) => new Date(`${ymd}T12:00:00+07:00`).getUTCDay() !== 0; // Senin–Sabtu
+const isWorkday = (ymd) => new Date(`${ymd}T12:00:00+07:00`).getUTCDay() !== 0; // pola data contoh: Senin–Sabtu acak, Minggu deterministik (semua hari tetap hari kerja, Q6)
 const TODAY = wibDate(BASE);
+const addDaysYmd = (ymd, n) => new Date(Date.parse(`${ymd}T12:00:00Z`) + n * DAY_MS).toISOString().slice(0, 10);
 /** Daftar tanggal WIB dari `from` (Date) s/d hari ini. */
 function daysFrom(from) {
   const out = [];
@@ -432,11 +433,13 @@ export const validStoresOf = (u) => (u.role === 'TL'
   : storesOf(u.id));
 
 /**
- * attendance: absensi harian (Senin–Sabtu) TL, SR, SA aktif (revisi stakeholder 2026-10-08).
+ * attendance: absensi harian TL, SR, SA aktif (revisi stakeholder 2026-10-08). Keputusan 2026-10-19 (Q6): setiap hari hari kerja,
+ * termasuk akhir pekan, libur, dan cuti; target 6 check-in per minggu Senin–Minggu, hari apa saja.
  * Check in/out dengan selfie + lokasi dalam radius 3 km dari titik lat/long yang tercatat (review 2026-10-09): kantor = titik kantor
  * terdaftar (`OFFICES`), toko = lokasi saat pendaftaran/Tambah Toko. distanceKm = jarak dari titik itu.
- * Waktu = jam server dalam zona area pengguna (PRD Scope 2 S8). status ON_TIME (check in ≤ 10:00) | LATE (> 10:00) | ABSENT (tidak check
- * in, atau check in tanpa check out sebelum 23:59 hari itu, S13). Senin–Sabtu termasuk hari libur nasional/cuti (S10). Hari ini bisa belum check in.
+ * Waktu = zona waktu lokasi check-in (WIB/WITA/WIT, keputusan 2026-10-19 Q6). status ON_TIME (check in ≤ 10:00) | LATE (> 10:00) |
+ * ABSENT (hari tanpa check-in). Check in tanpa check out sebelum 23:59 tetap tercatat hadir dengan check out kosong. Hari ini bisa belum
+ * check in. corrections: koreksi oleh TL (sampai akhir minggu berikutnya, alasan wajib) [{at, by, from, to, reason}].
  * place: { kind: 'OFFICE' | 'STORE', name }, distanceKm dari titik referensi.
  */
 export const attendance = [];
@@ -456,17 +459,49 @@ users.filter((u) => ['TL', 'SR', 'SA'].includes(u.role) && u.status === 'ACTIVE'
     const ref = atStore ?? office;
     const pt = near(ref, 1.2);
     const outAt = today ? null : atLocal(d, area, between(17, 18), between(0, 59));
-    // Contoh lupa check out (tanpa memakai angka acak agar data lain tidak bergeser): hari lalu tanpa check out = Absen (S13).
+    // Contoh lupa check out (tanpa memakai angka acak agar data lain tidak bergeser): tetap hadir, check out kosong.
     const noOut = !today && (u.id * 7 + Number(d.slice(8))) % 29 === 0;
     attendance.push({
-      userId: u.id, date: d, status: noOut ? 'ABSENT' : status, clockInAt: inAt,
+      userId: u.id, date: d, status, clockInAt: inAt,
       clockOutAt: noOut ? null : outAt,
       ...pt, place: { kind: atStore ? 'STORE' : 'OFFICE', name: ref.name }, distanceKm: +distanceKm(ref, pt).toFixed(2),
       // Zona waktu area pengguna (jam server, PRD Scope 2 S8: WIB/WITA/WIT) dan foto selfie contoh 1–6.
       tz: area.tz, utcOffset: area.utcOffset, selfie: (u.id + d.length + inAt.getUTCMinutes()) % 6 + 1,
     });
   });
+  // Hari Minggu (Q6: juga hari kerja). Dibuat tanpa angka acak agar data lain tidak bergeser: sebagian check in di kantor,
+  // sisanya Absen; target mingguan tetap 6 check-in sehingga satu hari tanpa check-in tidak menggagalkan minggu itu.
+  daysFrom(u.activatedAt).filter((d) => !isWorkday(d) && d !== TODAY).forEach((d) => {
+    const base = { userId: u.id, date: d, tz: area.tz, utcOffset: area.utcOffset };
+    if ((u.id + Number(d.slice(8))) % 4 !== 0) { attendance.push({ ...base, status: 'ABSENT', clockInAt: null, clockOutAt: null, lat: null, lng: null, place: null, distanceKm: null, selfie: null }); return; }
+    attendance.push({ ...base, status: 'ON_TIME', clockInAt: atLocal(d, area, 9, 15), clockOutAt: atLocal(d, area, 15, 30), lat: office.lat, lng: office.lng, place: { kind: 'OFFICE', name: office.name }, distanceKm: 0, selfie: (u.id % 6) + 1 });
+  });
 });
+
+/**
+ * Contoh koreksi absensi oleh TL (keputusan 2026-10-19, Q6): SR pertama yang punya atasan; satu hari Absen minggu lalu dikoreksi
+ * menjadi Tepat Waktu dan satu hari Terlambat menjadi Tepat Waktu, dengan alasan. Web hanya menampilkan; koreksi dilakukan di Android.
+ */
+{
+  const sr = users.find((u) => u.role === 'SR' && u.status === 'ACTIVE' && u.supervisorId);
+  const tl = users.find((u) => u.id === sr?.supervisorId);
+  const lastMon = ((t) => addDaysYmd(t, -((new Date(`${t}T12:00:00Z`).getUTCDay() + 6) % 7) - 7))(TODAY);
+  const inWeek = (a) => a.userId === sr?.id && a.date >= lastMon && a.date <= addDaysYmd(lastMon, 6);
+  const area = sr && AREAS.find((a) => a.id === sr.areaIds[0]);
+  const office = area && OFFICES.find((o) => o.areaId === area.id);
+  const by = tl ? `${tl.fullName} (TL)` : 'TL';
+  const absent = attendance.find((a) => inWeek(a) && a.status === 'ABSENT');
+  if (absent) {
+    Object.assign(absent, { status: 'ON_TIME', clockInAt: atLocal(absent.date, area, 8, 50), clockOutAt: atLocal(absent.date, area, 17, 10), lat: office.lat, lng: office.lng, place: { kind: 'OFFICE', name: office.name }, distanceKm: 0, selfie: null,
+      corrections: [{ at: atWib(addDaysYmd(absent.date, 2), 9, 12), by, from: { status: 'ABSENT', clockInAt: null }, to: { status: 'ON_TIME', clockInAt: atLocal(absent.date, area, 8, 50) }, reason: 'Ponsel rusak, hadir di kantor sesuai daftar hadir manual' }] });
+  }
+  const late = attendance.find((a) => inWeek(a) && a.status === 'LATE');
+  if (late) {
+    const old = late.clockInAt;
+    Object.assign(late, { status: 'ON_TIME', clockInAt: atLocal(late.date, area, 9, 40),
+      corrections: [{ at: atWib(addDaysYmd(late.date, 1), 8, 30), by, from: { status: 'LATE', clockInAt: old }, to: { status: 'ON_TIME', clockInAt: atLocal(late.date, area, 9, 40) }, reason: 'Gangguan sinyal saat check in, sudah di lokasi sebelum 10:00' }] });
+  }
+}
 
 /**
  * visits: check-in kunjungan (PRD Scope 2 §2.2). Target per minggu = setiap toko yang ditugaskan (SA/SR) atau toko kursi TL

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { passwordPolicy, validatePksFile, validateReason, validateReferralCode, validateUserForm } from '../lib/validation.js';
 import { formatDateTime, formatDateWIB, formatDuration, formatPhone, formatRp, formatTimeLocal, normalizePhone } from '../lib/format.js';
-import { computeIncentives, currentVisitWeek, findByIdentifier, visitWeekStores, picPhoneTaken, referralTaken, tierFor, tierLabel, verificationGap, visitWeeks, weekStatusLabel } from '../api/mockApi.js';
+import { attendanceWeekLabel, attendanceWeeks, computeIncentives, currentVisitWeek, findByIdentifier, visitWeekStores, picPhoneTaken, referralTaken, tierFor, tierLabel, verificationGap, visitWeeks, weekStatusLabel } from '../api/mockApi.js';
 import { attendance, distanceKm, partners, visits } from '../api/db.js';
 import { OFFICES, TIME_ZONES } from '../lib/constants.js';
 
@@ -78,10 +78,24 @@ describe('absensi & kunjungan (revisi stakeholder 2026-10-08)', () => {
       expect(a.status === 'ON_TIME' ? m <= 600 : m > 600).toBe(true);
     });
   });
-  it('PRD Scope 2 S13: check in tanpa check out di hari yang sudah lewat = Absen', () => {
+  it('Q6 (2026-10-19): Absen = hari tanpa check-in; check in tanpa check out tetap hadir; Minggu juga hari kerja', () => {
     const noOut = attendance.filter((a) => a.clockInAt && !a.clockOutAt && a.date < '2026-10-07');
     expect(noOut.length).toBeGreaterThan(0);
-    expect(noOut.every((a) => a.status === 'ABSENT')).toBe(true);
+    expect(noOut.every((a) => a.status !== 'ABSENT')).toBe(true);
+    expect(attendance.filter((a) => a.status === 'ABSENT').every((a) => !a.clockInAt)).toBe(true);
+    expect(attendance.some((a) => new Date(`${a.date}T12:00:00Z`).getUTCDay() === 0 && a.clockInAt)).toBe(true);
+  });
+  it('Q6: target 6 check-in per minggu Senin–Minggu', () => {
+    const w = attendanceWeeks(11, { from: '2026-09-07', to: '2026-09-13' })[0];
+    expect(w).toMatchObject({ start: '2026-09-07', target: 6, closed: true });
+    expect(w.met).toBe(w.checkIns >= 6);
+    expect(attendanceWeekLabel({ checkIns: 4, target: 6 })).toBe('4/6 check-in');
+  });
+  it('Q6: koreksi TL tercatat dengan pelaku, status lama/baru, dan alasan', () => {
+    const c = attendance.filter((a) => a.corrections?.length);
+    expect(c.length).toBe(2);
+    c.forEach((a) => expect(a.corrections[0]).toMatchObject({ by: expect.stringContaining('(TL)'), reason: expect.any(String) }));
+    expect(c.map((a) => a.corrections[0].from.status).sort()).toEqual(['ABSENT', 'LATE']);
   });
   it('jarak check in = jarak dari titik lat/long yang tercatat (kantor OFFICES / lokasi toko), maks. 3 km', () => {
     const stores = partners.flatMap((p) => p.stores);
@@ -110,12 +124,14 @@ describe('absensi & kunjungan (revisi stakeholder 2026-10-08)', () => {
   it('target mingguan = semua toko yang ditugaskan sekali per minggu, tanpa jumlah hari tetap (review 2026-10-09)', () => {
     const stores = visitWeekStores(11, '2026-09-07');
     expect(stores.flatMap((g) => g.stores).length).toBe(3); // SR Siti: 3 toko di 2 partner
-    const w = visitWeeks(11, { from: '2026-09-07', to: '2026-09-12' })[0];
+    const w = visitWeeks(11, { from: '2026-09-07', to: '2026-09-13' })[0];
     expect(w).toMatchObject({ start: '2026-09-07', target: 3, closed: true });
     expect(w.complete).toBe(w.visited >= 3);
     const cur = currentVisitWeek(11);
-    // Senin 5 Okt APL melepas TL dari toko Tamalanrea (SR Siti ikut dilepas): minggu berjalan tinggal 2 toko.
-    expect(cur).toMatchObject({ start: '2026-10-05', target: 2, closed: false });
+    // Senin 5 Okt 10:30 APL melepas TL dari toko Tamalanrea (SR Siti ikut dilepas). Target dikunci Senin 00:00 WIB (Q5):
+    // minggu berjalan tetap 3 toko; mulai minggu depan 2 toko.
+    expect(cur).toMatchObject({ start: '2026-10-05', target: 3, closed: false });
+    expect(visitWeekStores(11, '2026-10-12').flatMap((g) => g.stores).length).toBe(2);
     expect(stores.every((g) => g.visited === g.stores.every((x) => x.visited))).toBe(true);
     expect(weekStatusLabel({ visited: 3, target: 5, complete: false })).toBe('Belum lengkap 3/5');
     expect(weekStatusLabel({ visited: 5, target: 5, complete: true })).toBe('Lengkap 5/5');

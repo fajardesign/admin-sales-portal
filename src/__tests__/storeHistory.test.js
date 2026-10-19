@@ -2,25 +2,27 @@
 // File terpisah karena mengubah data contoh; vitest mengisolasi modul per file.
 import { describe, expect, it } from 'vitest';
 import { loans, partners } from '../api/db.js';
-import { changeStatus, computeIncentives, disableUser, visitWeeks } from '../api/mockApi.js';
+import { changeStatus, computeIncentives, disableUser, visitWeekStores, visitWeeks } from '../api/mockApi.js';
 
 const admin = { userId: 1, name: 'Rina Saraswati', role: 'REVIEWER' };
-const lastWeek = { from: '2026-09-28', to: '2026-10-03' };
+const lastWeek = { from: '2026-09-28', to: '2026-10-04' };
 const thisWeek = { from: '2026-10-05', to: '2026-10-07' };
 const salesRow = (id) => computeIncentives(null, '2026-10').find((r) => r.kind === 'SALES' && r.id === id);
 
 describe('Riwayat pemegang toko', () => {
-  it('SA dinonaktifkan: penjualan, insentif, dan minggu lalu tetap; minggu berjalan tanpa toko yang dilepas', async () => {
+  it('SA dinonaktifkan: penjualan, insentif, minggu lalu, dan target minggu berjalan (dikunci Senin 00:00 WIB, Q5) tetap', async () => {
     const sold = loans.filter((l) => l.salesId === 16).map((l) => l.id);
     const incentive = salesRow(16);
     const past = visitWeeks(16, lastWeek);
+    const cur = visitWeeks(16, thisWeek)[0].target;
     expect(past[0].target).toBeGreaterThan(0);
 
     await disableUser(16, 'Resign', admin);
     expect(loans.filter((l) => l.salesId === 16).map((l) => l.id)).toEqual(sold);
     expect(salesRow(16)).toEqual(incentive);
     expect(visitWeeks(16, lastWeek)).toEqual(past);
-    expect(visitWeeks(16, thisWeek)[0].target).toBe(0);
+    expect(visitWeeks(16, thisWeek)[0].target).toBe(cur);
+    expect(visitWeekStores(16, '2026-10-12')).toEqual([]); // minggu depan tanpa toko
   });
 
   it('TL dinonaktifkan: minggu lalu TL lama dan TL pengganti tidak berubah', async () => {

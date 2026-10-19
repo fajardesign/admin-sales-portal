@@ -87,7 +87,7 @@ describe('Dokumen PKS berversi (FR-024)', () => {
 });
 
 describe('Toko Aktif (UI)', () => {
-  it('ringkasan, pengingat kuning menyaring toko tanpa kode, isi kode + QR lewat modal', async () => {
+  it('ringkasan, pengingat kuning membuka tab Permintaan tambah toko (per partner), isi kode + QR lewat modal', async () => {
     const user = userEvent.setup();
     render(<App />);
     await user.type(screen.getByPlaceholderText('nama@amarbank.co.id atau 08123456789'), 'rina.saraswati@amarbank.co.id');
@@ -100,9 +100,13 @@ describe('Toko Aktif (UI)', () => {
     expect(await screen.findByText('Jumlah toko', {}, T)).toBeTruthy();
     expect(screen.getByText('Jumlah TL')).toBeTruthy();
     expect(screen.getByText('Belum ditugaskan ke SA/SR')).toBeTruthy();
-    await user.click(await screen.findByRole('button', { name: 'Lihat toko' }, T));
-    await waitFor(() => expect(window.location.hash).toContain('ref=belum'));
-    await user.click(await screen.findByRole('button', { name: 'Isi kode & aktifkan' }, T));
+    await user.click(await screen.findByRole('button', { name: 'Lihat permintaan' }, T));
+    await waitFor(() => expect(window.location.hash).toContain('tab=permintaan'));
+    expect(await screen.findByText('Galaxy Phone Center Kemang', {}, T)).toBeTruthy();
+    expect(screen.getAllByText(/1 permintaan/).length).toBeGreaterThan(0);
+    expect(screen.queryByText('Jumlah toko')).toBeNull();
+    const row = screen.getByText('Galaxy Phone Center Kemang').closest('tr');
+    await user.click(within(row).getByRole('button', { name: 'Isi kode & aktifkan' }));
     const dlg = await screen.findByRole('dialog', {}, T);
     expect(within(dlg).getByText('Isi kode referral dan aktifkan toko')).toBeTruthy();
     await user.type(within(dlg).getByPlaceholderText('Masukkan kode referral'), 't1225009');

@@ -71,7 +71,7 @@ function PipelineListView({ user, onLogout, query }) {
     // Partner Active (keputusan 2026-10-17): "Lihat {n} toko" membuka Toko Aktif tersaring ke partner ini; "Detail Partner" membuka detail.
     { key: 'actions', header: 'Aksi', render: (p) => (p.status === 'ACTIVE' ? { misc: true, children: (
       <span role="presentation" onClick={(e) => e.stopPropagation()} style={{ display: 'flex', gap: 'var(--space-8)' }}>
-        <Button size="2xs" onClick={() => navigate(withQuery('/toko-aktif', { partner: p.id }))}>{`Lihat ${p.stores.filter((s) => ['ACTIVE', 'WAITING_REFERRAL'].includes(s.status)).length} toko`}</Button>
+        <Button size="2xs" onClick={() => navigate(withQuery('/toko-aktif', { q: p.partnerName }))}>{`Lihat ${p.stores.filter((s) => ['ACTIVE', 'WAITING_REFERRAL'].includes(s.status)).length} toko`}</Button>
         <Button size="2xs" variant="stroke" tone="neutral" onClick={() => navigate(`/partner-pipeline/${p.registrationNumber}`)}>Detail Partner</Button>
       </span>
     ) } : '') },

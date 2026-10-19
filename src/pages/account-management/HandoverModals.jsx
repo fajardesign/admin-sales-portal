@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Alert, CheckboxLabel, Select, TextArea } from '@ds/index.js';
 import { ActionModal } from '../../components/ActionModal.jsx';
 import { useToast } from '../../components/Toaster.jsx';
-import { disableUser, handoverPlan, moveSubordinates, releasesAfter } from '../../api/mockApi.js';
+import { ApiError, disableUser, handoverPlan, moveSubordinates, releasesAfter } from '../../api/mockApi.js';
 import { ROLES, areaName } from '../../lib/constants.js';
 import { validateReason } from '../../lib/validation.js';
 
@@ -132,9 +132,9 @@ export function MoveSubordinatesModal({ target, user, onClose, onDone }) {
       const u = await moveSubordinates(target.id, h.map, reason.trim(), user);
       toast('success', 'Bawahan berhasil dipindahkan.');
       onDone(u);
-    } catch {
+    } catch (e) {
       setBusy(false);
-      toast('error', 'Gagal memindahkan bawahan. Coba lagi.');
+      if (e instanceof ApiError && e.code === 'STALE') { toast('error', 'Susunan bawahan sudah berubah. Buka ulang lalu coba lagi.'); onClose(); } else toast('error', 'Gagal memindahkan bawahan. Coba lagi.');
     }
   }
   return (

@@ -45,7 +45,7 @@ describe('Toko Aktif APL (API)', () => {
     const before = currentVisitWeek(22).target;
     await assignTl([TAMALANREA], '22', hasan);
     expect(store(TAMALANREA).tlId).toBe(22);
-    expect(currentVisitWeek(22).target).toBe(before + 1); // PRD Scope 2 S9: target minggu berjalan berubah seketika
+    expect(currentVisitWeek(22).target).toBe(before); // Q5: target dikunci Senin 00:00 WIB; Bagus mulai minggu depan
     expect(store(TAMALANREA).tlLog.at(-1)).toMatchObject({ to: 22, by: 'Hasan Basri (APL)', source: 'APL' });
     await expect(assignTl([TAMALANREA], '6', hasan)).rejects.toMatchObject({ code: 'STALE', field: 'PT Bintang Gadget Store Tamalanrea' });
   });

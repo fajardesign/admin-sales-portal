@@ -20,7 +20,7 @@ const SALES = [
   { key: 'paidOutAmount', label: 'Nominal cair', icon: 'MoneyDollarCircleLine', color: 'green', fmt: formatRp },
 ];
 const PROD = [
-  { key: 'attendanceRate', label: 'Tingkat kehadiran', hint: 'Hari check in / hari kerja Senin–Sabtu', icon: 'CalendarLine', color: 'blue' },
+  { key: 'attendanceRate', label: 'Tingkat kehadiran', hint: 'Check-in / target 6 per minggu, minggu yang sudah selesai', icon: 'CalendarLine', color: 'blue' },
   { key: 'visitRate', label: 'Minggu kunjungan lengkap', hint: 'Minggu selesai dengan semua toko yang ditugaskan dikunjungi', icon: 'MapPinLine', color: 'orange', value: (p) => `${p.visitWeeksComplete}/${p.visitWeeks}` },
   { key: 'onTimeRate', label: 'Tepat waktu', hint: 'Check in ≤ 10:00 waktu lokal / hadir', icon: 'TimeLine', color: 'teal' },
 ];
