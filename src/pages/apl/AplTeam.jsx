@@ -14,7 +14,7 @@ import { navigate, withQuery } from '../../lib/router.js';
 import { PeriodFilter } from './aplCommon.jsx';
 import { useAplScope, usePeriod } from './aplPeriod.js';
 
-const TODAY_BADGE = { ON_TIME: 'completed', LATE: 'pending', CHECKED_OUT: 'information', NONE: 'disabled', OFF: 'disabled' };
+const TODAY_BADGE = { ON_TIME: 'completed', LATE: 'pending', CHECKED_OUT: 'information', NONE: 'disabled' };
 
 /** B5 · Tim (PRD v3): TL dan SA/SR aktif di area APL dengan atasan, partner, dan absensi hari ini; klik untuk detail orang. */
 export function AplTeam(props) {
@@ -81,7 +81,7 @@ function PersonDrawer({ person: r, period, onClose }) {
         </SectionCard>
         <SectionCard title={`Produktivitas · ${period.label}`}>
           <KeyValueGrid items={s ? [
-            { label: 'Tingkat kehadiran', value: formatPct(s.productivity.attendanceRate) }, { label: 'Tepat waktu', value: formatPct(s.productivity.onTimeRate) },
+            { label: 'Tingkat kehadiran', value: formatPct(s.productivity.attendanceRate) }, { label: 'Minggu 6 check-in tercapai', value: `${s.productivity.attendanceWeeksMet}/${s.productivity.attendanceWeeks}` }, { label: 'Tepat waktu', value: formatPct(s.productivity.onTimeRate) },
             { label: 'Minggu kunjungan lengkap', value: `${s.productivity.visitWeeksComplete}/${s.productivity.visitWeeks}` },
             { label: 'Kunjungan minggu ini', value: weekStatusLabel(s.thisWeek) },
           ] : [{ label: 'Memuat', value: '…' }]} />

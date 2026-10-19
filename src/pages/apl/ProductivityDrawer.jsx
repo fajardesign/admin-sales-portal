@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Drawer, DrawerHeader, LinkButton, SegmentedControl, StatusBadge } from '@ds/index.js';
-import { attendanceDetail, visitDetail, weekStatusLabel } from '../../api/mockApi.js';
+import { attendanceDetail, attendanceWeekDetail, attendanceWeekLabel, todayDate, visitDetail, weekStatusLabel } from '../../api/mockApi.js';
 import { DataTable } from '../../components/DataTable.jsx';
 import { AREAS, ATTENDANCE_LABEL } from '../../lib/constants.js';
 import { nowrap } from '../../lib/cells.jsx';
-import { formatDate, formatKm, formatTimeLocal, monthLabel } from '../../lib/format.js';
+import { formatDate, formatDateTime, formatKm, formatTimeLocal, monthLabel } from '../../lib/format.js';
 import { selfieUrl } from '../../lib/selfies.js';
 
 const ATT = { ON_TIME: ['completed', ATTENDANCE_LABEL.ON_TIME], LATE: ['pending', ATTENDANCE_LABEL.LATE], ABSENT: ['failed', ATTENDANCE_LABEL.ABSENT] };
@@ -22,14 +22,20 @@ const Selfie = ({ n }) => (n ? (
 /** Detail produktivitas satu orang (PRD v3 §B3) — tampilan harian, mingguan, bulanan. */
 export function ProductivityDrawer({ person, tab, period, onClose }) {
   const area = AREAS.find((a) => a.id === person.areaId);
-  // Jam = jam server dalam zona area pengguna yang tercatat di setiap check in (PRD Scope 2 S8: WIB/WITA/WIT).
+  // Jam = zona waktu lokasi check-in yang tercatat di setiap check in (keputusan 2026-10-19 Q6: WIB/WITA/WIT).
   const time = (d, rec) => formatTimeLocal(d, rec?.tz ? rec : area);
   const [rows, setRows] = useState(null);
   const [weeks, setWeeks] = useState([]);
   const [thisWeek, setThisWeek] = useState([]);
+  const [attWeeks, setAttWeeks] = useState({ weeks: [], thisWeek: null });
   const [mode, setMode] = useState('harian');
   const key = `${person.id}|${tab}|${period.from}|${period.to}`;
-  const fetchRows = () => (tab === 'kunjungan' ? visitDetail(person.id, period).then((r) => { setWeeks(r.weeks); setThisWeek(r.thisWeek); return r.rows; }) : attendanceDetail(person.id, period));
+  const fetchRows = () => (tab === 'kunjungan'
+    ? visitDetail(person.id, period).then((r) => { setWeeks(r.weeks); setThisWeek(r.thisWeek); return r.rows; })
+    : Promise.all([attendanceDetail(person.id, period), attendanceWeekDetail(person.id, period)]).then(([r, w]) => { setAttWeeks(w); return r; }));
+  const today = todayDate();
+  const corrections = tab === 'absensi' && rows ? rows.filter((a) => a.corrections?.length).flatMap((a) => a.corrections.map((c) => ({ ...c, date: a.date, tz: a }))) : [];
+  const statusText = (st) => ATT[st]?.[1] ?? '-';
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { setRows(null); fetchRows().then(setRows); }, [key]);
 
@@ -50,9 +56,15 @@ export function ProductivityDrawer({ person, tab, period, onClose }) {
     } else {
       columns = [
         { key: 'date', header: 'Tanggal', render: (a) => ({ priority: 'regular', title: nowrap(day(a.date)) }) },
-        { key: 'status', header: 'Status', render: (a) => ({ misc: true, children: <StatusBadge status={ATT[a.status][0]}>{ATT[a.status][1]}</StatusBadge> }) },
-        { key: 'in', header: 'Check in', render: (a) => time(a.clockInAt, a) },
-        { key: 'out', header: 'Check out', render: (a) => (a.clockOutAt ? time(a.clockOutAt, a) : a.clockInAt ? (a.status === 'ABSENT' ? 'Tidak check out' : ATTENDANCE_LABEL.CHECKED_IN) : '-') },
+        { key: 'status', header: 'Status', render: (a) => ({ misc: true, children: (
+          <span style={{ display: 'inline-flex', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
+            <StatusBadge status={ATT[a.status][0]}>{ATT[a.status][1]}</StatusBadge>
+            {a.corrections?.length > 0 && <StatusBadge status="information">Dikoreksi TL</StatusBadge>}
+          </span>
+        ) }) },
+        { key: 'in', header: 'Check in', render: (a) => (a.clockInAt ? time(a.clockInAt, a) : '-') },
+        // Check in tanpa check out tetap hadir (Q6); hari yang sudah lewat ditandai "Tidak check out".
+        { key: 'out', header: 'Check out', render: (a) => (a.clockOutAt ? time(a.clockOutAt, a) : a.clockInAt ? (a.date < today ? 'Tidak check out' : ATTENDANCE_LABEL.CHECKED_IN) : '-') },
         { key: 'place', header: 'Lokasi', render: (a) => (a.place ? { priority: 'regular', title: a.place.name, description: `${a.place.kind === 'OFFICE' ? 'Kantor terdaftar' : 'Toko partner'} · ${formatKm(a.distanceKm)}` } : '-') },
         { key: 'ev', header: 'Bukti', render: (a) => (a.clockInAt ? { misc: true, children: <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-8)' }}><Selfie n={a.selfie} /><LinkButton size="sm" onClick={() => openMap(a.lat, a.lng)}>Peta</LinkButton></span> } : '-') },
       ];
@@ -79,7 +91,10 @@ export function ProductivityDrawer({ person, tab, period, onClose }) {
     data = [...m.entries()].map(([k, rs]) => ({ id: k, k, rs }));
     columns = [
       { key: 'p', header: mode === 'mingguan' ? 'Minggu' : 'Bulan', render: (g) => ({ priority: 'regular', title: nowrap(groupLabel(g.k)) }) },
-      { key: 'present', header: ATTENDANCE_LABEL.CHECKED_IN, align: 'right', render: (g) => String(g.rs.filter((a) => a.status !== 'ABSENT').length) },
+      { key: 'present', header: mode === 'mingguan' ? 'Check-in / target' : ATTENDANCE_LABEL.CHECKED_IN, align: 'right', render: (g) => {
+        const c = new Set(g.rs.filter((a) => a.clockInAt).map((a) => a.date)).size;
+        return mode === 'mingguan' ? attendanceWeekLabel({ checkIns: c, target: 6 }) : String(c);
+      } },
       { key: 'on', header: ATTENDANCE_LABEL.ON_TIME, align: 'right', render: (g) => String(g.rs.filter((a) => a.status === 'ON_TIME').length) },
       { key: 'late', header: ATTENDANCE_LABEL.LATE, align: 'right', render: (g) => String(g.rs.filter((a) => a.status === 'LATE').length) },
       { key: 'out', header: ATTENDANCE_LABEL.CHECKED_OUT, align: 'right', render: (g) => String(g.rs.filter((a) => a.clockOutAt).length) },
@@ -91,6 +106,15 @@ export function ProductivityDrawer({ person, tab, period, onClose }) {
     <Drawer open width={860} onClose={onClose}
       header={<DrawerHeader size="lg" title={person.name} description={`${person.role} · ${tab === 'kunjungan' ? 'Kunjungan' : 'Absensi'} · ${period.label}`} icon={tab === 'kunjungan' ? 'MapPinLine' : 'CalendarLine'} onClose={onClose} />}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-12)', padding: 'var(--space-16) var(--space-24) var(--space-24)' }}>
+        {tab === 'absensi' && attWeeks.thisWeek && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-8)', flexWrap: 'wrap', font: 'var(--label-sm)', color: 'var(--text-strong-950)' }}>
+            Absensi minggu ini
+            <StatusBadge status={attWeeks.thisWeek.met ? 'completed' : 'pending'}>{attendanceWeekLabel(attWeeks.thisWeek)}</StatusBadge>
+            <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>
+              Minggu tercapai pada periode: {attWeeks.weeks.filter((w) => w.closed && w.met).length}/{attWeeks.weeks.filter((w) => w.closed).length}
+            </span>
+          </div>
+        )}
         {tab === 'kunjungan' && thisWeek.length > 0 && (
           <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
             <h3 style={{ margin: 0, font: 'var(--subheading-xs)', letterSpacing: 'var(--subheading-xs-ls)', textTransform: 'uppercase', color: 'var(--text-soft-400)' }}>Minggu ini per partner</h3>
@@ -114,7 +138,20 @@ export function ProductivityDrawer({ person, tab, period, onClose }) {
           <DataTable loading={!rows} rows={data} columns={columns} minWidth={720} />
           {rows && rows.length === 0 && <span style={{ display: 'block', padding: 'var(--space-16)', font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>Belum ada data pada periode ini.</span>}
         </div>
-        <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>Jam memakai waktu server sesuai zona area pengguna (WIB/WITA/WIT). Foto selfie di prototipe ini adalah foto contoh.</span>
+        {corrections.length > 0 && (
+          <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
+            <h3 style={{ margin: 0, font: 'var(--subheading-xs)', letterSpacing: 'var(--subheading-xs-ls)', textTransform: 'uppercase', color: 'var(--text-soft-400)' }}>Koreksi absensi oleh TL</h3>
+            {corrections.map((c, i) => (
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', padding: 'var(--space-10) var(--space-12)', borderRadius: 'var(--rounded-10)', boxShadow: 'var(--shadow-stroke)' }}>
+                <span style={{ font: 'var(--label-sm)', color: 'var(--text-strong-950)' }}>
+                  {day(c.date)}: {statusText(c.from.status)}{c.from.clockInAt ? ` (${time(c.from.clockInAt, c.tz)})` : ''} menjadi {statusText(c.to.status)}{c.to.clockInAt ? ` (${time(c.to.clockInAt, c.tz)})` : ''}
+                </span>
+                <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>{c.by} · {formatDateTime(c.at)} · Alasan: {c.reason}</span>
+              </div>
+            ))}
+          </section>
+        )}
+        <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>Jam memakai zona waktu lokasi check-in (WIB/WITA/WIT). Foto selfie di prototipe ini adalah foto contoh.</span>
       </div>
     </Drawer>
   );
