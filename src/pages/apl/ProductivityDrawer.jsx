@@ -22,7 +22,7 @@ const Selfie = ({ n }) => (n ? (
 /** Detail produktivitas satu orang (PRD v3 §B3) — tampilan harian, mingguan, bulanan. */
 export function ProductivityDrawer({ person, tab, period, onClose }) {
   const area = AREAS.find((a) => a.id === person.areaId);
-  // Jam = zona waktu lokasi check-in yang tercatat di setiap check in (keputusan 2026-10-19 Q6: WIB/WITA/WIT).
+  // Jam = jam server dalam zona area pengguna yang tercatat di setiap check in (PRD Scope 2 S8: WIB/WITA/WIT).
   const time = (d, rec) => formatTimeLocal(d, rec?.tz ? rec : area);
   const [rows, setRows] = useState(null);
   const [weeks, setWeeks] = useState([]);
@@ -63,7 +63,7 @@ export function ProductivityDrawer({ person, tab, period, onClose }) {
           </span>
         ) }) },
         { key: 'in', header: 'Check in', render: (a) => (a.clockInAt ? time(a.clockInAt, a) : '-') },
-        // Check in tanpa check out tetap hadir (Q6); hari yang sudah lewat ditandai "Tidak check out".
+        // Check in tanpa check out sebelum 23:59 = Absen (PRD S13); kolom check out menandai "Tidak check out".
         { key: 'out', header: 'Check out', render: (a) => (a.clockOutAt ? time(a.clockOutAt, a) : a.clockInAt ? (a.date < today ? 'Tidak check out' : ATTENDANCE_LABEL.CHECKED_IN) : '-') },
         { key: 'place', header: 'Lokasi', render: (a) => (a.place ? { priority: 'regular', title: a.place.name, description: `${a.place.kind === 'OFFICE' ? 'Kantor terdaftar' : 'Toko partner'} · ${formatKm(a.distanceKm)}` } : '-') },
         { key: 'ev', header: 'Bukti', render: (a) => (a.clockInAt ? { misc: true, children: <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-8)' }}><Selfie n={a.selfie} /><LinkButton size="sm" onClick={() => openMap(a.lat, a.lng)}>Peta</LinkButton></span> } : '-') },
@@ -92,7 +92,7 @@ export function ProductivityDrawer({ person, tab, period, onClose }) {
     columns = [
       { key: 'p', header: mode === 'mingguan' ? 'Minggu' : 'Bulan', render: (g) => ({ priority: 'regular', title: nowrap(groupLabel(g.k)) }) },
       { key: 'present', header: mode === 'mingguan' ? 'Check-in / target' : ATTENDANCE_LABEL.CHECKED_IN, align: 'right', render: (g) => {
-        const c = new Set(g.rs.filter((a) => a.clockInAt).map((a) => a.date)).size;
+        const c = new Set(g.rs.filter((a) => a.status !== 'ABSENT').map((a) => a.date)).size;
         return mode === 'mingguan' ? attendanceWeekLabel({ checkIns: c, target: 6 }) : String(c);
       } },
       { key: 'on', header: ATTENDANCE_LABEL.ON_TIME, align: 'right', render: (g) => String(g.rs.filter((a) => a.status === 'ON_TIME').length) },
@@ -151,7 +151,7 @@ export function ProductivityDrawer({ person, tab, period, onClose }) {
             ))}
           </section>
         )}
-        <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>Jam memakai zona waktu lokasi check-in (WIB/WITA/WIT). Foto selfie di prototipe ini adalah foto contoh.</span>
+        <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>Jam memakai waktu server sesuai zona area pengguna (WIB/WITA/WIT). Foto selfie di prototipe ini adalah foto contoh.</span>
       </div>
     </Drawer>
   );

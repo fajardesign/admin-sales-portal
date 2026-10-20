@@ -3,7 +3,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { DEFAULT_SCENARIO, setScenario } from '../dev/scenario.js';
 import { partners } from '../api/db.js';
-import { activeStores, cancelStoreRequest, changeStatus, loadStoreTlHistory, releaseTl, setStoreReferral, updateStoreLocation } from '../api/mockApi.js';
+import { activeStores, cancelStoreRequest, changeStatus, loadStoreTlHistory, releaseTl, setStoreReferral, updateStoreLocation, visitWeekStores } from '../api/mockApi.js';
 
 const admin = { userId: 1, name: 'Rina Saraswati', role: 'REVIEWER' };
 const hasan = { userId: 3, name: 'Hasan Basri', role: 'APL' };
@@ -78,5 +78,19 @@ describe('Stale dan Riwayat TL', () => {
     expect((await loadStoreTlHistory('REG2026-0132-2')).length).toBeGreaterThan(0);
     setScenario({ ...DEFAULT_SCENARIO, tableState: 'error' });
     await expect(loadStoreTlHistory('REG2026-0132-2')).rejects.toBeTruthy();
+  });
+});
+
+describe('PRD Scope 2 S20 (ikut PRD, 2026-10-20)', () => {
+  it('toko dilepas di tengah minggu: yang sudah dikunjungi tetap dihitung, yang belum keluar dari target pemegang lama', async () => {
+    const before = visitWeekStores(6, '2026-10-05').flatMap((g) => g.stores);
+    const visited = before.find((x) => x.visited);
+    const notVisited = before.find((x) => !x.visited);
+    expect(visited).toBeTruthy();
+    await releaseTl(visited.id, hasan);
+    if (notVisited) await releaseTl(notVisited.id, hasan);
+    const after = visitWeekStores(6, '2026-10-05').flatMap((g) => g.stores);
+    expect(after.find((x) => x.id === visited.id)).toMatchObject({ visited: true });
+    if (notVisited) expect(after.some((x) => x.id === notVisited.id)).toBe(false);
   });
 });

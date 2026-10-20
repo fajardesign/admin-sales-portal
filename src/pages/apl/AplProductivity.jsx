@@ -9,8 +9,8 @@ import { navigate, withQuery } from '../../lib/router.js';
 import { ProductivityDrawer } from './ProductivityDrawer.jsx';
 
 const n = (v) => String(v);
-const ABSENSI_NOTE = 'Setiap hari adalah hari kerja, termasuk akhir pekan, hari libur, dan cuti. Target 6 check-in per minggu (Senin–Minggu), hari apa saja; minggu tercapai = minggu yang sudah selesai dengan minimal 6 check-in. Check in dengan selfie dan lokasi dalam radius 3 km dari titik lokasi kantor atau toko partner yang terdaftar. Check in setelah 10:00 waktu setempat sesuai lokasi check-in (WIB/WITA/WIT) dihitung Terlambat; hari tanpa check-in dihitung Absen. Batas check out 23:59. TL dapat mengoreksi absensi sampai akhir minggu berikutnya dengan alasan.';
-const KUNJUNGAN_NOTE = 'Target per minggu (Senin–Minggu) = setiap toko yang ditugaskan dikunjungi sekali (TL: toko yang ia pegang), hari apa saja; boleh lebih dari satu toko per hari. Target dikunci Senin 00:00 WIB: toko yang pindah di tengah minggu tetap menjadi target pemegang lama minggu itu, pemegang baru mulai minggu berikutnya; kunjungan dihitung untuk orang yang melakukannya. Check in kunjungan mulai 12:00 waktu setempat sesuai lokasi check-in, dalam radius 3 km dari titik lokasi toko yang terdaftar; check-out kunjungan opsional. Minggu lengkap = minggu yang sudah selesai dengan semua toko dikunjungi; minggu masuk periode yang memuat hari Seninnya.';
+const ABSENSI_NOTE = 'Setiap hari adalah hari kerja, termasuk akhir pekan, hari libur, dan cuti. Target 6 check-in per minggu (Senin–Minggu), hari apa saja; minggu tercapai = minggu yang sudah selesai dengan minimal 6 check-in. Check in dengan selfie dan lokasi dalam radius 3 km dari titik lokasi kantor atau toko partner yang terdaftar. Check in setelah 10:00 waktu server sesuai zona area pengguna (WIB/WITA/WIT) dihitung Terlambat; tidak check in, atau check in tanpa check out sebelum 23:59, dihitung Absen. TL dapat mengoreksi absensi sampai akhir minggu berikutnya dengan alasan.';
+const KUNJUNGAN_NOTE = 'Target per minggu (Senin–Minggu) = setiap toko yang ditugaskan dikunjungi sekali (TL: toko yang ia pegang), hari apa saja; boleh lebih dari satu toko per hari. Target dikunci Senin 00:00 WIB; pemegang baru mulai minggu berikutnya. Toko yang dilepas di tengah minggu dan belum dikunjungi keluar dari target pemegang lama tanpa penalti; kunjungan dihitung untuk orang yang melakukannya. Check in kunjungan mulai 12:00 waktu server sesuai zona area pengguna, dalam radius 3 km dari titik lokasi toko yang terdaftar; check-out kunjungan opsional. Minggu lengkap = minggu yang sudah selesai dengan semua toko dikunjungi; minggu masuk periode yang memuat hari Seninnya.';
 
 /**
  * B3 · Produktivitas (PRD v3) — sejak 2026-10-20 digabung ke menu Tim sebagai tab "Absensi" dan "Kunjungan" (konflik dengan PRD yang
@@ -45,7 +45,7 @@ export function ProductivityList({ areaIds, period, tab, role, search }) {
     { key: 'avg', header: 'Rata-rata check in', align: 'right', render: (r) => r.attendance.avgCheckIn ?? '-' },
   ] : [
     lead,
-    { key: 'week', header: 'Minggu ini', render: (r) => ({ misc: true, children: <StatusBadge status={r.visits.thisWeek.complete ? 'completed' : 'pending'}>{weekStatusLabel(r.visits.thisWeek)}</StatusBadge> }) },
+    { key: 'week', header: 'Minggu ini', render: (r) => ({ misc: true, children: <StatusBadge status={r.visits.thisWeek.target === 0 ? 'disabled' : r.visits.thisWeek.complete ? 'completed' : 'pending'}>{weekStatusLabel(r.visits.thisWeek)}</StatusBadge> }) },
     { key: 'weeks', header: 'Minggu lengkap', align: 'right', render: (r) => ({ priority: 'leading', title: r.visits.weeks ? `${r.visits.weeksComplete}/${r.visits.weeks}` : '-' }) },
   ];
   return (

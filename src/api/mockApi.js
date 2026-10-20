@@ -1071,13 +1071,16 @@ const mondayOf = (ymd) => { const d = new Date(`${ymd}T12:00:00Z`); return addDa
 export function visitWeekStores(uid, start) {
   const u = userById(uid);
   const end = addDays(start, 6);
-  // Keputusan 2026-10-19 (Q5, menggantikan S9 "berubah seketika"): target dikunci Senin 00:00 WIB = toko yang dipegang saat itu.
-  // Toko yang pindah di tengah minggu tetap target pemegang lama minggu itu; pemegang baru mulai minggu depan. Kunjungan dihitung
-  // untuk orang yang melakukannya.
+  // Target dikunci Senin 00:00 WIB = toko yang dipegang saat itu (PRD Scope 2 S9); pemegang baru mulai minggu depan. Kunjungan
+  // dihitung untuk orang yang melakukannya. Toko yang dilepas di tengah minggu dan belum dikunjungi pemegang lama dikeluarkan dari
+  // targetnya tanpa penalti; bila sudah dikunjungi tetap dihitung (PRD S20, dikonfirmasi user 2026-10-20 "ikut PRD").
   const lock = new Date(`${start}T00:00:00+07:00`);
+  const weekEnd = new Date(Date.parse(`${addDays(start, 7)}T00:00:00+07:00`) - 1);
+  const at = new Date(Math.min(+now(), +weekEnd));
+  const stillHeld = new Set(weekStoresOf(u, at, at).map(({ s }) => s.id));
   const seen = new Set(visits.filter((v) => v.userId === uid && v.date >= start && v.date <= end).map((v) => v.storeId));
   const groups = new Map();
-  weekStoresOf(u, lock, lock).forEach(({ p, s }) => {
+  weekStoresOf(u, lock, lock).filter(({ s }) => stillHeld.has(s.id) || seen.has(s.id)).forEach(({ p, s }) => {
     const g = groups.get(p.id) ?? { partnerId: p.id, partnerName: p.partnerName, stores: [] };
     g.stores.push({ id: s.id, name: s.name, visited: seen.has(s.id) });
     groups.set(p.id, g);
@@ -1092,7 +1095,8 @@ function visitWeek(uid, start) {
 /** Minggu absensi: jumlah hari dengan check-in (Senin–Minggu) dibanding target 6 (Q6). Minggu aktivasi tidak dihitung. */
 function attendanceWeek(uid, start) {
   const end = addDays(start, 6);
-  const checkIns = new Set(attendance.filter((a) => a.userId === uid && a.clockInAt && a.date >= start && a.date <= end).map((a) => a.date)).size;
+  // Hari yang dihitung = hari hadir (bukan Absen); check in tanpa check out = Absen (S13).
+  const checkIns = new Set(attendance.filter((a) => a.userId === uid && a.status !== 'ABSENT' && a.clockInAt && a.date >= start && a.date <= end).map((a) => a.date)).size;
   return { start, checkIns, target: WEEKLY_CHECKINS, met: checkIns >= WEEKLY_CHECKINS, closed: end < todayDate() };
 }
 export function attendanceWeeks(uid, period) {
@@ -1102,8 +1106,8 @@ export function attendanceWeeks(uid, period) {
 export const currentAttendanceWeek = (uid) => attendanceWeek(uid, mondayOf(todayDate()));
 /** "4/6 check-in". */
 export const attendanceWeekLabel = (w) => `${w.checkIns}/${w.target} check-in`;
-/** "Lengkap 5/5" / "Belum lengkap 3/5". */
-export const weekStatusLabel = (w) => `${w.complete ? 'Lengkap' : 'Belum lengkap'} ${w.visited}/${w.target}`;
+/** "Lengkap 5/5" / "Belum lengkap 3/5"; tanpa toko target: "Belum ada toko" (sama dengan Android, keputusan 2026-10-20). */
+export const weekStatusLabel = (w) => (w.target === 0 ? 'Belum ada toko' : `${w.complete ? 'Lengkap' : 'Belum lengkap'} ${w.visited}/${w.target}`);
 /** Minggu kunjungan satu orang yang hari Seninnya ada di periode (minggu masuk periode yang memuat hari Seninnya). */
 function weeksIn(period) {
   const out = [];
@@ -1116,7 +1120,7 @@ export const currentVisitWeek = (uid) => visitWeek(uid, mondayOf(todayDate()));
 
 function productivity(userIds, period) {
   const att = attendance.filter((a) => userIds.includes(a.userId) && inP(a.date, period));
-  const present = att.filter((a) => a.clockInAt).length;
+  const present = att.filter((a) => a.status !== 'ABSENT').length;
   const weeks = userIds.flatMap((id) => visitWeeks(id, period)).filter((w) => w.closed);
   const weeksComplete = weeks.filter((w) => w.complete).length;
   // Tingkat kehadiran (Q6) = check-in pada minggu yang sudah selesai (maks. 6 per minggu) / 6 × jumlah minggu itu.
@@ -1223,9 +1227,9 @@ export async function aplProductivity(areaIds, period, f = {}, { retry = false }
   return people.map((u) => {
     const area = AREAS.find((a) => a.id === u.areaIds[0]);
     const att = attendance.filter((a) => a.userId === u.id && inP(a.date, period));
-    const present = att.filter((a) => a.clockInAt);
+    const present = att.filter((a) => a.status !== 'ABSENT');
     const aw = attendanceWeeks(u.id, period).filter((w) => w.closed);
-    // Jam check in dibaca pada zona waktu lokasi check-in yang tercatat di tiap check in (WIB/WITA/WIT, Q6).
+    // Jam check in dibaca pada zona area pengguna yang tercatat di tiap check in (jam server, PRD Scope 2 S8: WIB/WITA/WIT).
     const mins = present.map((a) => { const t = new Date(new Date(a.clockInAt).getTime() + (a.utcOffset ?? area.utcOffset) * 3600e3); return t.getUTCHours() * 60 + t.getUTCMinutes(); });
     const avg = mins.length ? Math.round(mins.reduce((a, b) => a + b, 0) / mins.length) : null;
     const weeks = visitWeeks(u.id, period).filter((w) => w.closed);
