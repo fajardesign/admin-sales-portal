@@ -1042,6 +1042,8 @@ export function previousPeriod(period) {
   return { from: addDays(period.from, -len), to: addDays(period.from, -1) };
 }
 const inP = (ymd, p) => ymd >= p.from && ymd <= p.to;
+/** Hari hadir = ada check in dan bukan Absen (check in tanpa check out) maupun "Tidak check in" (hari tanpa check in). */
+export const isPresent = (a) => !!a.clockInAt && a.status !== 'ABSENT' && a.status !== 'NO_CHECKIN';
 /** Target absensi per minggu Senin–Minggu (keputusan 2026-10-19, Q6): 6 check-in, hari apa saja termasuk akhir pekan, libur, cuti. */
 export const WEEKLY_CHECKINS = 6;
 const pct = (a, b) => (b ? (a / b) * 100 : 0);
@@ -1096,7 +1098,7 @@ function visitWeek(uid, start) {
 function attendanceWeek(uid, start) {
   const end = addDays(start, 6);
   // Hari yang dihitung = hari hadir (bukan Absen); check in tanpa check out = Absen (S13).
-  const checkIns = new Set(attendance.filter((a) => a.userId === uid && a.status !== 'ABSENT' && a.clockInAt && a.date >= start && a.date <= end).map((a) => a.date)).size;
+  const checkIns = new Set(attendance.filter((a) => a.userId === uid && isPresent(a) && a.date >= start && a.date <= end).map((a) => a.date)).size;
   return { start, checkIns, target: WEEKLY_CHECKINS, met: checkIns >= WEEKLY_CHECKINS, closed: end < todayDate() };
 }
 export function attendanceWeeks(uid, period) {
@@ -1120,7 +1122,7 @@ export const currentVisitWeek = (uid) => visitWeek(uid, mondayOf(todayDate()));
 
 function productivity(userIds, period) {
   const att = attendance.filter((a) => userIds.includes(a.userId) && inP(a.date, period));
-  const present = att.filter((a) => a.status !== 'ABSENT').length;
+  const present = att.filter(isPresent).length;
   const weeks = userIds.flatMap((id) => visitWeeks(id, period)).filter((w) => w.closed);
   const weeksComplete = weeks.filter((w) => w.complete).length;
   // Tingkat kehadiran (Q6) = check-in pada minggu yang sudah selesai (maks. 6 per minggu) / 6 × jumlah minggu itu.
@@ -1227,7 +1229,7 @@ export async function aplProductivity(areaIds, period, f = {}, { retry = false }
   return people.map((u) => {
     const area = AREAS.find((a) => a.id === u.areaIds[0]);
     const att = attendance.filter((a) => a.userId === u.id && inP(a.date, period));
-    const present = att.filter((a) => a.status !== 'ABSENT');
+    const present = att.filter(isPresent);
     const aw = attendanceWeeks(u.id, period).filter((w) => w.closed);
     // Jam check in dibaca pada zona area pengguna yang tercatat di tiap check in (jam server, PRD Scope 2 S8: WIB/WITA/WIT).
     const mins = present.map((a) => { const t = new Date(new Date(a.clockInAt).getTime() + (a.utcOffset ?? area.utcOffset) * 3600e3); return t.getUTCHours() * 60 + t.getUTCMinutes(); });
@@ -1237,7 +1239,7 @@ export async function aplProductivity(areaIds, period, f = {}, { retry = false }
       id: u.id, name: u.fullName, role: u.role, tlLevel: u.tlLevel, areaId: u.areaIds[0], leader: u.supervisorId ? userById(u.supervisorId).fullName : null,
       attendance: {
         days: att.length, present: present.length, onTime: att.filter((a) => a.status === 'ON_TIME').length, late: att.filter((a) => a.status === 'LATE').length,
-        checkedOut: att.filter((a) => a.clockOutAt).length, absent: att.filter((a) => a.status === 'ABSENT').length,
+        checkedOut: att.filter((a) => a.clockOutAt).length, absent: att.filter((a) => a.status === 'ABSENT').length, noCheckIn: att.filter((a) => a.status === 'NO_CHECKIN').length,
         corrected: att.filter((a) => a.corrections?.length).length,
         thisWeek: currentAttendanceWeek(u.id), weeksMet: aw.filter((w) => w.met).length, weeks: aw.length,
         avgCheckIn: avg == null ? null : `${String(Math.floor(avg / 60)).padStart(2, '0')}:${String(avg % 60).padStart(2, '0')} ${present[0]?.tz ?? area.tz}`,
@@ -1328,7 +1330,7 @@ export function computeIncentives(areaIds, ym) {
   const range = monthRange(ym);
   const paidIn = loans.filter((l) => l.status === 'PAID_OUT' && inArea(areaIds, l.areaId) && inP(wibDate(l.paidOutAt), range));
   const tgt = (storeIds) => [...new Set(storeIds)].reduce((a, id) => a + (targets[`${id}:${ym}`] ?? 0), 0);
-  const days = (uid) => attendance.filter((a) => a.userId === uid && inP(a.date, range) && a.status !== 'ABSENT').length;
+  const days = (uid) => attendance.filter((a) => a.userId === uid && inP(a.date, range) && isPresent(a)).length;
   const status = ym === CURRENT_MONTH ? 'ESTIMATE' : 'PAID';
   const rows = [];
   const group = (key) => { const m = new Map(); paidIn.forEach((l) => { const k = l[key]; if (k == null) return; m.set(k, [...(m.get(k) ?? []), l]); }); return m; };

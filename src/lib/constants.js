@@ -23,7 +23,7 @@ export const TIME_ZONES = { WIB: 7, WITA: 8, WIT: 9 };
 export const ON_TIME_LIMIT = '10:00';
 export const VISIT_START = '12:00';
 /** Label laporan absensi (Bahasa Indonesia, pemetaan dari Check in / On time / Late / Check out / Absen). */
-export const ATTENDANCE_LABEL = { CHECKED_IN: 'Sudah Check In', ON_TIME: 'Tepat Waktu', LATE: 'Terlambat', CHECKED_OUT: 'Sudah Check Out', ABSENT: 'Absen' };
+export const ATTENDANCE_LABEL = { CHECKED_IN: 'Sudah Check In', ON_TIME: 'Tepat Waktu', LATE: 'Terlambat', CHECKED_OUT: 'Sudah Check Out', ABSENT: 'Absen', NO_CHECKIN: 'Tidak check in' };
 
 /** Status partner (PRD §2). */
 export const PARTNER_STATUS = {

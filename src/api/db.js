@@ -436,7 +436,8 @@ export const validStoresOf = (u) => (u.role === 'TL'
  * Check in/out dengan selfie + lokasi dalam radius 3 km dari titik lat/long yang tercatat (review 2026-10-09): kantor = titik kantor
  * terdaftar (`OFFICES`), toko = lokasi saat pendaftaran/Tambah Toko. distanceKm = jarak dari titik itu.
  * Waktu = jam server dalam zona area pengguna (WIB/WITA/WIT, PRD Scope 2 S8; dikonfirmasi user 2026-10-20). status ON_TIME (check in
- * ≤ 10:00) | LATE (> 10:00) | ABSENT (tidak check in, atau check in tanpa check out sebelum 23:59 hari itu, S13). Tanggal dan minggu
+ * ≤ 10:00) | LATE (> 10:00) | ABSENT (check in tanpa check out sebelum 23:59 hari itu, S13) | NO_CHECKIN (hari tanpa check in, label
+ * netral "Tidak check in", OQ-S2-03 diputuskan 2026-10-20). Tanggal dan minggu
  * memakai tanggal lokal zona itu. Hari ini bisa belum check in. corrections: koreksi oleh TL (sampai akhir minggu berikutnya, alasan wajib) [{at, by, from, to, reason}].
  * place: { kind: 'OFFICE' | 'STORE', name }, distanceKm dari titik referensi.
  */
@@ -449,8 +450,8 @@ users.filter((u) => ['TL', 'SR', 'SA'].includes(u.role) && u.status === 'ACTIVE'
     const today = d === TODAY;
     const r = rnd();
     if (today && r < 0.15) return; // belum check in
-    const status = r < 0.05 && !today ? 'ABSENT' : r < 0.22 ? 'LATE' : 'ON_TIME';
-    if (status === 'ABSENT') { attendance.push({ userId: u.id, date: d, status, clockInAt: null, clockOutAt: null, lat: null, lng: null, place: null, distanceKm: null, tz: area.tz, utcOffset: area.utcOffset, selfie: null }); return; }
+    const status = r < 0.05 && !today ? 'NO_CHECKIN' : r < 0.22 ? 'LATE' : 'ON_TIME';
+    if (status === 'NO_CHECKIN') { attendance.push({ userId: u.id, date: d, status, clockInAt: null, clockOutAt: null, lat: null, lng: null, place: null, distanceKm: null, tz: area.tz, utcOffset: area.utcOffset, selfie: null }); return; }
     // Hari ini jam demo 10:30 WIB / 11:30 WITA: check in terlambat hari ini sebelum jam demo.
     const inAt = status === 'LATE' ? atLocal(d, area, 10, between(1, today && area.tz === 'WIB' ? 29 : 59)) : atLocal(d, area, between(8, 9), between(0, 59));
     const atStore = stores.length && rnd() < 0.4 ? stores[between(0, stores.length - 1)].s : null;
@@ -472,7 +473,7 @@ users.filter((u) => ['TL', 'SR', 'SA'].includes(u.role) && u.status === 'ACTIVE'
   // sisanya Absen; target mingguan tetap 6 check-in sehingga satu hari tanpa check-in tidak menggagalkan minggu itu.
   daysFrom(u.activatedAt).filter((d) => !isWorkday(d) && d !== TODAY).forEach((d) => {
     const base = { userId: u.id, date: d, tz: area.tz, utcOffset: area.utcOffset };
-    if ((u.id + Number(d.slice(8))) % 4 !== 0) { attendance.push({ ...base, status: 'ABSENT', clockInAt: null, clockOutAt: null, lat: null, lng: null, place: null, distanceKm: null, selfie: null }); return; }
+    if ((u.id + Number(d.slice(8))) % 4 !== 0) { attendance.push({ ...base, status: 'NO_CHECKIN', clockInAt: null, clockOutAt: null, lat: null, lng: null, place: null, distanceKm: null, selfie: null }); return; }
     attendance.push({ ...base, status: 'ON_TIME', clockInAt: atLocal(d, area, 9, 15), clockOutAt: atLocal(d, area, 15, 30), lat: office.lat, lng: office.lng, place: { kind: 'OFFICE', name: office.name }, distanceKm: 0, selfie: (u.id % 6) + 1 });
   });
 });
@@ -489,10 +490,10 @@ users.filter((u) => ['TL', 'SR', 'SA'].includes(u.role) && u.status === 'ACTIVE'
   const area = sr && AREAS.find((a) => a.id === sr.areaIds[0]);
   const office = area && OFFICES.find((o) => o.areaId === area.id);
   const by = tl ? `${tl.fullName} (TL)` : 'TL';
-  const absent = attendance.find((a) => inWeek(a) && a.status === 'ABSENT');
+  const absent = attendance.find((a) => inWeek(a) && a.status === 'NO_CHECKIN');
   if (absent) {
     Object.assign(absent, { status: 'ON_TIME', clockInAt: atLocal(absent.date, area, 8, 50), clockOutAt: atLocal(absent.date, area, 17, 10), lat: office.lat, lng: office.lng, place: { kind: 'OFFICE', name: office.name }, distanceKm: 0, selfie: null,
-      corrections: [{ at: atWib(addDaysYmd(absent.date, 2), 9, 12), by, from: { status: 'ABSENT', clockInAt: null }, to: { status: 'ON_TIME', clockInAt: atLocal(absent.date, area, 8, 50) }, reason: 'Ponsel rusak, hadir di kantor sesuai daftar hadir manual' }] });
+      corrections: [{ at: atWib(addDaysYmd(absent.date, 2), 9, 12), by, from: { status: 'NO_CHECKIN', clockInAt: null }, to: { status: 'ON_TIME', clockInAt: atLocal(absent.date, area, 8, 50) }, reason: 'Ponsel rusak, hadir di kantor sesuai daftar hadir manual' }] });
   }
   const late = attendance.find((a) => inWeek(a) && a.status === 'LATE');
   if (late) {
