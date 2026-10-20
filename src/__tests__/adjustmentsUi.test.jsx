@@ -62,7 +62,7 @@ describe('APL', () => {
     expect(await screen.findByText('Koreksi absensi oleh TL', {}, T)).toBeTruthy();
     expect(screen.getAllByText('Dikoreksi TL').length).toBe(2);
     expect(screen.getByText(/Alasan: Ponsel rusak/)).toBeTruthy();
-    expect(screen.getByText(/Absen menjadi Tepat Waktu/)).toBeTruthy();
+    expect(screen.getByText(/Tidak check in menjadi Tepat Waktu/)).toBeTruthy();
   });
 });
 

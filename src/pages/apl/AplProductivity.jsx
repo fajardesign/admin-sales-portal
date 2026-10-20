@@ -9,7 +9,7 @@ import { navigate, withQuery } from '../../lib/router.js';
 import { ProductivityDrawer } from './ProductivityDrawer.jsx';
 
 const n = (v) => String(v);
-const ABSENSI_NOTE = 'Setiap hari adalah hari kerja, termasuk akhir pekan, hari libur, dan cuti. Target 6 check-in per minggu (Senin–Minggu), hari apa saja; minggu tercapai = minggu yang sudah selesai dengan minimal 6 check-in. Check in dengan selfie dan lokasi dalam radius 3 km dari titik lokasi kantor atau toko partner yang terdaftar. Check in setelah 10:00 waktu server sesuai zona area pengguna (WIB/WITA/WIT) dihitung Terlambat; tidak check in, atau check in tanpa check out sebelum 23:59, dihitung Absen. TL dapat mengoreksi absensi sampai akhir minggu berikutnya dengan alasan.';
+const ABSENSI_NOTE = 'Setiap hari adalah hari kerja, termasuk akhir pekan, hari libur, dan cuti. Target 6 check-in per minggu (Senin–Minggu), hari apa saja; minggu tercapai = minggu yang sudah selesai dengan minimal 6 check-in. Check in dengan selfie dan lokasi dalam radius 3 km dari titik lokasi kantor atau toko partner yang terdaftar. Check in setelah 10:00 waktu server sesuai zona area pengguna (WIB/WITA/WIT) dihitung Terlambat; check in tanpa check out sebelum 23:59 dihitung Absen; hari tanpa check in ditandai Tidak check in. TL dapat mengoreksi absensi sampai akhir minggu berikutnya dengan alasan.';
 const KUNJUNGAN_NOTE = 'Target per minggu (Senin–Minggu) = setiap toko yang ditugaskan dikunjungi sekali (TL: toko yang ia pegang), hari apa saja; boleh lebih dari satu toko per hari. Target dikunci Senin 00:00 WIB; pemegang baru mulai minggu berikutnya. Toko yang dilepas di tengah minggu dan belum dikunjungi keluar dari target pemegang lama tanpa penalti; kunjungan dihitung untuk orang yang melakukannya. Check in kunjungan mulai 12:00 waktu server sesuai zona area pengguna, dalam radius 3 km dari titik lokasi toko yang terdaftar; check-out kunjungan opsional. Minggu lengkap = minggu yang sudah selesai dengan semua toko dikunjungi; minggu masuk periode yang memuat hari Seninnya.';
 
 /**
@@ -42,6 +42,7 @@ export function ProductivityList({ areaIds, period, tab, role, search }) {
     { key: 'late', header: ATTENDANCE_LABEL.LATE, align: 'right', render: (r) => n(r.attendance.late) },
     { key: 'out', header: ATTENDANCE_LABEL.CHECKED_OUT, align: 'right', render: (r) => n(r.attendance.checkedOut) },
     { key: 'abs', header: ATTENDANCE_LABEL.ABSENT, align: 'right', render: (r) => n(r.attendance.absent) },
+    { key: 'nci', header: ATTENDANCE_LABEL.NO_CHECKIN, align: 'right', render: (r) => n(r.attendance.noCheckIn) },
     { key: 'avg', header: 'Rata-rata check in', align: 'right', render: (r) => r.attendance.avgCheckIn ?? '-' },
   ] : [
     lead,

@@ -3,7 +3,7 @@ import { passwordPolicy, validatePksFile, validateReason, validateReferralCode, 
 import { formatDateTime, formatDateWIB, formatDuration, formatPhone, formatRp, formatTimeLocal, normalizePhone } from '../lib/format.js';
 import { attendanceWeekLabel, attendanceWeeks, computeIncentives, currentVisitWeek, findByIdentifier, visitWeekStores, picPhoneTaken, referralTaken, tierFor, tierLabel, verificationGap, visitWeeks, weekStatusLabel } from '../api/mockApi.js';
 import { attendance, distanceKm, partners, visits } from '../api/db.js';
-import { OFFICES, TIME_ZONES } from '../lib/constants.js';
+import { ATTENDANCE_LABEL, OFFICES, TIME_ZONES } from '../lib/constants.js';
 
 const ok = { email: 'budi@amarbank.co.id', phone: '081234567890', fullName: 'Budi Santoso', role: 'REVIEWER', tlLevel: '', areaIds: [], leaderId: '' };
 const leaders = [{ value: '3', label: 'Hasan Basri' }];
@@ -94,7 +94,7 @@ describe('absensi & kunjungan (revisi stakeholder 2026-10-08)', () => {
     const c = attendance.filter((a) => a.corrections?.length);
     expect(c.length).toBe(2);
     c.forEach((a) => expect(a.corrections[0]).toMatchObject({ by: expect.stringContaining('(TL)'), reason: expect.any(String) }));
-    expect(c.map((a) => a.corrections[0].from.status).sort()).toEqual(['ABSENT', 'LATE']);
+    expect(c.map((a) => a.corrections[0].from.status).sort()).toEqual(['LATE', 'NO_CHECKIN']);
   });
   it('jarak check in = jarak dari titik lat/long yang tercatat (kantor OFFICES / lokasi toko), maks. 3 km', () => {
     const stores = partners.flatMap((p) => p.stores);
@@ -230,5 +230,14 @@ describe('Dokumen PDP (keputusan 2026-10-20, pengganti persetujuan PRD 1.1 C5)',
       expect(p.documents.find((d) => d.key === 'PDP')).toMatchObject({ label: 'Formulir Persetujuan PDP', mandatory: true });
     }
     expect(partners.some((p) => 'consent' in p)).toBe(false);
+  });
+});
+
+describe('OQ-S2-03 (diputuskan 2026-10-20)', () => {
+  it('check in tanpa check out = Absen; hari tanpa check in = "Tidak check in" (netral), keduanya bukan hari hadir', () => {
+    expect(attendance.filter((a) => a.status === 'ABSENT').every((a) => a.clockInAt && !a.clockOutAt)).toBe(true);
+    expect(attendance.filter((a) => a.status === 'NO_CHECKIN').every((a) => !a.clockInAt)).toBe(true);
+    expect(attendance.some((a) => a.status === 'NO_CHECKIN')).toBe(true);
+    expect(ATTENDANCE_LABEL.NO_CHECKIN).toBe('Tidak check in');
   });
 });

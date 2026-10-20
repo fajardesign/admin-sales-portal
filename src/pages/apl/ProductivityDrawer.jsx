@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Drawer, DrawerHeader, LinkButton, SegmentedControl, StatusBadge } from '@ds/index.js';
-import { attendanceDetail, attendanceWeekDetail, attendanceWeekLabel, todayDate, visitDetail, weekStatusLabel } from '../../api/mockApi.js';
+import { attendanceDetail, attendanceWeekDetail, isPresent, attendanceWeekLabel, todayDate, visitDetail, weekStatusLabel } from '../../api/mockApi.js';
 import { DataTable } from '../../components/DataTable.jsx';
 import { AREAS, ATTENDANCE_LABEL } from '../../lib/constants.js';
 import { nowrap } from '../../lib/cells.jsx';
 import { formatDate, formatDateTime, formatKm, formatTimeLocal, monthLabel } from '../../lib/format.js';
 import { selfieUrl } from '../../lib/selfies.js';
 
-const ATT = { ON_TIME: ['completed', ATTENDANCE_LABEL.ON_TIME], LATE: ['pending', ATTENDANCE_LABEL.LATE], ABSENT: ['failed', ATTENDANCE_LABEL.ABSENT] };
+const ATT = { ON_TIME: ['completed', ATTENDANCE_LABEL.ON_TIME], LATE: ['pending', ATTENDANCE_LABEL.LATE], ABSENT: ['failed', ATTENDANCE_LABEL.ABSENT], NO_CHECKIN: ['disabled', ATTENDANCE_LABEL.NO_CHECKIN] };
 const WEEK = { true: ['completed', 'Lengkap'], false: ['pending', 'Belum lengkap'] };
 const day = (ymd) => formatDate(new Date(`${ymd}T05:00:00Z`));
 /** Senin awal minggu dari tanggal "YYYY-MM-DD". */
@@ -92,13 +92,14 @@ export function ProductivityDrawer({ person, tab, period, onClose }) {
     columns = [
       { key: 'p', header: mode === 'mingguan' ? 'Minggu' : 'Bulan', render: (g) => ({ priority: 'regular', title: nowrap(groupLabel(g.k)) }) },
       { key: 'present', header: mode === 'mingguan' ? 'Check-in / target' : ATTENDANCE_LABEL.CHECKED_IN, align: 'right', render: (g) => {
-        const c = new Set(g.rs.filter((a) => a.status !== 'ABSENT').map((a) => a.date)).size;
+        const c = new Set(g.rs.filter(isPresent).map((a) => a.date)).size;
         return mode === 'mingguan' ? attendanceWeekLabel({ checkIns: c, target: 6 }) : String(c);
       } },
       { key: 'on', header: ATTENDANCE_LABEL.ON_TIME, align: 'right', render: (g) => String(g.rs.filter((a) => a.status === 'ON_TIME').length) },
       { key: 'late', header: ATTENDANCE_LABEL.LATE, align: 'right', render: (g) => String(g.rs.filter((a) => a.status === 'LATE').length) },
       { key: 'out', header: ATTENDANCE_LABEL.CHECKED_OUT, align: 'right', render: (g) => String(g.rs.filter((a) => a.clockOutAt).length) },
       { key: 'abs', header: ATTENDANCE_LABEL.ABSENT, align: 'right', render: (g) => String(g.rs.filter((a) => a.status === 'ABSENT').length) },
+      { key: 'nci', header: ATTENDANCE_LABEL.NO_CHECKIN, align: 'right', render: (g) => String(g.rs.filter((a) => a.status === 'NO_CHECKIN').length) },
     ];
   }
 
