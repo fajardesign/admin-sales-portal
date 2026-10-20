@@ -46,7 +46,7 @@ describe('Admin', () => {
     await user.clear(lat); await user.type(lat, '-5.150001');
     await user.type(within(dlg).getByPlaceholderText('Contoh: Toko pindah ke ruko sebelah'), 'Toko pindah ke ruko sebelah');
     await user.click(within(dlg).getByRole('button', { name: 'Simpan lokasi' }));
-    expect(await screen.findByText('Lokasi toko diperbarui. Check-in kunjungan memakai lokasi baru.', {}, T)).toBeTruthy();
+    expect(await screen.findByText('Lokasi toko diperbarui.', {}, T)).toBeTruthy();
     await waitFor(() => expect(partners.find((p) => p.id === 'REG2026-0139').stores[0].lat).toBe(-5.150001));
     expect(await screen.findByText(/Lokasi diubah/, {}, T)).toBeTruthy();
   });

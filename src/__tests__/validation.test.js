@@ -222,3 +222,13 @@ describe('tier insentif (rentang dari–sampai, PRD v3 §E2)', () => {
     crp.forEach((r) => expect(r.total).toBeCloseTo(r.paidOutAmount * 0.03, 2));
   });
 });
+
+describe('Dokumen PDP (keputusan 2026-10-20, pengganti persetujuan PRD 1.1 C5)', () => {
+  it('Formulir Persetujuan PDP wajib untuk Individu dan PT/CV; tidak ada data persetujuan', () => {
+    for (const type of ['INDIVIDU', 'PT']) {
+      const p = partners.find((x) => (type === 'INDIVIDU' ? x.businessEntityType === 'INDIVIDU' : x.businessEntityType !== 'INDIVIDU'));
+      expect(p.documents.find((d) => d.key === 'PDP')).toMatchObject({ label: 'Formulir Persetujuan PDP', mandatory: true });
+    }
+    expect(partners.some((p) => 'consent' in p)).toBe(false);
+  });
+});

@@ -162,8 +162,6 @@ function partner(n, name, entity, areaId, status, submitterId, cfg = {}) {
     revisedSections: [], fieldChanges: [], changeLog: [], revisionRequest: null,
     revisionRound: 0, // bertambah 1 setiap TL/SR mengirim ulang perbaikan (PRD Scope 1 FR-007, AC-010)
     history: [{ at: submittedAt, from: null, to: 'UNDER_REVIEW', by: submitterId, reason: 'Pengajuan dikirim dari aplikasi mobile' }],
-    // PRD Scope 1 v2 C5: persetujuan "Konfirmasi dan Persetujuan Pendaftaran Toko" dicentang saat pengajuan pertama (tidak diulang saat revisi).
-    consent: { at: submittedAt, version: '1.0', by: submitterId },
     stores: [],
     documents: [],
   };
