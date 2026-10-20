@@ -11,7 +11,8 @@ const latErr = (v) => (!v.trim() ? 'Latitude wajib diisi' : !COORD.test(v.trim()
 const lngErr = (v) => (!v.trim() ? 'Longitude wajib diisi' : !COORD.test(v.trim()) || +v < 94 || +v > 142 ? 'Longitude harus di wilayah Indonesia (94 s.d. 142)' : undefined);
 
 /**
- * Ubah lokasi toko (keputusan 2026-10-19, Q8): hanya Admin, setelah partner Active, alasan wajib. Koordinat baru langsung dipakai
+ * Ubah lokasi toko (keputusan 2026-10-19, Q8; PRD 1.1 AC-039): hanya Admin, setelah partner Active, alasan wajib (Simpan nonaktif
+ * sampai alasan diisi). Koordinat baru langsung dipakai
  * sebagai titik radius check-in kunjungan; perubahan tercatat di Riwayat Status partner.
  */
 export function ChangeLocationModal({ partnerId, store, user, onClose, onSaved }) {
@@ -31,7 +32,7 @@ export function ChangeLocationModal({ partnerId, store, user, onClose, onSaved }
     setBusy(true);
     try {
       const p = await updateStoreLocation(partnerId, store.id, lat, lng, reason, user);
-      toast('success', 'Lokasi toko diperbarui. Check-in kunjungan memakai lokasi baru.');
+      toast('success', 'Lokasi toko diperbarui.');
       onSaved(p);
     } catch (e) {
       setBusy(false);
@@ -41,7 +42,7 @@ export function ChangeLocationModal({ partnerId, store, user, onClose, onSaved }
 
   return (
     <ActionModal open onClose={onClose} icon="MapPinLine" title="Ubah lokasi toko" description={store.name} confirmLabel="Simpan lokasi"
-      busy={busy} onConfirm={save} confirmDisabled={same} width={560}>
+      busy={busy} onConfirm={save} confirmDisabled={same || !reason.trim()} width={560}>
       <Alert status="information" size="sm" title="Titik check-in ikut berubah">
         SA/SR dan TL harus check-in dalam radius lokasi baru mulai kunjungan berikutnya.
       </Alert>

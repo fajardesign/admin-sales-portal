@@ -100,6 +100,8 @@ export const DOC_TYPES = [
   { key: 'DOMISILI', label: 'Keterangan Domisili', level: 'PARTNER', INDIVIDU: null, COMPANY: 'M' },
   { key: 'IJIN', label: 'Ijin Lokasi & Ijin Usaha', level: 'PARTNER', INDIVIDU: null, COMPANY: 'M' },
   { key: 'BUKU_REKENING', label: 'Halaman Depan Buku Rekening / Rekening Koran', level: 'PARTNER', INDIVIDU: 'M', COMPANY: 'M' },
+  // Keputusan 2026-10-20: persetujuan di aplikasi dihapus (PRD 1.1 C5), diganti dokumen PDP wajib untuk semua badan usaha.
+  { key: 'PDP', label: 'Formulir Persetujuan PDP', level: 'PARTNER', INDIVIDU: 'M', COMPANY: 'M' },
   { key: 'FOTO_DEPAN', label: 'Foto Toko – Tampak Depan', level: 'STORE', INDIVIDU: 'M', COMPANY: 'M' },
   { key: 'FOTO_SAMPING', label: 'Foto Toko – Tampak Samping', level: 'STORE', INDIVIDU: 'M', COMPANY: 'M' },
 ];

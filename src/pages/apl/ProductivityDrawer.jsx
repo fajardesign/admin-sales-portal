@@ -22,7 +22,7 @@ const Selfie = ({ n }) => (n ? (
 /** Detail produktivitas satu orang (PRD v3 §B3) — tampilan harian, mingguan, bulanan. */
 export function ProductivityDrawer({ person, tab, period, onClose }) {
   const area = AREAS.find((a) => a.id === person.areaId);
-  // Jam = zona waktu lokasi check-in yang tercatat di setiap check in (keputusan 2026-10-19 Q6: WIB/WITA/WIT).
+  // Jam = jam server dalam zona area pengguna yang tercatat di setiap check in (PRD Scope 2 S8: WIB/WITA/WIT).
   const time = (d, rec) => formatTimeLocal(d, rec?.tz ? rec : area);
   const [rows, setRows] = useState(null);
   const [weeks, setWeeks] = useState([]);
@@ -63,7 +63,7 @@ export function ProductivityDrawer({ person, tab, period, onClose }) {
           </span>
         ) }) },
         { key: 'in', header: 'Check in', render: (a) => (a.clockInAt ? time(a.clockInAt, a) : '-') },
-        // Check in tanpa check out tetap hadir (Q6); hari yang sudah lewat ditandai "Tidak check out".
+        // Check in tanpa check out sebelum 23:59 = Absen (PRD S13); kolom check out menandai "Tidak check out".
         { key: 'out', header: 'Check out', render: (a) => (a.clockOutAt ? time(a.clockOutAt, a) : a.clockInAt ? (a.date < today ? 'Tidak check out' : ATTENDANCE_LABEL.CHECKED_IN) : '-') },
         { key: 'place', header: 'Lokasi', render: (a) => (a.place ? { priority: 'regular', title: a.place.name, description: `${a.place.kind === 'OFFICE' ? 'Kantor terdaftar' : 'Toko partner'} · ${formatKm(a.distanceKm)}` } : '-') },
         { key: 'ev', header: 'Bukti', render: (a) => (a.clockInAt ? { misc: true, children: <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-8)' }}><Selfie n={a.selfie} /><LinkButton size="sm" onClick={() => openMap(a.lat, a.lng)}>Peta</LinkButton></span> } : '-') },
@@ -92,7 +92,7 @@ export function ProductivityDrawer({ person, tab, period, onClose }) {
     columns = [
       { key: 'p', header: mode === 'mingguan' ? 'Minggu' : 'Bulan', render: (g) => ({ priority: 'regular', title: nowrap(groupLabel(g.k)) }) },
       { key: 'present', header: mode === 'mingguan' ? 'Check-in / target' : ATTENDANCE_LABEL.CHECKED_IN, align: 'right', render: (g) => {
-        const c = new Set(g.rs.filter((a) => a.clockInAt).map((a) => a.date)).size;
+        const c = new Set(g.rs.filter((a) => a.status !== 'ABSENT').map((a) => a.date)).size;
         return mode === 'mingguan' ? attendanceWeekLabel({ checkIns: c, target: 6 }) : String(c);
       } },
       { key: 'on', header: ATTENDANCE_LABEL.ON_TIME, align: 'right', render: (g) => String(g.rs.filter((a) => a.status === 'ON_TIME').length) },
@@ -117,18 +117,15 @@ export function ProductivityDrawer({ person, tab, period, onClose }) {
         )}
         {tab === 'kunjungan' && thisWeek.length > 0 && (
           <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
-            <h3 style={{ margin: 0, font: 'var(--subheading-xs)', letterSpacing: 'var(--subheading-xs-ls)', textTransform: 'uppercase', color: 'var(--text-soft-400)' }}>Minggu ini per partner</h3>
-            {thisWeek.map((g) => (
-              <div key={g.partnerId} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: 'var(--space-10) var(--space-12)', borderRadius: 'var(--rounded-10)', boxShadow: 'var(--shadow-stroke)' }}>
-                <span style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-8)', font: 'var(--label-sm)', color: 'var(--text-strong-950)' }}>
-                  {g.partnerName}
-                  <StatusBadge status={g.visited ? 'completed' : 'pending'}>{g.visited ? 'Sudah dikunjungi minggu ini' : 'Belum dikunjungi'}</StatusBadge>
+            {/* Satu baris per toko dengan partner sebagai keterangan, sama dengan Android (keputusan 2026-10-20 No 6). */}
+            <h3 style={{ margin: 0, font: 'var(--subheading-xs)', letterSpacing: 'var(--subheading-xs-ls)', textTransform: 'uppercase', color: 'var(--text-soft-400)' }}>Toko minggu ini</h3>
+            {thisWeek.flatMap((g) => g.stores.map((st) => ({ ...st, partnerName: g.partnerName }))).map((st) => (
+              <div key={st.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-8)', padding: 'var(--space-10) var(--space-12)', borderRadius: 'var(--rounded-10)', boxShadow: 'var(--shadow-stroke)' }}>
+                <span style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  <span style={{ font: 'var(--label-sm)', color: 'var(--text-strong-950)' }}>{st.name}</span>
+                  <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>{st.partnerName}</span>
                 </span>
-                {g.stores.map((st) => (
-                  <span key={st.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-8)', font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>
-                    {st.name}<span>{st.visited ? 'Sudah dikunjungi' : 'Belum dikunjungi'}</span>
-                  </span>
-                ))}
+                <StatusBadge status={st.visited ? 'completed' : 'pending'}>{st.visited ? 'Sudah dikunjungi' : 'Belum dikunjungi'}</StatusBadge>
               </div>
             ))}
           </section>
@@ -151,7 +148,7 @@ export function ProductivityDrawer({ person, tab, period, onClose }) {
             ))}
           </section>
         )}
-        <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>Jam memakai zona waktu lokasi check-in (WIB/WITA/WIT). Foto selfie di prototipe ini adalah foto contoh.</span>
+        <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>Jam memakai waktu server sesuai zona area pengguna (WIB/WITA/WIT). Foto selfie di prototipe ini adalah foto contoh.</span>
       </div>
     </Drawer>
   );

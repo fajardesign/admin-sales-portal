@@ -162,8 +162,6 @@ function partner(n, name, entity, areaId, status, submitterId, cfg = {}) {
     revisedSections: [], fieldChanges: [], changeLog: [], revisionRequest: null,
     revisionRound: 0, // bertambah 1 setiap TL/SR mengirim ulang perbaikan (PRD Scope 1 FR-007, AC-010)
     history: [{ at: submittedAt, from: null, to: 'UNDER_REVIEW', by: submitterId, reason: 'Pengajuan dikirim dari aplikasi mobile' }],
-    // PRD Scope 1 v2 C5: persetujuan "Konfirmasi dan Persetujuan Pendaftaran Toko" dicentang saat pengajuan pertama (tidak diulang saat revisi).
-    consent: { at: submittedAt, version: '1.0', by: submitterId },
     stores: [],
     documents: [],
   };
@@ -437,9 +435,9 @@ export const validStoresOf = (u) => (u.role === 'TL'
  * termasuk akhir pekan, libur, dan cuti; target 6 check-in per minggu Senin–Minggu, hari apa saja.
  * Check in/out dengan selfie + lokasi dalam radius 3 km dari titik lat/long yang tercatat (review 2026-10-09): kantor = titik kantor
  * terdaftar (`OFFICES`), toko = lokasi saat pendaftaran/Tambah Toko. distanceKm = jarak dari titik itu.
- * Waktu = zona waktu lokasi check-in (WIB/WITA/WIT, keputusan 2026-10-19 Q6). status ON_TIME (check in ≤ 10:00) | LATE (> 10:00) |
- * ABSENT (hari tanpa check-in). Check in tanpa check out sebelum 23:59 tetap tercatat hadir dengan check out kosong. Hari ini bisa belum
- * check in. corrections: koreksi oleh TL (sampai akhir minggu berikutnya, alasan wajib) [{at, by, from, to, reason}].
+ * Waktu = jam server dalam zona area pengguna (WIB/WITA/WIT, PRD Scope 2 S8; dikonfirmasi user 2026-10-20). status ON_TIME (check in
+ * ≤ 10:00) | LATE (> 10:00) | ABSENT (tidak check in, atau check in tanpa check out sebelum 23:59 hari itu, S13). Tanggal dan minggu
+ * memakai tanggal lokal zona itu. Hari ini bisa belum check in. corrections: koreksi oleh TL (sampai akhir minggu berikutnya, alasan wajib) [{at, by, from, to, reason}].
  * place: { kind: 'OFFICE' | 'STORE', name }, distanceKm dari titik referensi.
  */
 export const attendance = [];
@@ -459,10 +457,11 @@ users.filter((u) => ['TL', 'SR', 'SA'].includes(u.role) && u.status === 'ACTIVE'
     const ref = atStore ?? office;
     const pt = near(ref, 1.2);
     const outAt = today ? null : atLocal(d, area, between(17, 18), between(0, 59));
-    // Contoh lupa check out (tanpa memakai angka acak agar data lain tidak bergeser): tetap hadir, check out kosong.
+    // Contoh lupa check out (tanpa memakai angka acak agar data lain tidak bergeser): hari lalu tanpa check out = Absen
+    // (PRD Scope 2 S13, dikonfirmasi user 2026-10-20 "ikut PRD").
     const noOut = !today && (u.id * 7 + Number(d.slice(8))) % 29 === 0;
     attendance.push({
-      userId: u.id, date: d, status, clockInAt: inAt,
+      userId: u.id, date: d, status: noOut ? 'ABSENT' : status, clockInAt: inAt,
       clockOutAt: noOut ? null : outAt,
       ...pt, place: { kind: atStore ? 'STORE' : 'OFFICE', name: ref.name }, distanceKm: +distanceKm(ref, pt).toFixed(2),
       // Zona waktu area pengguna (jam server, PRD Scope 2 S8: WIB/WITA/WIT) dan foto selfie contoh 1–6.

@@ -63,8 +63,7 @@ export function DataPartnerTab({ partner: p, user, onGoStores, onChangeArea }) {
           )),
           fv('Tanggal Diajukan', formatDateTime(p.submittedAt)), fv('Tanggal Verifikasi', formatDateTime(p.verifiedAt)), fv('Tanggal Aktif', formatDateTime(p.activatedAt)),
           fv('Terakhir Diperbarui', formatDateTime(p.statusUpdatedAt)), fv('Kode Merchant', p.merchantCode),
-          // PRD Scope 1 v2 C5 (FR-004): persetujuan "Konfirmasi dan Persetujuan Pendaftaran Toko" saat pengajuan pertama.
-          fv('Persetujuan Pendaftaran Toko', p.consent ? `Disetujui ${formatDateTime(p.consent.at)} · versi ${p.consent.version}` : 'Tidak ada'),
+          // PRD 1.1 C5 dihapus 2026-10-20: Info Pengajuan tidak menampilkan data persetujuan.
         ]} />
       </SectionCard>
     </div>
