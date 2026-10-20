@@ -117,18 +117,15 @@ export function ProductivityDrawer({ person, tab, period, onClose }) {
         )}
         {tab === 'kunjungan' && thisWeek.length > 0 && (
           <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
-            <h3 style={{ margin: 0, font: 'var(--subheading-xs)', letterSpacing: 'var(--subheading-xs-ls)', textTransform: 'uppercase', color: 'var(--text-soft-400)' }}>Minggu ini per partner</h3>
-            {thisWeek.map((g) => (
-              <div key={g.partnerId} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: 'var(--space-10) var(--space-12)', borderRadius: 'var(--rounded-10)', boxShadow: 'var(--shadow-stroke)' }}>
-                <span style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-8)', font: 'var(--label-sm)', color: 'var(--text-strong-950)' }}>
-                  {g.partnerName}
-                  <StatusBadge status={g.visited ? 'completed' : 'pending'}>{g.visited ? 'Sudah dikunjungi minggu ini' : 'Belum dikunjungi'}</StatusBadge>
+            {/* Satu baris per toko dengan partner sebagai keterangan, sama dengan Android (keputusan 2026-10-20 No 6). */}
+            <h3 style={{ margin: 0, font: 'var(--subheading-xs)', letterSpacing: 'var(--subheading-xs-ls)', textTransform: 'uppercase', color: 'var(--text-soft-400)' }}>Toko minggu ini</h3>
+            {thisWeek.flatMap((g) => g.stores.map((st) => ({ ...st, partnerName: g.partnerName }))).map((st) => (
+              <div key={st.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--space-8)', padding: 'var(--space-10) var(--space-12)', borderRadius: 'var(--rounded-10)', boxShadow: 'var(--shadow-stroke)' }}>
+                <span style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+                  <span style={{ font: 'var(--label-sm)', color: 'var(--text-strong-950)' }}>{st.name}</span>
+                  <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>{st.partnerName}</span>
                 </span>
-                {g.stores.map((st) => (
-                  <span key={st.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-8)', font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>
-                    {st.name}<span>{st.visited ? 'Sudah dikunjungi' : 'Belum dikunjungi'}</span>
-                  </span>
-                ))}
+                <StatusBadge status={st.visited ? 'completed' : 'pending'}>{st.visited ? 'Sudah dikunjungi' : 'Belum dikunjungi'}</StatusBadge>
               </div>
             ))}
           </section>
