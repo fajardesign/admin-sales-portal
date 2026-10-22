@@ -10,9 +10,11 @@ export const SCENARIO_OPTIONS = {
   saveOutcome: ['success', 'emailFail', 'kcFail'],
   picAccount: ['ok', 'fail'],
   activationState: ['valid', 'expired', 'already'],
+  // PRD Scope 3: tanggal hari ini untuk status bulan. 2026-10-03 = sebelum lock 5 Okt, September masih "Menunggu rekonsiliasi".
+  s3Today: ['2026-10-07', '2026-10-03'],
 };
-export const SCENARIO_LABELS = { tableState: 'Tabel', service: 'Layanan login', saveOutcome: 'Simpan pengguna', picAccount: 'Akun PIC', activationState: 'Tautan contoh' };
-export const DEFAULT_SCENARIO = { tableState: 'data', service: 'ok', saveOutcome: 'success', picAccount: 'ok', activationState: 'valid' };
+export const SCENARIO_LABELS = { tableState: 'Tabel', service: 'Layanan login', saveOutcome: 'Simpan pengguna', picAccount: 'Akun PIC', activationState: 'Tautan contoh', s3Today: 'Tanggal Scope 3' };
+export const DEFAULT_SCENARIO = { tableState: 'data', service: 'ok', saveOutcome: 'success', picAccount: 'ok', activationState: 'valid', s3Today: '2026-10-07' };
 
 let state = { ...DEFAULT_SCENARIO };
 const subs = new Set();

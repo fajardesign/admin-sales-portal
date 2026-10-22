@@ -509,15 +509,18 @@ describe('APL', () => {
     expect(screen.getByText('Nama PIC')).toBeTruthy();
   });
 
-  it('Tim dan Insentif (TL, SA/SR, Partner)', async () => {
+  it('Tim dan Insentif per tim TL (PRD Scope 3): take home pay, status bayar, rincian hitung', async () => {
     const user = await start('hasan.basri');
     go('/apl/tim');
     expect(await screen.findByText('Andi Pratama', {}, T)).toBeTruthy();
     expect(screen.queryByText('Budi Santoso')).toBeNull();
     go('/apl/insentif?m=2026-09');
-    expect(await screen.findByText('Leader Incentive', { exact: false }, T)).toBeTruthy();
-    await user.click(screen.getByRole('tab', { name: 'Partner' }));
-    expect(await screen.findByText(/Volume Incentive/, {}, T)).toBeTruthy();
+    expect((await screen.findAllByText(/Total take home pay tim/, {}, T)).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('tab', { name: 'Partner' })).toBeNull(); // insentif partner hanya Super Admin dan Admin (OQ-3-31)
+    expect(screen.getAllByText(/Menunggu pembayaran \(jadwal 10 Okt 2026\)/).length).toBeGreaterThan(0);
+    await user.click(screen.getByText('— Siti Rahmawati'));
+    expect(await screen.findByText('Gaji pokok', { selector: 'h3' }, T)).toBeTruthy();
+    expect(screen.getByText(/karena capaian/)).toBeTruthy();
   });
 });
 

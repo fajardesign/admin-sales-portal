@@ -13,7 +13,11 @@
  * Semua angka dibulatkan ke bawah ke rupiah.
  */
 import { attendance, CURRENT_MONTH, loans, now, partners, s3Config, s3Payments, users, wibDate } from './db.js';
-import { ApiError, actorOf, listGate, monthRange, todayDate, userById, wait } from './mockApi.js';
+import { ApiError, actorOf, listGate, monthRange, userById, wait } from './mockApi.js';
+import { getScenario } from '../dev/scenario.js';
+
+/** Hari ini untuk status bulan Scope 3; DevToolbar "Tanggal Scope 3" bisa memundurkannya ke sebelum lock. */
+export const s3Today = () => getScenario().s3Today ?? '2026-10-07';
 
 // ------------------------------------------------------------------ status pinjaman (FR-LP-003)
 /** Status LMS (data contoh: status CRM lama) → status portal. Status tidak dikenal = Diajukan (dan dicatat untuk ditinjau). */
@@ -38,7 +42,7 @@ export const payoutDate = (ym, kind = 'SALES') => dayIn(nextYm(ym), kind === 'PA
 /** BERJALAN | REKONSILIASI | FINAL (relatif terhadap hari ini WIB). */
 export function monthStatus(ym) {
   if (ym >= CURRENT_MONTH) return 'BERJALAN';
-  return todayDate() >= lockDate(ym) ? 'FINAL' : 'REKONSILIASI';
+  return s3Today() >= lockDate(ym) ? 'FINAL' : 'REKONSILIASI';
 }
 export const MONTH_STATUS = { BERJALAN: 'Berjalan', REKONSILIASI: 'Menunggu rekonsiliasi', FINAL: 'Final' };
 /** Batas koreksi absensi TL untuk tanggal ymd: akhir minggu berikutnya (Scope 2 FR-014) atau sebelum lock bulannya, mana yang lebih dulu. */
@@ -157,7 +161,7 @@ export function paymentOf(kind, id, ym, finalAmount) {
   const scheduledAt = payoutDate(ym, kind);
   const paidAt = r.paidAt ?? (ym <= s3Payments.paidThrough && amountToPay > 0 ? scheduledAt : null);
   const status = paidAt ? 'DIBAYAR' : amountToPay > 0 ? 'MENUNGGU' : 'TIDAK_ADA';
-  return { status, correction, note: r.note ?? '', amountToPay, paidAt, paidAmount: paidAt ? amountToPay : null, scheduledAt, overdue: status === 'MENUNGGU' && todayDate() > scheduledAt };
+  return { status, correction, note: r.note ?? '', amountToPay, paidAt, paidAmount: paidAt ? amountToPay : null, scheduledAt, overdue: status === 'MENUNGGU' && s3Today() > scheduledAt };
 }
 export const PAYMENT_STATUS = { MENUNGGU: 'Menunggu pembayaran', DIBAYAR: 'Dibayar', TIDAK_ADA: 'Tidak ada pembayaran' };
 
