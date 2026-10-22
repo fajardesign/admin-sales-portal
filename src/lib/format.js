@@ -31,6 +31,8 @@ export function formatDateTime(dt) {
   return `${date}, ${time}`;
 }
 export const formatDate = (dt) => (dt ? formatDateWIB(dt).date : '-');
+/** Tanggal "YYYY-MM-DD" (kalender, tanpa jam) → "10 Okt 2026"; kosong → "-". */
+export const formatYmd = (ymd) => (ymd ? formatDate(new Date(`${ymd}T05:00:00Z`)) : '-');
 
 /** Rp 24.000.000 */
 export const formatRp = (n) => `Rp\u00A0${Math.round(n || 0).toLocaleString('id-ID')}`; // spasi tak terputus agar "Rp" tidak terpisah dari angka

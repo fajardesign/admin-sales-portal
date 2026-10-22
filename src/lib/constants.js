@@ -119,16 +119,16 @@ export const FEATURE_LABEL = {
   INCENTIVE_ESTIMATION: 'Estimasi insentif', PARTNER_VIEW: 'Lihat partner', TEAM_VIEW: 'Lihat tim', PARTNER_ACQUISITION: 'Pendaftaran partner',
   SALES_ASSIGNMENT: 'Penugasan SA/SR', VISIT_PLAN_MANAGEMENT: 'Atur kunjungan', ATTENDANCE: 'Absensi', VISIT_EXECUTION: 'Kunjungan',
   LOAN_TRACKING: 'Pantau pinjaman', PARTNER_SALES_DASHBOARD: 'Penjualan partner', PARTNER_COMMISSION: 'Komisi partner', PARTNER_PROFILE: 'Profil partner',
-  TRANSACTION_INQUIRY: 'Cek transaksi', DOCUMENT_REPOSITORY: 'Dokumen', INCENTIVE_SCHEME: 'Skema insentif', TL_ASSIGNMENT: 'Penugasan TL toko',
+  TRANSACTION_INQUIRY: 'Cek transaksi', DOCUMENT_REPOSITORY: 'Dokumen', INCENTIVE_SCHEME: 'Skema insentif', TL_ASSIGNMENT: 'Penugasan TL toko', INCENTIVE_PAYMENT: 'Pembayaran insentif',
 };
 export const ROLES = {
-  REVIEWER: { label: 'Admin (Reviewer)', short: 'Admin', realm: 'ADMIN', platform: 'web-access', features: ['DASHBOARD', 'PARTNER_PIPELINE', 'ACCOUNT_CREATION'] },
+  REVIEWER: { label: 'Admin (Reviewer)', short: 'Admin', realm: 'ADMIN', platform: 'web-access', features: ['DASHBOARD', 'PARTNER_PIPELINE', 'ACCOUNT_CREATION', 'INCENTIVE_PAYMENT'] },
   APL: { label: 'APL', short: 'APL', realm: 'APL', platform: 'web-access', features: ['SALES_PERFORMANCE', 'PRODUCTIVITY_PERFORMANCE_CHECK_IN', 'PRODUCTIVITY_PERFORMANCE_VISIT', 'INCENTIVE_ESTIMATION', 'PARTNER_VIEW', 'TEAM_VIEW', 'TL_ASSIGNMENT'] },
   TL: { label: 'TL', short: 'TL', realm: 'TL', platform: 'sales-app-access', features: ['PARTNER_ACQUISITION', 'SALES_ASSIGNMENT', 'VISIT_PLAN_MANAGEMENT', ...SALES_COMMON, 'TEAM_VIEW'] },
   SR: { label: 'SR', short: 'SR', realm: 'SR', platform: 'sales-app-access', features: ['PARTNER_ACQUISITION', ...SALES_COMMON] },
   SA: { label: 'SA', short: 'SA', realm: 'SA', platform: 'sales-app-access', features: SALES_COMMON },
   PARTNER: { label: 'Partner (PIC)', short: 'Partner', realm: 'PARTNER', platform: 'partner-web-access', features: ['PARTNER_SALES_DASHBOARD', 'PARTNER_COMMISSION', 'PARTNER_PROFILE', 'TRANSACTION_INQUIRY', 'DOCUMENT_REPOSITORY'] },
-  SUPER_ADMIN: { label: 'Super Admin', short: 'Super Admin', realm: 'SUPER_ADMIN', platform: 'web-access', features: ['INCENTIVE_SCHEME'] },
+  SUPER_ADMIN: { label: 'Super Admin', short: 'Super Admin', realm: 'SUPER_ADMIN', platform: 'web-access', features: ['INCENTIVE_SCHEME', 'INCENTIVE_PAYMENT'] },
 };
 export const CREATABLE_ROLES = ['REVIEWER', 'APL', 'TL', 'SR', 'SA'];
 export const TL_LEVEL = { JUNIOR: 'Junior', SENIOR: 'Senior' };
@@ -145,6 +145,8 @@ export const ACCOUNT_STATUS = {
 export const PIC_ACCOUNT_LABEL = { NONE: 'Belum dibuat', PENDING: 'Undangan terkirim', EXPIRED: 'Undangan terkirim', ACTIVE: 'Aktif', DISABLED: 'Dinonaktifkan' };
 
 export const PAGE_SIZE = 20;
+/** Kontak Amar Bank untuk partner (PRD Scope 3 OQ-3-32: satu nomor WhatsApp). Nomor contoh sampai ditetapkan Business. */
+export const PARTNER_CONTACT = { channel: 'WhatsApp', number: '+62 811-0000-0000' };
 /** Tautan aktivasi berlaku 3x24 jam (revisi stakeholder 2026-10-08); tautan reset password tetap 24 jam. */
 export const ACTIVATION_TTL_MS = 72 * 3600e3;
 export const RESET_TTL_MS = 24 * 3600e3;

@@ -4,11 +4,14 @@ import { AdminShell } from '../../components/AdminShell.jsx';
 import { DataTable } from '../../components/DataTable.jsx';
 import { ListCard } from '../../components/ListCard.jsx';
 import { SearchField } from '../../components/FilterBar.jsx';
-import { aplSalesRows, subordinateOptions } from '../../api/mockApi.js';
+import { aplSalesRows, monthRange, subordinateOptions } from '../../api/mockApi.js';
+import { StatCard, StatGrid } from '../../components/StatCard.jsx';
+import { AsOf } from '../../components/scope3/S3Common.jsx';
+import { dataAsOf } from '../../api/scope3.js';
 import { useScenario } from '../../dev/scenario.js';
 import { nowrap } from '../../lib/cells.jsx';
 import { CHANNEL } from '../../lib/constants.js';
-import { formatNumber, formatPct, formatRp } from '../../lib/format.js';
+import { formatNumber, formatRp, monthLabel } from '../../lib/format.js';
 import { navigate, withQuery } from '../../lib/router.js';
 import { PeriodFilter } from './aplCommon.jsx';
 import { useAplScope, usePeriod } from './aplPeriod.js';
@@ -18,8 +21,9 @@ const LEVEL_LABEL = { area: 'Area', tl: 'TL', sales: 'SA/SR', partner: 'Partner'
 const PATH_KEYS = { area: 'dArea', tl: 'dTl', sales: 'dSales', partner: 'dPartner' };
 
 /**
- * B2 · Kinerja Penjualan (PRD v3): drill-down Area → TL → SA/SR → Partner → Toko. Klik baris = turun satu level;
- * "Pinjaman" membuka daftar pinjaman baris tersebut (di level Toko, klik baris langsung membuka pinjaman).
+ * B2 · Kinerja Penjualan (PRD v3; PRD Scope 3 FR-LP-006): pipeline per bulan pengajuan dengan 4 status portal (Diajukan,
+ * Disetujui, Ditolak, Cair) dan "Dihitung untuk insentif" (cair di bulan yang sama). Drill-down Area → TL → SA/SR → Partner → Toko;
+ * klik baris = turun satu level; "Pinjaman" membuka daftar pinjaman baris tersebut (di level Toko, klik baris langsung membuka pinjaman).
  */
 export function AplSales(props) {
   const { tableState } = useScenario();
@@ -28,7 +32,11 @@ export function AplSales(props) {
 
 function AplSalesView({ user, onLogout, query }) {
   const q = Object.fromEntries(query.entries());
-  const period = usePeriod(query);
+  // Scope 3: pipeline per bulan pengajuan (rentang tanggal tidak dipakai).
+  const p0 = usePeriod(query);
+  const ym = p0.month ?? p0.from.slice(0, 7);
+  const period = { mode: 'bulan', month: ym, ...monthRange(ym), label: monthLabel(ym, true) };
+  const [asOf, setAsOf] = useState(dataAsOf());
   const areaIds = useAplScope(user, query);
   const path = { area: q.dArea, tl: q.dTl, sales: q.dSales, partner: q.dPartner };
   const [data, setData] = useState(null);
@@ -36,7 +44,7 @@ function AplSalesView({ user, onLogout, query }) {
   const [loans, setLoans] = useState(null);
   const set = (patch) => navigate(withQuery('/apl/kinerja', { ...q, ...patch }));
   const key = JSON.stringify({ period, areaIds, path, c: q.channel, s: q.q });
-  const load = (retry) => { setView('loading'); aplSalesRows(areaIds, period, path, { channel: q.channel, q: q.q }, { retry }).then((r) => { setData(r); setView(r.rows.length ? 'data' : 'empty'); }, () => setView('error')); };
+  const load = (retry) => { setView('loading'); aplSalesRows(areaIds, period, path, { channel: q.channel, q: q.q }, { retry }).then((r) => { setData(r); setAsOf(dataAsOf()); setView(r.rows.length ? 'data' : 'empty'); }, () => setView('error')); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(false); }, [key]);
 
@@ -60,11 +68,11 @@ function AplSalesView({ user, onLogout, query }) {
   const columns = [
     { key: 'name', header: LEVEL_LABEL[level], render: (r) => ({ priority: 'leading', title: r.name, description: r.sub }) },
     { key: 'submitted', header: 'Diajukan', align: 'right', render: (r) => formatNumber(r.submitted) },
-    { key: 'accepted', header: 'Diterima', align: 'right', render: (r) => formatNumber(r.accepted) },
+    { key: 'approved', header: 'Disetujui', align: 'right', render: (r) => formatNumber(r.approvedOnly) },
+    { key: 'rejected', header: 'Ditolak', align: 'right', render: (r) => formatNumber(r.rejected) },
     { key: 'paidOut', header: 'Cair', align: 'right', render: (r) => formatNumber(r.paidOut) },
-    { key: 'units', header: 'Unit Cair', align: 'right', render: (r) => formatNumber(r.paidOutUnits) },
-    { key: 'amount', header: 'Nominal Cair', align: 'right', render: (r) => ({ priority: 'regular', title: nowrap(formatRp(r.paidOutAmount)) }) },
-    { key: 'rate', header: 'Acceptance Rate', align: 'right', render: (r) => formatPct(r.acceptanceRate) },
+    { key: 'amount', header: 'Total cair', align: 'right', render: (r) => ({ priority: 'regular', title: nowrap(formatRp(r.paidOutAmount)) }) },
+    { key: 'counted', header: 'Dihitung untuk insentif', align: 'right', render: (r) => ({ priority: 'regular', title: nowrap(formatRp(r.countedAmount)), description: `${formatNumber(r.countedCount)} pinjaman` }) },
     { key: 'act', header: 'Aksi', render: (r) => ({ misc: true, children: (
       <span role="presentation" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
         <Button size="2xs" variant="ghost" tone="primary" onClick={() => setLoans({ title: r.name, scope: { ...path, [r.level]: r.key } })}>Pinjaman</Button>
@@ -76,7 +84,7 @@ function AplSalesView({ user, onLogout, query }) {
 
   return (
     <AdminShell active="/apl/kinerja" icon="BarChartLine" title="Kinerja Penjualan" description="Telusuri kinerja pinjaman dari area hingga toko." user={user} onLogout={onLogout}>
-      <PeriodFilter path="/apl/kinerja" query={query} user={user} period={period}>
+      <PeriodFilter path="/apl/kinerja" query={query} user={user} period={period} monthOnly>
         <div style={{ width: 160 }}>
           <Select size="sm" value={q.channel ?? ''} placeholder="Semua channel" onChange={(v) => set({ channel: v })}
             options={[{ value: '', label: 'Semua channel' }, ...Object.entries(CHANNEL).map(([value, label]) => ({ value, label }))]} />
@@ -90,10 +98,17 @@ function AplSalesView({ user, onLogout, query }) {
         <Breadcrumbs items={crumbs} />
         <SearchField placeholder={`Cari ${LEVEL_LABEL[level].toLowerCase()}`} value={q.q ?? ''} onChange={(v) => set({ q: v })} width={280} />
       </div>
+      <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-12)', flexWrap: 'wrap', font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>
+        Pengajuan dibuat di {period.label}<AsOf asOf={asOf} ym={ym} onRefresh={() => load(true)} />
+      </span>
       {data && view === 'data' && (
-        <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>
-          Total: {formatNumber(data.total.submitted)} diajukan · {formatNumber(data.total.accepted)} diterima · {formatNumber(data.total.paidOut)} cair · {formatRp(data.total.paidOutAmount)} · acceptance rate {formatPct(data.total.acceptanceRate)}
-        </span>
+        <StatGrid min={180}>
+          <StatCard icon="FileList2Line" color="blue" label="Diajukan" value={formatNumber(data.total.submitted)} hint="Semua pengajuan bulan ini" />
+          <StatCard icon="CheckLine" color="teal" label="Disetujui" value={formatNumber(data.total.approvedOnly)} hint="Belum cair" />
+          <StatCard icon="CloseLine" color="red" label="Ditolak" value={formatNumber(data.total.rejected)} />
+          <StatCard icon="Wallet3Line" color="green" label="Cair" value={formatNumber(data.total.paidOut)} hint={`Total cair ${formatRp(data.total.paidOutAmount)}`} />
+          <StatCard icon="HandCoinLine" color="purple" label="Dihitung untuk insentif" value={formatRp(data.total.countedAmount)} hint={`${formatNumber(data.total.countedCount)} pinjaman cair di bulan yang sama`} />
+        </StatGrid>
       )}
       <ListCard view={view} onRetry={() => load(true)} emptyMessage="Belum ada pinjaman pada periode dan filter ini.">
         {(view === 'data' || view === 'loading') && <DataTable loading={view === 'loading'} rows={data?.rows ?? []} rowKey={(r) => r.key} columns={columns} minWidth={1100} onRowClick={drill} />}

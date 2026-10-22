@@ -14,6 +14,8 @@ const NAV = [
     { label: 'Insentif', value: '/apl/insentif', icon: 'HandCoinLine', feature: 'INCENTIVE_ESTIMATION' },
     { label: 'Skema Insentif', value: '/skema-insentif', icon: 'CoinsLine', feature: 'INCENTIVE_SCHEME' },
     { label: 'Hasil Perhitungan', value: '/hasil-perhitungan', icon: 'FileList2Line', feature: 'INCENTIVE_SCHEME' },
+    // PRD Scope 3 (3.7): Admin mencatat pembayaran; Super Admin melihat saja.
+    { label: 'Pembayaran Insentif', value: '/pembayaran-insentif', icon: 'Wallet3Line', feature: 'INCENTIVE_PAYMENT' },
   ] },
   // Admin (keputusan 2026-10-16): Utama (Beranda) · Partner (Toko Aktif, Partner Pipeline) · Atur (Manajemen Akun).
   { title: 'Partner', items: [
