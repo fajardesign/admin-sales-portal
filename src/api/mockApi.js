@@ -7,7 +7,7 @@ import {
   ACCOUNT_STATUS, AREAS, CREATABLE_ROLES, ACTIVATION_TTL_MS, FINAL_STATUSES, PAGE_SIZE, PKS_VIA, RESET_TTL_MS, PARTNER_STATUS, ROLES, TRANSITIONS,
 } from '../lib/constants.js';
 import {
-  attendance, CURRENT_MONTH, defaultTlOf, loans, mfp, MONTHS, now, partners, partnerTls, schemes, superAdmins, targets, users, visits, wibDate, weekStoresOf,
+  attendance, CURRENT_MONTH, defaultTlOf, loans, MONTHS, now, partners, partnerTls, superAdmins, users, visits, wibDate, weekStoresOf,
 } from './db.js';
 import { hydrateUsers, syncUser } from './supabaseSync.js';
 
@@ -1051,7 +1051,6 @@ const pct = (a, b) => (b ? (a / b) * 100 : 0);
 /** Samaran PRD v3 §B2: ID "APP-••••1234", nama "Bu•• Sa•••••". */
 export const maskId = (id) => `APP-••••${id.slice(-4)}`;
 export const maskName = (n) => n.split(' ').map((w) => w.slice(0, 2) + '•'.repeat(Math.max(1, w.length - 2))).join(' ');
-export const CRM_STATUS = { SUBMITTED: 'Pengajuan', IN_PROCESS: 'Diproses', APPROVED: 'Disetujui', REJECTED: 'Ditolak', PAID_OUT: 'Dicairkan' };
 
 /** Agregat metrik penjualan dari daftar pinjaman (berdasarkan tanggal pengajuan). */
 /** Pinjaman dihitung untuk insentif (PRD Scope 3): cair di bulan yang sama dengan pengajuan (WIB). */
@@ -1312,133 +1311,6 @@ export async function personSummary(userId, period) {
   return { sales: salesStats(ls), productivity: productivity([u.id], period), thisWeek: currentVisitWeek(u.id) };
 }
 
-// ------------------------------------------------------------------ Insentif (APL B6, Super Admin E3)
-/** Versi skema yang berlaku pada bulan ym: effectiveFrom terbesar yang ≤ ym. */
-export function versionFor(recipient, ym) {
-  const s = schemes.find((x) => x.recipient === recipient);
-  return [...s.versions].sort((a, b) => (a.effectiveFrom < b.effectiveFrom ? 1 : -1)).find((v) => v.effectiveFrom <= ym) ?? s.versions[0];
-}
-/** Status versi dihitung dari bulan berjalan: ACTIVE | SCHEDULED | ARCHIVED. */
-export function versionStatus(s, v) {
-  const active = versionFor(s.recipient, CURRENT_MONTH);
-  if (v.version === active.version) return 'ACTIVE';
-  return v.effectiveFrom > CURRENT_MONTH ? 'SCHEDULED' : 'ARCHIVED';
-}
-/** Tier yang cocok: nilai > from (tier pertama ≥ 0) dan ≤ to (to null = tak terbatas). */
-/**
- * Tier rentang dari–sampai: batas bawah ikut tier (≥ dari), batas atas tidak (< sampai), tier terakhir tanpa batas atas
- * (keputusan review 2026-10-09 mengikuti PRD: MFP 10% masuk tier 10–13% = 0,05%).
- */
-export function tierFor(component, value) {
-  const tiers = [...component.tiers].sort((a, b) => a.from - b.from);
-  return tiers.find((t) => value >= t.from && (t.to == null || value < t.to)) ?? tiers[tiers.length - 1];
-}
-export const tierLabel = (t) => (t.to == null ? `≥ ${t.from}%` : `${t.from}% s/d < ${t.to}%`);
-const fmtRp = (n) => `Rp\u00A0${Math.round(n).toLocaleString("id-ID")}`;
-const rate = (r) => `${String(r).replace('.', ',')}%`;
-
-/**
- * Hasil (estimasi) insentif bulan ym untuk TL, SA/SR, dan partner di area (null = semua). Target read-only (sumber TBD).
- * Baris: { kind, id, name, role, areaId, target, paidOutAmount, achievement, tier, components:[{label, amount, detail}], total, version, status }.
- */
-export function computeIncentives(areaIds, ym) {
-  const range = monthRange(ym);
-  const paidIn = loans.filter((l) => l.status === 'PAID_OUT' && inArea(areaIds, l.areaId) && inP(wibDate(l.paidOutAt), range));
-  const tgt = (storeIds) => [...new Set(storeIds)].reduce((a, id) => a + (targets[`${id}:${ym}`] ?? 0), 0);
-  const days = (uid) => attendance.filter((a) => a.userId === uid && inP(a.date, range) && isPresent(a)).length;
-  const status = ym === CURRENT_MONTH ? 'ESTIMATE' : 'PAID';
-  const rows = [];
-  const group = (key) => { const m = new Map(); paidIn.forEach((l) => { const k = l[key]; if (k == null) return; m.set(k, [...(m.get(k) ?? []), l]); }); return m; };
-  const person = (kind, id, ls, recipient, compKey, compLabel, extra) => {
-    const u = userById(id); const v = versionFor(recipient, ym);
-    const fee = v.components.find((c) => c.key === 'dailyFee'); const comp = v.components.find((c) => c.key === compKey);
-    const paid = ls.reduce((a, l) => a + l.amount, 0); const target = tgt(ls.map((l) => l.storeId)); const ach = pct(paid, target); const t = tierFor(comp, ach); const d = days(id);
-    const components = [{ label: 'Daily Fee', amount: d * fee.amount, detail: `${d} hari × ${fmtRp(fee.amount)}` }, { label: compLabel, amount: (paid * t.rate) / 100, detail: `Tarif ${rate(t.rate)}${extra}` }];
-    rows.push({ kind, id, name: u.fullName, role: kind === 'TL' ? 'TL' : u.role, tlLevel: u.tlLevel, areaId: u.areaIds[0], target, paidOutAmount: paid, achievement: ach, tier: tierLabel(t), components, total: components.reduce((a, c) => a + c.amount, 0), version: v.version, status });
-  };
-  group('salesId').forEach((ls, id) => person('SALES', id, ls, userById(id).role, 'paidOut', 'Paid Out Incentive', ''));
-  group('tlId').forEach((ls, id) => person('TL', id, ls, userById(id).tlLevel === 'SENIOR' ? 'TL_SENIOR' : 'TL_JUNIOR', 'leader', 'Leader Incentive', ' × paid out tim'));
-  group('partnerId').forEach((ls, id) => {
-    const p = findP(id); const paid = ls.reduce((a, l) => a + l.amount, 0); const target = tgt(ls.map((l) => l.storeId)); const ach = pct(paid, target);
-    if (p.channel === 'NON_STORE') {
-      const v = versionFor('PARTNER_AFFILIATE', ym); const c = v.components[0];
-      const components = [{ label: c.label, amount: (paid * c.rate) / 100, detail: `${rate(c.rate)} dari disbursement` }];
-      rows.push({ kind: 'PARTNER', id, name: p.partnerName, role: 'Partner', areaId: p.areaId, target, paidOutAmount: paid, achievement: ach, tier: '-', components, total: components[0].amount, version: v.version, status });
-      return;
-    }
-    const v = versionFor('PARTNER_RETAIL', ym); const vol = v.components.find((c) => c.key === 'volume'); const col = v.components.find((c) => c.key === 'collection');
-    const storeIds = [...new Set(ls.map((l) => l.storeId))];
-    const m = storeIds.reduce((a, sid) => a + (mfp[`${sid}:${ym}`] ?? 0), 0) / storeIds.length;
-    const tv = tierFor(vol, ach); const tc = tierFor(col, m);
-    const components = [
-      { label: 'Volume Incentive', amount: (paid * tv.rate) / 100, detail: `Tarif ${rate(tv.rate)}` },
-      { label: 'Collection Incentive (MFP)', amount: (paid * tc.rate) / 100, detail: `MFP ${m.toFixed(1).replace('.', ',')}% · tier ${tierLabel(tc)} · tarif ${rate(tc.rate)}` },
-    ];
-    rows.push({ kind: 'PARTNER', id, name: p.partnerName, role: 'Partner', areaId: p.areaId, target, paidOutAmount: paid, achievement: ach, tier: tierLabel(tv), components, total: components.reduce((a, c) => a + c.amount, 0), version: v.version, status });
-  });
-  // Customer Referral Program (skema CRP): komisi % dari total disbursement pinjaman yang direferensikan nasabah.
-  const crp = new Map();
-  paidIn.filter((l) => l.crpReferrer).forEach((l) => crp.set(l.crpReferrer, [...(crp.get(l.crpReferrer) ?? []), l]));
-  crp.forEach((ls, name) => {
-    const v = versionFor('CRP', ym); const c = v.components[0]; const paid = ls.reduce((a, l) => a + l.amount, 0);
-    const components = [{ label: c.label, amount: (paid * c.rate) / 100, detail: `${rate(c.rate)} × disbursement ${ls.length} pinjaman referensi` }];
-    rows.push({ kind: 'CRP', id: `CRP:${name}`, name, role: 'Customer (CRP)', areaId: ls[0].areaId, target: 0, paidOutAmount: paid, achievement: 0, tier: '-', components, total: components[0].amount, version: v.version, status });
-  });
-  return rows.sort((a, b) => b.total - a.total);
-}
-/** Hasil insentif dengan filter { kind, role, area }. */
-export async function incentiveResults(areaIds, ym, f = {}, { retry = false } = {}) {
-  const empty = await listGate(retry);
-  if (empty) return [];
-  return computeIncentives(areaIds, ym).filter((r) => (!f.kind || r.kind === f.kind) && (!f.role || r.role === f.role) && (!f.area || r.areaId === Number(f.area)));
-}
-
-// ------------------------------------------------------------------ Skema insentif (Super Admin E1–E2)
-const schemeView = (s) => ({
-  ...clone(s), active: clone(versionFor(s.recipient, CURRENT_MONTH)),
-  versions: s.versions.map((v) => ({ ...clone(v), status: versionStatus(s, v) })).sort((a, b) => b.version - a.version),
-});
-export async function listSchemes({ retry = false } = {}) {
-  const empty = await listGate(retry);
-  return empty ? [] : schemes.map(schemeView);
-}
-export async function getScheme(id) {
-  await wait(150);
-  return schemeView(schemes.find((x) => x.id === id));
-}
-/** "Buat Versi Baru": salin versi terbaru menjadi draf (atau kembalikan draf yang ada). */
-export async function createDraft(id, session) {
-  await wait(250);
-  const s = schemes.find((x) => x.id === id);
-  if (!s.draft) {
-    const latest = [...s.versions].sort((a, b) => b.version - a.version)[0];
-    s.draft = { payday: latest.payday, components: clone(latest.components), createdBy: actorOf(session), createdAt: now(), updatedAt: now() };
-  }
-  return schemeView(s);
-}
-export async function saveDraft(id, draft) {
-  await wait(300);
-  const s = schemes.find((x) => x.id === id);
-  s.draft = { ...s.draft, payday: draft.payday, components: clone(draft.components), updatedAt: now() };
-  return schemeView(s);
-}
-export async function discardDraft(id) {
-  await wait(200);
-  const s = schemes.find((x) => x.id === id);
-  s.draft = null;
-  return schemeView(s);
-}
-/** "Terbitkan": draf menjadi versi baru, berlaku mulai bulan depan atau setelahnya (tidak pernah mundur). */
-export async function publishDraft(id, effectiveFrom, session) {
-  await wait(500);
-  const s = schemes.find((x) => x.id === id);
-  if (!s.draft || effectiveFrom <= CURRENT_MONTH) throw new ApiError('CONFLICT');
-  // Versi terjadwal di bulan yang sama atau setelahnya digantikan versi baru.
-  s.versions = s.versions.filter((v) => !(v.effectiveFrom >= effectiveFrom && v.effectiveFrom > CURRENT_MONTH));
-  const version = Math.max(0, ...s.versions.map((v) => v.version)) + 1;
-  s.versions.push({ version, effectiveFrom, payday: s.draft.payday, components: s.draft.components, createdBy: s.draft.createdBy, createdAt: s.draft.createdAt, publishedBy: actorOf(session), publishedAt: now() });
-  s.draft = null;
-  return schemeView(s);
-}
+// Insentif dan skema: PRD Scope 3 di src/api/scope3.js (skema lama per penerima, CRP, affiliate, MFP dihapus 2026-10-22).
 
 export const isFinal = (status) => FINAL_STATUSES.includes(status);

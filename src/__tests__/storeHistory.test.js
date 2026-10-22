@@ -2,12 +2,14 @@
 // File terpisah karena mengubah data contoh; vitest mengisolasi modul per file.
 import { describe, expect, it } from 'vitest';
 import { loans, partners } from '../api/db.js';
-import { changeStatus, computeIncentives, disableUser, visitWeekStores, visitWeeks } from '../api/mockApi.js';
+import { changeStatus, disableUser, visitWeekStores, visitWeeks } from '../api/mockApi.js';
+import { salesRow as s3Row } from '../api/scope3.js';
 
 const admin = { userId: 1, name: 'Rina Saraswati', role: 'REVIEWER' };
 const lastWeek = { from: '2026-09-28', to: '2026-10-04' };
 const thisWeek = { from: '2026-10-05', to: '2026-10-07' };
-const salesRow = (id) => computeIncentives(null, '2026-10').find((r) => r.kind === 'SALES' && r.id === id);
+// Insentif Scope 3 bulan berjalan: Cair dihitung dan insentif tetap milik orang pada tanggal pengajuan.
+const salesRow = (id) => { const r = s3Row(id, '2026-10'); return r && { actual: r.actual, incentive: r.incentive }; };
 
 describe('Riwayat pemegang toko', () => {
   it('SA dinonaktifkan: penjualan, insentif, minggu lalu, dan target minggu berjalan (dikunci Senin 00:00 WIB, Q5) tetap', async () => {

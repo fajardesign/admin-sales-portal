@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { passwordPolicy, validatePksFile, validateReason, validateReferralCode, validateUserForm } from '../lib/validation.js';
 import { formatDateTime, formatDateWIB, formatDuration, formatPhone, formatRp, formatTimeLocal, normalizePhone } from '../lib/format.js';
-import { attendanceWeekLabel, attendanceWeeks, computeIncentives, currentVisitWeek, findByIdentifier, visitWeekStores, picPhoneTaken, referralTaken, tierFor, tierLabel, verificationGap, visitWeeks, weekStatusLabel } from '../api/mockApi.js';
+import { attendanceWeekLabel, attendanceWeeks, currentVisitWeek, findByIdentifier, visitWeekStores, picPhoneTaken, referralTaken, verificationGap, visitWeeks, weekStatusLabel } from '../api/mockApi.js';
 import { attendance, distanceKm, partners, visits } from '../api/db.js';
 import { ATTENDANCE_LABEL, OFFICES, TIME_ZONES } from '../lib/constants.js';
 
@@ -191,35 +191,6 @@ describe('passwordPolicy', () => {
     expect(rule('081234567890')).toBe(false);
     expect(rule('+62 812-3456-7890')).toBe(false);
     expect(rule('Rahasia123')).toBe(true);
-  });
-});
-
-describe('tier insentif (rentang dari–sampai, PRD v3 §E2)', () => {
-  const T = (rows) => ({ tiers: rows.map(([from, to, rate]) => ({ from, to, rate })) });
-  const sales = T([[0, 55, 0], [55, 70, 0.55], [70, 85, 0.7], [85, 100, 0.85], [100, 120, 0.9], [120, null, 1]]);
-  const mfp = T([[0, 10, 0.1], [10, 13, 0.05], [13, null, 0]]);
-  it('batas bawah ikut tier (≥ dari), batas atas tidak (< sampai) (review 2026-10-09)', () => {
-    expect(tierFor(sales, 120).rate).toBe(1);
-    expect(tierFor(sales, 119.9).rate).toBe(0.9);
-    expect(tierFor(sales, 55).rate).toBe(0.55);
-    expect(tierFor(sales, 0).rate).toBe(0);
-  });
-  it('MFP', () => {
-    expect(tierFor(mfp, 9.9).rate).toBe(0.1);
-    expect(tierFor(mfp, 10).rate).toBe(0.05);
-    expect(tierFor(mfp, 12).rate).toBe(0.05);
-    expect(tierFor(mfp, 13).rate).toBe(0);
-    expect(tierFor(mfp, 13.5).rate).toBe(0);
-  });
-  it('label tier', () => {
-    expect(tierLabel({ from: 0, to: 55 })).toBe('0% s/d < 55%');
-    expect(tierLabel({ from: 85, to: 100 })).toBe('85% s/d < 100%');
-    expect(tierLabel({ from: 120, to: null })).toBe('≥ 120%');
-  });
-  it('skema CRP 3% ikut dihitung dari disbursement pinjaman referensi (review 2026-10-09)', () => {
-    const crp = computeIncentives(null, '2026-09').filter((r) => r.kind === 'CRP');
-    expect(crp.length).toBeGreaterThan(0);
-    crp.forEach((r) => expect(r.total).toBeCloseTo(r.paidOutAmount * 0.03, 2));
   });
 });
 
