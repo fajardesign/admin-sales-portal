@@ -551,11 +551,16 @@ describe('Super Admin', () => {
     expect(await screen.findByText('Harus lebih dari 55%', {}, T)).toBeTruthy();
   });
 
-  it('Hasil Perhitungan menampilkan versi skema dan status', async () => {
-    await start('hendra.wijaya');
-    go('/hasil-perhitungan?m=2026-09');
-    expect((await screen.findAllByText('Versi 1', {}, T)).length).toBeGreaterThan(0);
-    expect((await screen.findAllByText("Dibayar", {}, T)).length).toBeGreaterThan(0);
+  it('Hasil Perhitungan (PRD Scope 3): tab Sales dan Partner, status bulan, status pembayaran, ekspor', async () => {
+    const user = await start('hendra.wijaya');
+    go('/hasil-perhitungan?m=2026-08');
+    expect(await screen.findByText('Total take home pay', {}, T)).toBeTruthy();
+    expect((await screen.findAllByText(/^Dibayar 10 Sep 2026/, {}, T)).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Koreksi \+Rp/).length).toBeGreaterThan(0);
+    await user.click(screen.getByRole('tab', { name: 'Partner' }));
+    expect(await screen.findByText('Total insentif partner', {}, T)).toBeTruthy();
+    expect((await screen.findAllByText(/^Dibayar 15 Sep 2026/, {}, T)).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: 'Ekspor Excel' })).toBeTruthy();
   });
 });
 
@@ -563,7 +568,7 @@ describe('Tidak ada layar buntu', () => {
   it.each([
     ['rina.saraswati', ['/beranda', '/partner-pipeline', '/partner-pipeline/REG2026-0133', '/account-management']],
     ['lestari.wulandari', ['/apl', '/apl/kinerja', '/apl/tim?tab=absensi', '/apl/toko-aktif', '/apl/tim', '/apl/insentif']],
-    ['hendra.wijaya', ['/skema-insentif', '/hasil-perhitungan']],
+    ['hendra.wijaya', ['/skema-insentif', '/hasil-perhitungan', '/pembayaran-insentif']],
   ])('%s: setiap layar punya navigasi sidebar dan Keluar', async (id, paths) => {
     await start(id);
     for (const p of paths) {

@@ -5,6 +5,7 @@ import {
   BAND_LABEL, configFor, MONTH_STATUS, PAYMENT_STATUS, monthStatus, pipeline, rateLabel, tierRange,
 } from '../../api/scope3.js';
 import { perfMonths } from '../../api/mockApi.js';
+import { partners } from '../../api/db.js';
 import { areaName } from '../../lib/constants.js';
 import { formatDateTime, formatPct, formatRp, formatYmd, monthLabel } from '../../lib/format.js';
 import { monthNote, signedRp } from '../../lib/s3.js';
@@ -137,6 +138,40 @@ export function IncomeDrawer({ row: r, onClose }) {
                 <span style={{ font: 'var(--paragraph-xs)' }}>Diajukan {formatDateTime(l.submittedAt)} · Cair {formatDateTime(l.paidOutAt)}</span>
               </span>
               {!l.counted && <span style={{ ...muted, textAlign: 'right' }}>Cair {formatDateTime(l.paidOutAt).split(',')[0]}, beda bulan, tidak dihitung</span>}
+            </div>
+          ))}
+        </SectionCard>
+      </div>
+    </Drawer>
+  );
+}
+
+/** Rincian insentif partner satu bulan (FR-PI-002/006): target, Cair dihitung, capaian, tier volume, per toko, pembayaran. */
+export function PartnerIncomeDrawer({ row: r, onClose }) {
+  const [stores, setStores] = useState(null);
+  useEffect(() => {
+    pipeline(r.ym, { partnerId: r.partnerId }, {}, { retry: true }).then((p) => {
+      const m = new Map();
+      p.rows.filter((l) => l.counted).forEach((l) => m.set(l.storeId, (m.get(l.storeId) ?? 0) + l.amount));
+      const partner = partners.find((x) => x.id === r.partnerId);
+      setStores(partner.stores.filter((s) => s.status === 'ACTIVE' || m.has(s.id)).map((s) => ({ id: s.id, name: s.name, amount: m.get(s.id) ?? 0 })));
+    });
+  }, [r.ym, r.partnerId]);
+  return (
+    <Drawer open width={600} onClose={onClose}
+      header={<DrawerHeader size="lg" title={r.name} description={`${areaName(r.areaId)} · ${r.storeCount} toko · ${monthLabel(r.ym, true)}`} icon="Building2Line" onClose={onClose} />}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-16)', padding: 'var(--space-16) var(--space-24) var(--space-24)' }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-8)', flexWrap: 'wrap' }}>
+          <MonthStatusBadge status={r.monthStatus} /><span style={muted}>{monthNote(r.ym)}</span>
+        </span>
+        <SectionCard title={`Insentif partner ${formatRp(r.incentive)}`}>
+          <IncentiveBlock r={r} tiers={configFor('partner', r.ym).tiers} />
+          <PaymentLine payment={r.payment} />
+        </SectionCard>
+        <SectionCard title="Cair dihitung per toko">
+          {stores == null ? <span role="status" style={muted}>Memuat toko...</span> : stores.map((s) => (
+            <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--space-12)', font: 'var(--paragraph-sm)', color: 'var(--text-strong-950)' }}>
+              <span>{s.name}</span><span>{formatRp(s.amount)}</span>
             </div>
           ))}
         </SectionCard>

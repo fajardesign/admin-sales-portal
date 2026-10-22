@@ -47,6 +47,8 @@ export const PRESETS = {
   'schemes': { name: 'E1 | Incentive Schemes', route: '/skema-insentif', session: 'hendra.wijaya' },
   'scheme-draft': { name: 'E2 | Incentive Scheme | New Version Draft', route: '/skema-insentif', session: 'hendra.wijaya', scheme: { open: 'SA', editing: true } },
   'incentive-results': { name: 'E3 | Incentive Results', route: '/hasil-perhitungan?m=2026-09', session: 'hendra.wijaya' },
+  'incentive-payment': { name: 'S3 | Incentive Payment (Admin)', route: '/pembayaran-insentif', session: 'rina.saraswati' },
+  'incentive-payment-readonly': { name: 'S3 | Incentive Payment (Super Admin, read-only)', route: '/pembayaran-insentif', session: 'hendra.wijaya' },
   'forbidden': { name: 'W | Access Denied | Page', route: '/apl', session: 'rina.saraswati' },
   'login-outage': { name: 'W1 | Login | Outage', route: '/login', login: { outage: true } },
   'detail-edit-partner': { name: 'W3 | Partner Detail | Edit Partner Data', route: '/partner-pipeline/REG2026-0139', session: 'rina.saraswati', detail: { editing: true } },

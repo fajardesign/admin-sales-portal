@@ -21,6 +21,7 @@ import { AplTeam } from './pages/apl/AplTeam.jsx';
 import { AplIncentive } from './pages/apl/AplIncentive.jsx';
 import { IncentiveSchemes } from './pages/super-admin/IncentiveSchemes.jsx';
 import { IncentiveResults } from './pages/super-admin/IncentiveResults.jsx';
+import { IncentivePayment } from './pages/payment/IncentivePayment.jsx';
 import { demoSession } from './api/mockApi.js';
 import { DevToolbar } from './dev/DevToolbar.jsx';
 import { preset } from './dev/presets.js';
@@ -30,12 +31,13 @@ import { preset } from './dev/presets.js';
  *  /login, /denied, /activate?user=<id>[&mode=reset]
  *  Admin: /beranda, /toko-aktif, /partner-pipeline[/<reg>], /account-management
  *  APL: /apl, /apl/kinerja, /apl/produktivitas, /apl/toko-aktif, /apl/tim, /apl/insentif
- *  Super Admin: /skema-insentif, /hasil-perhitungan
+ *  Super Admin: /skema-insentif, /hasil-perhitungan, /pembayaran-insentif (lihat saja)
+ *  Admin: juga /pembayaran-insentif (PRD Scope 3 §3.7)
  */
 const PAGES = {
   '/beranda': Beranda, '/partner-pipeline': PipelineList, '/toko-aktif': ActiveStores, '/account-management': AccountManagement,
   '/apl': AplDashboard, '/apl/kinerja': AplSales, '/apl/produktivitas': AplProductivity, '/apl/toko-aktif': AplStores, '/apl/tim': AplTeam, '/apl/insentif': AplIncentive,
-  '/skema-insentif': IncentiveSchemes, '/hasil-perhitungan': IncentiveResults,
+  '/skema-insentif': IncentiveSchemes, '/hasil-perhitungan': IncentiveResults, '/pembayaran-insentif': IncentivePayment,
 };
 
 const SESSION_KEY = 'sp-portal-session';
