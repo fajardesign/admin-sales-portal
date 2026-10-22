@@ -156,7 +156,7 @@ function CorrectionModal({ row, kind, ym, finalAmount, user, onClose, onSaved, o
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
   const n = /^[+-]?\d+$/.test(value.replace(/\./g, '').trim()) ? Number(value.replace(/\./g, '').trim()) : NaN;
-  const invalid = Number.isNaN(n) ? 'Masukkan angka, contoh 150000 atau -50000' : finalAmount + n < 0 ? 'Jumlah dibayar tidak boleh negatif' : null;
+  const invalid = Number.isNaN(n) ? 'Masukkan angka, contoh 150000 atau -50000' : finalAmount + n < 0 ? 'Jumlah dibayar tidak boleh negatif.' : null;
   async function save() {
     if (invalid) { setErr(invalid); return; }
     setBusy(true);
@@ -169,12 +169,12 @@ function CorrectionModal({ row, kind, ym, finalAmount, user, onClose, onSaved, o
     }
   }
   return (
-    <ActionModal open onClose={onClose} title="Isi koreksi" description={`${row.name} · ${monthLabel(ym, true)}`} icon="EditLine" busy={busy} onConfirm={save} confirmLabel="Simpan koreksi">
+    <ActionModal open onClose={onClose} title="Isi koreksi" description={`${row.name} · ${monthLabel(ym, true)}`} icon="EditLine" busy={busy} onConfirm={save} confirmLabel="Simpan koreksi" confirmDisabled={!!invalid}>
       <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>
         Jumlah final {formatRp(finalAmount)}{kind === 'SALES' ? ` (gaji pokok ${formatRp(row.basicSalary)} + insentif ${formatRp(row.incentive)})` : ''}
       </span>
       <TextInput label="Koreksi (Rp)" required value={value} onChange={(e) => { setValue(e.target.value); setErr(null); }} placeholder="0"
-        hint={err ? undefined : 'Pakai tanda minus untuk mengurangi, contoh -50000'} error={err ?? undefined} />
+        hint={err || invalid ? undefined : 'Pakai tanda minus untuk mengurangi, contoh -50000'} error={err ?? invalid ?? undefined} />
       <TextArea label="Catatan" sublabel="(Opsional)" maxLength={255} rows={2} value={note} onChange={setNote} placeholder="Contoh: Koreksi Agustus 2026" />
       <span style={{ font: 'var(--label-sm)', color: 'var(--text-strong-950)' }}>Jumlah dibayar: {Number.isNaN(n) ? '-' : formatRp(Math.max(0, finalAmount + n))}</span>
     </ActionModal>

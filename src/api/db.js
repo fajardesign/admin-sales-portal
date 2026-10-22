@@ -395,22 +395,13 @@ partners.filter((p) => p.activatedAt).forEach((p) => {
   });
 });
 
-/**
- * Customer Referral Program (CRP, skema E1): sebagian pinjaman berasal dari referensi nasabah lain. Data contoh ditandai
- * deterministik (tanpa PRNG agar data lain tetap sama dengan Android): tiap pinjaman ke-15 mulai indeks 7 mereferensikan nasabah
- * pinjaman 3 baris sebelumnya.
+/*
+ * Skema lama (target per toko, MFP, CRP; PRD v3 §E) dihapus pada PRD 3.0 (2026-10-22). Angka acak yang dulu dipakai untuk target
+ * dan MFP tetap diambil dengan urutan yang sama agar data contoh berikutnya (absensi, kunjungan) tidak bergeser.
  */
-loans.forEach((l, i) => { l.crpReferrer = i >= 7 && i % 15 === 7 ? loans[i - 3].customer : null; });
-
-/** targets: target nominal paid out per toko per bulan (read-only; sumber target masih TBD). Bulan berjalan = prorata s/d hari ini. */
-export const targets = {};
-/** mfp: rasio MFP (collection) per toko per bulan, dalam persen. */
-export const mfp = {};
 partners.filter((p) => p.activatedAt).forEach((p) => p.stores.forEach((s) => MONTHS.forEach((ym) => {
-  const paid = loans.filter((l) => l.storeId === s.id && l.status === 'PAID_OUT' && wibDate(l.paidOutAt).startsWith(ym)).reduce((a, l) => a + l.amount, 0);
-  if (!paid) return;
-  targets[`${s.id}:${ym}`] = Math.round((paid * (0.75 + rnd() * 0.65)) / 1e6) * 1e6;
-  mfp[`${s.id}:${ym}`] = +(6 + rnd() * 9).toFixed(1);
+  const paid = loans.some((l) => l.storeId === s.id && l.status === 'PAID_OUT' && wibDate(l.paidOutAt).startsWith(ym));
+  if (paid) { rnd(); rnd(); }
 })));
 
 /** Jarak dua titik (km, haversine). */
@@ -534,48 +525,6 @@ users.filter((u) => ['TL', 'SR', 'SA'].includes(u.role) && u.status === 'ACTIVE'
   }));
 });
 
-// ---------------------------------------------------------------- skema insentif (Super Admin, PRD v3 §E)
-/**
- * Versi skema per penerima. Tier memakai rentang: cocok bila nilai ≥ from dan < to (to null = tak terbatas; review 2026-10-09).
- * Isi awal dari BRD V2.2 (PRD v3 §E1). status versi: ACTIVE | SCHEDULED | ARCHIVED; draft disimpan terpisah.
- */
-const T = (rows) => rows.map(([from, to, rate]) => ({ from, to, rate }));
-const SALES_TIERS = T([[0, 55, 0], [55, 70, 0.55], [70, 85, 0.7], [85, 100, 0.85], [100, 120, 0.9], [120, null, 1.0]]);
-const LEADER_TIERS = T([[0, 55, 0], [55, 70, 0.18], [70, 85, 0.23], [85, 100, 0.28], [100, 120, 0.3], [120, null, 0.33]]);
-const HS = 'Hendra Wijaya (Super Admin)';
-const scheme = (id, name, recipient, payday, components) => ({
-  id, name, recipient, draft: null,
-  versions: [{ version: 1, status: 'ACTIVE', effectiveFrom: '2026-08', payday, components, createdBy: HS, createdAt: day('2026-07-28'), publishedAt: day('2026-07-28') }],
-});
-export const schemes = [
-  scheme('SA', 'Sales Agent (SA)', 'SA', 10, [
-    { key: 'dailyFee', type: 'fixed', label: 'Daily Fee', amount: 108000, basis: 'per hari kerja' },
-    { key: 'paidOut', type: 'tier', label: 'Paid Out Incentive', basis: 'pencapaian target paid out', metric: 'Pencapaian', tiers: SALES_TIERS },
-  ]),
-  scheme('SR', 'Sales Representative (SR)', 'SR', 10, [
-    { key: 'dailyFee', type: 'fixed', label: 'Daily Fee', amount: 126000, basis: 'per hari kerja' },
-    { key: 'paidOut', type: 'tier', label: 'Paid Out Incentive', basis: 'pencapaian target paid out', metric: 'Pencapaian', tiers: SALES_TIERS },
-  ]),
-  scheme('TL_SENIOR', 'Team Leader Senior', 'TL_SENIOR', 10, [
-    { key: 'dailyFee', type: 'fixed', label: 'Daily Fee', amount: 165000, basis: 'per hari kerja' },
-    { key: 'leader', type: 'tier', label: 'Leader Incentive', basis: 'pencapaian target paid out tim', metric: 'Pencapaian', tiers: LEADER_TIERS },
-  ]),
-  scheme('TL_JUNIOR', 'Team Leader Junior', 'TL_JUNIOR', 10, [
-    { key: 'dailyFee', type: 'fixed', label: 'Daily Fee', amount: 126000, basis: 'per hari kerja' },
-    { key: 'leader', type: 'tier', label: 'Leader Incentive', basis: 'pencapaian target paid out tim', metric: 'Pencapaian', tiers: LEADER_TIERS },
-  ]),
-  scheme('PARTNER_RETAIL', 'Partner · Offline Retailer', 'PARTNER_RETAIL', 15, [
-    { key: 'volume', type: 'tier', label: 'Volume Incentive', basis: 'pencapaian target paid out partner', metric: 'Pencapaian', tiers: T([[0, 55, 0], [55, 70, 0.05], [70, 85, 0.1], [85, 100, 0.2], [100, null, 0.3]]) },
-    { key: 'collection', type: 'tier', label: 'Collection Incentive (MFP)', basis: 'rasio MFP partner', metric: 'MFP', tiers: T([[0, 10, 0.1], [10, 13, 0.05], [13, null, 0]]) },
-  ]),
-  scheme('PARTNER_AFFILIATE', 'Partner · Affiliate / Sales Agency', 'PARTNER_AFFILIATE', 15, [
-    { key: 'commission', type: 'percent', label: 'Commission', rate: 5, basis: 'dari total disbursement' },
-  ]),
-  scheme('CRP', 'Customer Referral Program (CRP)', 'CRP', 15, [
-    { key: 'commission', type: 'percent', label: 'CRP Commission', rate: 3, basis: 'dari total disbursement' },
-  ]),
-];
-export const RECIPIENT_LABEL = { SA: 'SA', SR: 'SR', TL_SENIOR: 'TL Senior', TL_JUNIOR: 'TL Junior', PARTNER_RETAIL: 'Partner (Offline Retailer)', PARTNER_AFFILIATE: 'Partner (Affiliate)', CRP: 'Customer (CRP)' };
 
 // Dibuat paling akhir agar urutan angka acak data contoh lain tidak bergeser.
 // Toko yang ditambahkan setelah partner Active menunggu Kode Referral (OQ-25, keputusan 2026-10-16: opsi 1) dan baru aktif

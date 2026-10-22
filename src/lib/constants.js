@@ -145,6 +145,8 @@ export const ACCOUNT_STATUS = {
 export const PIC_ACCOUNT_LABEL = { NONE: 'Belum dibuat', PENDING: 'Undangan terkirim', EXPIRED: 'Undangan terkirim', ACTIVE: 'Aktif', DISABLED: 'Dinonaktifkan' };
 
 export const PAGE_SIZE = 20;
+/** Kontak Amar Bank untuk partner (PRD Scope 3 OQ-3-32: satu nomor WhatsApp). Nomor contoh sampai ditetapkan Business. */
+export const PARTNER_CONTACT = { channel: 'WhatsApp', number: '+62 811-0000-0000' };
 /** Tautan aktivasi berlaku 3x24 jam (revisi stakeholder 2026-10-08); tautan reset password tetap 24 jam. */
 export const ACTIVATION_TTL_MS = 72 * 3600e3;
 export const RESET_TTL_MS = 24 * 3600e3;
