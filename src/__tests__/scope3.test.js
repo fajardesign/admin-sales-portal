@@ -133,3 +133,32 @@ describe('Baris sales, visibilitas, dan pembayaran', () => {
     s3Config.fee[0].fees[1].TL = 200000;
   });
 });
+
+describe('Konfigurasi (FR-CF)', () => {
+  const sa = { userId: 900, name: 'Hendra Wijaya', role: 'SUPER_ADMIN' };
+  it('validasi: tier harus bersambung, target > 0, lock < tanggal bayar', async () => {
+    const { validateConfig } = await import('../api/scope3.js');
+    const v = structuredClone(configFor('sales', '2026-10'));
+    expect(validateConfig('sales', v, '2026-10')).toEqual({});
+    v.tiers.SALES[2].from = 71; v.targets.SA = 0; v.lockDay = 12;
+    const e = validateConfig('sales', v, '2026-10');
+    expect(Object.keys(e).sort()).toEqual(['payoutDay', 'target.SA', 'tiers.SALES']);
+  });
+  it('simpan versi Oktober mengubah bulan berjalan; bulan Final ditolak; perubahan tercatat', async () => {
+    const { saveConfig, configLog } = await import('../api/scope3.js');
+    const f = structuredClone(configFor('fee', '2026-10')); f.fees[5].SA = 130000;
+    await saveConfig('fee', '2026-10', f, sa);
+    expect(configFor('fee', '2026-10').fees[5].SA).toBe(130000);
+    expect(configFor('fee', '2026-09').fees[5].SA).toBe(120000);
+    expect(configLog('fee')[0].lines).toEqual(['Daily fee Jakarta SA: Rp 120.000 → Rp 130.000']);
+    await expect(saveConfig('fee', '2026-09', f, sa)).rejects.toMatchObject({ code: 'CONFLICT' });
+    await expect(saveConfig('fee', '2026-10', f, admin)).rejects.toMatchObject({ code: 'FORBIDDEN' });
+  });
+  it('override target partner lalu hapus kembali ke default', async () => {
+    const { setPartnerTarget, partnerTarget } = await import('../api/scope3.js');
+    await setPartnerTarget('REG2026-0137', '2026-10', 250e6, 'Uji', sa);
+    expect(partnerTarget('REG2026-0137', '2026-10')).toBe(250e6);
+    await setPartnerTarget('REG2026-0137', '2026-10', null, '', sa);
+    expect(partnerTarget('REG2026-0137', '2026-10')).toBe(500e6);
+  });
+});

@@ -77,7 +77,7 @@ describe('W1 Login & akses per role', () => {
   it.each([
     ['rina.saraswati', 'Perlu tindakan Anda'],
     ['hasan.basri', 'Penjualan dan produktivitas di area Anda: Makassar.'],
-    ['hendra.wijaya', 'Kelola komponen, tier, dan tanggal bayar insentif. Skema ini dipakai untuk semua estimasi insentif.'],
+    ['hendra.wijaya', 'Target, tier insentif, gaji pokok, dan insentif partner per bulan. Dipakai untuk semua perhitungan.'],
   ])('%s masuk ke beranda role-nya', async (id, desc) => {
     await start(id);
     expect(await screen.findByText(desc, {}, T)).toBeTruthy();
@@ -525,30 +525,32 @@ describe('APL', () => {
 });
 
 describe('Super Admin', () => {
-  it('buat versi baru, ubah daily fee, terbitkan mulai bulan depan', async () => {
+  it('Skema Insentif (PRD Scope 3): ubah target SA bulan berjalan, konfirmasi, tercatat di riwayat', async () => {
     const user = await start('hendra.wijaya');
-    await user.click(await screen.findByText('Sales Agent (SA)', {}, T));
-    await user.click(await screen.findByRole('button', { name: 'Buat Versi Baru' }, T));
-    const fee = await screen.findByDisplayValue('108000', {}, T);
-    await user.clear(fee);
-    await user.type(fee, '115000');
-    await user.click(screen.getByRole('button', { name: 'Terbitkan' }));
-    const dlg = await screen.findByRole('dialog', {}, T);
-    expect(within(dlg).getByText(/\[TBD: Apakah versi baru perlu persetujuan approver kedua/)).toBeTruthy();
-    await user.click(within(dlg).getByRole('button', { name: 'Terbitkan' }));
-    expect(await screen.findByText('Versi skema berhasil diterbitkan.', {}, T)).toBeTruthy();
-    expect(await screen.findByText('Terjadwal', {}, T)).toBeTruthy();
+    expect(await screen.findByText('Target per peran (per bulan)', {}, T)).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Ubah konfigurasi' }));
+    const target = await screen.findByDisplayValue('100000000', {}, T);
+    await user.clear(target);
+    await user.type(target, '110000000');
+    await user.click(screen.getByRole('button', { name: 'Simpan' }));
+    await user.click(await screen.findByRole('button', { name: 'Ya, simpan' }, T));
+    expect(await screen.findByText('Konfigurasi Insentif Sales disimpan, berlaku mulai Oktober 2026.', {}, T)).toBeTruthy();
+    expect(await screen.findByText(/Target SA: Rp.100\.000\.000 → Rp.110\.000\.000/, {}, T)).toBeTruthy();
   });
 
-  it('batas tier harus naik', async () => {
+  it('Skema Insentif: tanggal bayar harus setelah tanggal lock; Gaji Pokok menampilkan daily fee per area', async () => {
     const user = await start('hendra.wijaya');
-    await user.click(await screen.findByText('Sales Agent (SA)', {}, T));
-    await user.click(await screen.findByRole('button', { name: 'Buat Versi Baru' }, T));
-    const t2 = await screen.findByLabelText('Sampai tier 2', {}, T);
-    await user.clear(t2);
-    await user.type(t2, '40');
-    await user.click(screen.getByRole('button', { name: 'Simpan Draf' }));
-    expect(await screen.findByText('Harus lebih dari 55%', {}, T)).toBeTruthy();
+    await user.click(await screen.findByRole('button', { name: 'Ubah konfigurasi' }, T));
+    const lock = await screen.findByDisplayValue('5', {}, T);
+    await user.clear(lock);
+    await user.type(lock, '12');
+    await user.click(screen.getByRole('button', { name: 'Simpan' }));
+    await user.click(await screen.findByRole('button', { name: 'Ya, simpan' }, T));
+    expect(await screen.findByText('Tanggal bayar harus setelah tanggal lock', {}, T)).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Batal' }));
+    await user.click(screen.getByRole('tab', { name: 'Gaji Pokok' }));
+    expect(await screen.findByText('Daily fee per area dan peran (Rp per hari valid)', {}, T)).toBeTruthy();
+    expect(screen.getAllByText('Makassar').length).toBeGreaterThan(0);
   });
 
   it('Hasil Perhitungan (PRD Scope 3): tab Sales dan Partner, status bulan, status pembayaran, ekspor', async () => {

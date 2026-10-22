@@ -15,6 +15,7 @@
 import { attendance, CURRENT_MONTH, loans, now, partners, s3Config, s3Payments, users, wibDate } from './db.js';
 import { ApiError, actorOf, listGate, monthRange, userById, wait } from './mockApi.js';
 import { getScenario } from '../dev/scenario.js';
+import { areaName } from '../lib/constants.js';
 
 /** Hari ini untuk status bulan Scope 3; DevToolbar "Tanggal Scope 3" bisa memundurkannya ke sebelum lock. */
 export const s3Today = () => getScenario().s3Today ?? '2026-10-07';
@@ -280,3 +281,122 @@ export async function markPaid(ym, keys, paidAt, session) {
 export const historyMonths = (months) => [...months].reverse().slice(0, 12);
 /** Rentang tanggal bulan ym (re-ekspor untuk layar). */
 export const rangeOf = monthRange;
+
+// ------------------------------------------------------------------ konfigurasi (Super Admin, FR-CF-001/003/004)
+export const CONFIG_LABEL = { sales: 'Insentif Sales', fee: 'Gaji Pokok', partner: 'Insentif Partner' };
+const ROLES3 = ['SA', 'SR', 'TL'];
+const rp = (n) => `Rp ${Math.round(n).toLocaleString('id-ID')}`;
+/** Bulan yang boleh diubah: bulan Menunggu rekonsiliasi, bulan berjalan, dan 3 bulan ke depan (bulan Final hanya baca). */
+export function editableMonths() {
+  const out = [];
+  for (let m = '2026-05', i = 0; i < 12; m = nextYm(m), i += 1) out.push(m);
+  const upto = nextYm(nextYm(nextYm(CURRENT_MONTH)));
+  return out.filter((m) => m <= upto && monthStatus(m) !== 'FINAL');
+}
+/** Status versi relatif bulan berjalan: ACTIVE | SCHEDULED | ARCHIVED. */
+export function versionState(kind, v) {
+  if (configFor(kind, CURRENT_MONTH).version === v.version) return 'ACTIVE';
+  return v.effectiveFrom > CURRENT_MONTH ? 'SCHEDULED' : 'ARCHIVED';
+}
+export const listVersions = (kind) => [...s3Config[kind]].sort((a, b) => b.version - a.version).map((v) => ({ ...v, state: versionState(kind, v) }));
+export const configLog = (kind) => s3Config.log.filter((e) => !kind || e.kind === kind).sort((a, b) => b.at - a.at);
+
+/** Tier bersambung: mulai dari kosong (≤), tiap batas bawah = batas atas sebelumnya, terakhir tanpa batas atas; koefisien 0–100%. */
+export function tierErrors(tiers) {
+  if (!tiers?.length) return 'Isi minimal satu tier';
+  const t = [...tiers];
+  if (t[0].from != null) return 'Tier pertama harus mulai dari 0% (tanpa batas bawah)';
+  if (t[t.length - 1].to != null) return 'Tier terakhir harus tanpa batas atas';
+  for (let i = 0; i < t.length; i += 1) {
+    if (!(t[i].rate >= 0 && t[i].rate <= 100)) return 'Koefisien harus 0–100%';
+    if (i > 0 && t[i].from !== t[i - 1].to) return 'Tier harus bersambung tanpa celah atau tumpang tindih';
+    if (t[i].from != null && t[i].to != null && !(t[i].to > t[i].from)) return 'Batas atas harus lebih besar dari batas bawah';
+  }
+  return null;
+}
+/** Validasi nilai versi; hasil { field: pesan } (kosong = valid). */
+export function validateConfig(kind, v, ym) {
+  const e = {};
+  const pos = (x) => typeof x === 'number' && Number.isFinite(x) && x > 0;
+  if (kind === 'sales') {
+    ROLES3.forEach((r) => { if (!pos(v.targets?.[r])) e[`target.${r}`] = 'Target harus lebih dari 0'; });
+    ['SALES', 'TL'].forEach((k) => { const m = tierErrors(v.tiers?.[k]); if (m) e[`tiers.${k}`] = m; });
+    if (!(v.lockDay >= 1 && v.lockDay <= 28)) e.lockDay = 'Tanggal lock 1–28';
+    if (!(v.payoutDay >= 1 && v.payoutDay <= 28)) e.payoutDay = 'Tanggal bayar 1–28';
+    else if (!(v.lockDay < v.payoutDay)) e.payoutDay = 'Tanggal bayar harus setelah tanggal lock';
+  } else if (kind === 'fee') {
+    Object.keys(v.fees ?? {}).forEach((a) => ROLES3.forEach((r) => { if (!pos(v.fees[a]?.[r])) e[`fee.${a}.${r}`] = 'Wajib diisi'; }));
+    if (!(Number.isInteger(v.maxDays) && v.maxDays >= 1 && v.maxDays <= 31)) e.maxDays = 'Maksimal hari dibayar 1–31';
+    if (!(v.multiplier >= 1)) e.multiplier = 'Multiplier minimal 1';
+    if (!(v.threshold > 0)) e.threshold = 'Threshold harus lebih dari 0';
+  } else {
+    if (!pos(v.defaultTarget)) e.defaultTarget = 'Target harus lebih dari 0';
+    const m = tierErrors(v.tiers); if (m) e.tiers = m;
+    const lock = configFor('sales', ym).lockDay;
+    if (!(v.payoutDay >= 1 && v.payoutDay <= 28)) e.payoutDay = 'Tanggal bayar 1–28';
+    else if (!(v.payoutDay > lock)) e.payoutDay = `Tanggal bayar harus setelah tanggal lock (${lock})`;
+  }
+  return e;
+}
+/** Ringkasan perubahan lama → baru untuk log. */
+function diffLines(kind, a, b) {
+  const out = [];
+  const same = (x, y) => JSON.stringify(x) === JSON.stringify(y);
+  if (kind === 'sales') {
+    ROLES3.forEach((r) => { if (a.targets[r] !== b.targets[r]) out.push(`Target ${r}: ${rp(a.targets[r])} → ${rp(b.targets[r])}`); });
+    if (!same(a.tiers.SALES, b.tiers.SALES)) out.push('Tabel tier SA/SR diubah');
+    if (!same(a.tiers.TL, b.tiers.TL)) out.push('Tabel tier TL diubah');
+    if (a.lockDay !== b.lockDay) out.push(`Tanggal lock: ${a.lockDay} → ${b.lockDay}`);
+    if (a.payoutDay !== b.payoutDay) out.push(`Tanggal bayar sales: ${a.payoutDay} → ${b.payoutDay}`);
+  } else if (kind === 'fee') {
+    Object.keys(b.fees).forEach((ar) => ROLES3.forEach((r) => {
+      if (a.fees[ar]?.[r] !== b.fees[ar][r]) out.push(`Daily fee ${areaName(Number(ar))} ${r}: ${a.fees[ar]?.[r] ? rp(a.fees[ar][r]) : '-'} → ${rp(b.fees[ar][r])}`);
+    }));
+    if (a.maxDays !== b.maxDays) out.push(`Maksimal hari dibayar: ${a.maxDays} → ${b.maxDays}`);
+    if (a.multiplier !== b.multiplier) out.push(`Multiplier: ${a.multiplier} → ${b.multiplier}`);
+    if (a.threshold !== b.threshold) out.push(`Threshold capaian: ${a.threshold}% → ${b.threshold}%`);
+    if (!same([...a.roles].sort(), [...b.roles].sort())) out.push(`Peran multiplier: ${a.roles.join(', ') || '-'} → ${b.roles.join(', ') || '-'}`);
+  } else {
+    if (a.defaultTarget !== b.defaultTarget) out.push(`Target partner default: ${rp(a.defaultTarget)} → ${rp(b.defaultTarget)}`);
+    if (!same(a.tiers, b.tiers)) out.push('Tabel tier volume diubah');
+    if (a.payoutDay !== b.payoutDay) out.push(`Tanggal bayar partner: ${a.payoutDay} → ${b.payoutDay}`);
+  }
+  return out.length ? out : ['Tanpa perubahan nilai'];
+}
+const FIELDS = { sales: ['targets', 'tiers', 'lockDay', 'payoutDay'], fee: ['fees', 'maxDays', 'multiplier', 'threshold', 'roles'], partner: ['defaultTarget', 'tiers', 'payoutDay'] };
+
+/**
+ * Simpan versi konfigurasi berlaku mulai bulan ym (bukan bulan Final). Versi dengan bulan yang sama diganti; selain itu versi
+ * baru. Berlaku pada pengambilan data berikutnya. Error: FORBIDDEN | CONFLICT (bulan Final) | INVALID (field = { field: pesan }).
+ */
+export async function saveConfig(kind, ym, values, session) {
+  await wait(400);
+  if (session.role !== 'SUPER_ADMIN') throw new ApiError('FORBIDDEN');
+  if (monthStatus(ym) === 'FINAL' || !editableMonths().includes(ym)) throw new ApiError('CONFLICT');
+  const errors = validateConfig(kind, values, ym);
+  if (Object.keys(errors).length) throw new ApiError('INVALID', errors);
+  const before = configFor(kind, ym);
+  const picked = Object.fromEntries(FIELDS[kind].map((k) => [k, structuredClone(values[k])]));
+  const list = s3Config[kind];
+  const same = list.find((x) => x.effectiveFrom === ym);
+  const version = same ? same.version : Math.max(...list.map((x) => x.version)) + 1;
+  const entry = { version, effectiveFrom: ym, ...picked, by: actorOf(session), at: now() };
+  if (same) Object.assign(same, entry); else list.push(entry);
+  s3Config.log.push({ kind, at: now(), by: actorOf(session), effectiveFrom: ym, version, lines: diffLines(kind, before, entry) });
+  return entry;
+}
+/** Override target partner untuk bulan ym (amount null = hapus, pakai target default). Bulan Final tidak bisa diubah. */
+export async function setPartnerTarget(pid, ym, amount, reason, session) {
+  await wait(300);
+  if (session.role !== 'SUPER_ADMIN') throw new ApiError('FORBIDDEN');
+  if (monthStatus(ym) === 'FINAL') throw new ApiError('CONFLICT');
+  if (amount != null && !(amount > 0)) throw new ApiError('INVALID', { amount: 'Target harus lebih dari 0' });
+  const p = partners.find((x) => x.id === pid);
+  const before = partnerTarget(pid, ym);
+  s3Config.partnerTargets = s3Config.partnerTargets.filter((t) => !(t.partnerId === pid && t.ym === ym));
+  if (amount != null) s3Config.partnerTargets.push({ partnerId: pid, ym, amount, reason: (reason ?? '').trim(), by: actorOf(session), at: now() });
+  s3Config.log.push({ kind: 'partner', at: now(), by: actorOf(session), effectiveFrom: ym, version: null,
+    lines: [`Target ${p?.partnerName ?? pid} ${ym}: ${rp(before)} → ${amount != null ? rp(amount) : `default ${rp(configFor('partner', ym).defaultTarget)}`}${reason ? ` (${reason.trim()})` : ''}`] });
+  return partnerTarget(pid, ym);
+}
+export const partnerTargetList = () => [...s3Config.partnerTargets].sort((a, b) => (a.ym < b.ym ? 1 : -1));
