@@ -1054,11 +1054,19 @@ export const maskName = (n) => n.split(' ').map((w) => w.slice(0, 2) + '•'.rep
 export const CRM_STATUS = { SUBMITTED: 'Pengajuan', IN_PROCESS: 'Diproses', APPROVED: 'Disetujui', REJECTED: 'Ditolak', PAID_OUT: 'Dicairkan' };
 
 /** Agregat metrik penjualan dari daftar pinjaman (berdasarkan tanggal pengajuan). */
+/** Pinjaman dihitung untuk insentif (PRD Scope 3): cair di bulan yang sama dengan pengajuan (WIB). */
+const countedLoan = (l) => l.status === 'PAID_OUT' && wibDate(l.submittedAt).slice(0, 7) === wibDate(l.paidOutAt).slice(0, 7);
 function salesStats(rows) {
   const submitted = rows.length;
   const accepted = rows.filter((l) => l.status === 'APPROVED' || l.status === 'PAID_OUT').length;
   const paid = rows.filter((l) => l.status === 'PAID_OUT');
-  return { submitted, accepted, paidOut: paid.length, paidOutUnits: paid.reduce((a, l) => a + l.units, 0), paidOutAmount: paid.reduce((a, l) => a + l.amount, 0), acceptanceRate: pct(accepted, submitted) };
+  const counted = paid.filter(countedLoan);
+  return {
+    submitted, accepted, paidOut: paid.length, paidOutUnits: paid.reduce((a, l) => a + l.units, 0), paidOutAmount: paid.reduce((a, l) => a + l.amount, 0), acceptanceRate: pct(accepted, submitted),
+    // Status portal Scope 3 (FR-LP-003): Disetujui = disetujui belum cair; Ditolak; Dihitung untuk insentif = cair di bulan pengajuan.
+    approvedOnly: rows.filter((l) => l.status === 'APPROVED').length, rejected: rows.filter((l) => l.status === 'REJECTED' || l.status === 'CANCELLED').length,
+    countedAmount: counted.reduce((a, l) => a + l.amount, 0), countedCount: counted.length,
+  };
 }
 const scopeLoans = (areaIds, period, f = {}) => loans.filter((l) => inArea(areaIds, l.areaId) && inP(wibDate(l.submittedAt), period) && (!f.channel || l.channel === f.channel));
 
@@ -1204,12 +1212,19 @@ export async function aplSalesRows(areaIds, period, path = {}, f = {}, { retry =
 /** Daftar pinjaman untuk satu baris drill-down (read-only, disamarkan). scope: { area, tl, sales, partner, store }. */
 export async function aplLoans(areaIds, period, scope, f = {}, page = 1) {
   await wait(250);
-  const rows = filterPath(scopeLoans(areaIds, period, { channel: f.channel }), scope).sort((a, b) => b.updatedAt - a.updatedAt);
+  const PORTAL = { SUBMITTED: 'DIAJUKAN', IN_PROCESS: 'DIAJUKAN', APPROVED: 'DISETUJUI', REJECTED: 'DITOLAK', CANCELLED: 'DITOLAK', PAID_OUT: 'CAIR' };
+  const rows = filterPath(scopeLoans(areaIds, period, { channel: f.channel }), scope).filter((l) => !f.status || (PORTAL[l.status] ?? 'DIAJUKAN') === f.status)
+    .sort((a, b) => b.submittedAt - a.submittedAt);
   return {
     total: rows.length,
     rows: rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((l) => {
       const p = findP(l.partnerId);
-      return { id: l.id, maskedId: maskId(l.id), customer: maskName(l.customer), store: p.stores.find((x) => x.id === l.storeId).name, sales: l.salesId ? userById(l.salesId).fullName : null, amount: l.amount, status: l.status, rejectionReason: l.rejectionReason, updatedAt: l.updatedAt };
+      return {
+        id: l.id, maskedId: maskId(l.id), customer: maskName(l.customer), store: p.stores.find((x) => x.id === l.storeId).name,
+        sales: l.salesId ? userById(l.salesId).fullName : null, tl: l.tlId ? userById(l.tlId)?.fullName ?? null : null, amount: l.amount,
+        status: l.status, portalStatus: PORTAL[l.status] ?? 'DIAJUKAN', rejectionReason: l.rejectionReason, submittedAt: l.submittedAt, paidOutAt: l.paidOutAt, updatedAt: l.updatedAt,
+        paidLater: l.status === 'PAID_OUT' && !countedLoan(l),
+      };
     }),
   };
 }
