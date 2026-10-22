@@ -12,7 +12,7 @@ import {
 import { hydrateUsers, syncUser } from './supabaseSync.js';
 
 const TEST = import.meta.env.MODE === 'test';
-const wait = (ms) => new Promise((r) => setTimeout(r, TEST ? 0 : ms));
+export const wait = (ms) => new Promise((r) => setTimeout(r, TEST ? 0 : ms));
 const clone = (o) => structuredClone(o);
 
 /** Bus perubahan data (mis. simulasi kirim ulang dari DevToolbar) agar layar terbuka memuat ulang. */
@@ -27,7 +27,7 @@ export class ApiError extends Error {
 }
 
 /** Skenario tabel dari DevToolbar (loading/empty/error) — diabaikan saat "Coba lagi". */
-async function listGate(retry) {
+export async function listGate(retry) {
   const { tableState } = getScenario();
   if (!retry && tableState === 'loading') return new Promise(() => {});
   await wait(450);
@@ -77,7 +77,7 @@ export const actorLabel = (by) => {
   const u = userById(by);
   return u ? `${u.fullName} (${ROLES[u.role].short})` : '-';
 };
-const actorOf = (session) => `${session.name} (${ROLES[session.role].short})`;
+export const actorOf = (session) => `${session.name} (${ROLES[session.role].short})`;
 const inArea = (ids, areaId) => !ids || ids.length === 0 || ids.includes(areaId);
 
 // ------------------------------------------------------------------ auth (W1)

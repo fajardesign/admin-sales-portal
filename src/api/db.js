@@ -582,3 +582,43 @@ export const RECIPIENT_LABEL = { SA: 'SA', SR: 'SR', TL_SENIOR: 'TL Senior', TL_
 // setelah Admin mengisi kode + QR, lalu menunggu penugasan TL oleh APL (PRD Scope 1 v1.1 C6/C7: toko baru tanpa kursi).
 p139.stores.push({ ...store(p139, 3, { branch: 'Antang', addedBy: 22, addedAt: ago(26) }), status: 'WAITING_REFERRAL', tlId: null });
 p139.businessLocationCount = 4;
+
+// ---------------------------------------------------------------- PRD Scope 3 (Sales Pipeline & Incentive Monitoring)
+// Dibuat paling akhir dan tanpa angka acak agar data contoh lain tidak bergeser.
+const S3_SALES_TIERS = [[null, 55, 0], [55, 70, 0.55], [70, 85, 0.7], [85, 100, 0.85], [100, 120, 0.9], [120, null, 1]];
+const S3_TL_TIERS = [[null, 55, 0], [55, 70, 0.18], [70, 85, 0.23], [85, 100, 0.28], [100, 120, 0.3], [120, null, 0.33]];
+const S3_PARTNER_TIERS = [[null, 55, 0], [55, 70, 0.05], [70, 85, 0.1], [85, 100, 0.2], [100, null, 0.3]];
+/** Tier Scope 3: { from, to, rate } — capaian > from dan ≤ to (from null = mulai 0, to null = tanpa batas atas); rate dalam persen. */
+const s3Tiers = (rows) => rows.map(([from, to, rate]) => ({ from, to, rate }));
+const S3_SEED_BY = 'Hendra Wijaya (Super Admin)';
+const S3_SEED_AT = new Date('2026-04-25T09:00:00+07:00');
+/**
+ * Konfigurasi Scope 3 berversi per bulan efektif (FR-CF-001, FR-CF-003, FR-CF-004). Versi berlaku dari effectiveFrom sampai versi
+ * berikutnya. Nilai awal = PRD Scope 3 (keputusan 2026-10-22): target SA 100 jt, SR 150 jt, TL 1,5 M; daily fee SA/SR Rp 120.000,
+ * TL Rp 200.000 di semua area; maks. 26 hari dibayar; multiplier ×2 bila capaian > 100% untuk SA, SR, TL; lock tanggal 5,
+ * bayar sales tanggal 10, partner tanggal 15; target partner default Rp 500 jt.
+ */
+export const s3Config = {
+  sales: [{
+    version: 1, effectiveFrom: '2026-05', targets: { SA: 100e6, SR: 150e6, TL: 1.5e9 },
+    tiers: { SALES: s3Tiers(S3_SALES_TIERS), TL: s3Tiers(S3_TL_TIERS) }, lockDay: 5, payoutDay: 10, by: S3_SEED_BY, at: S3_SEED_AT,
+  }],
+  fee: [{
+    version: 1, effectiveFrom: '2026-05', fees: Object.fromEntries(AREAS.map((a) => [a.id, { SA: 120000, SR: 120000, TL: 200000 }])),
+    maxDays: 26, multiplier: 2, threshold: 100, roles: ['SA', 'SR', 'TL'], by: S3_SEED_BY, at: S3_SEED_AT,
+  }],
+  partner: [{ version: 1, effectiveFrom: '2026-05', defaultTarget: 500e6, tiers: s3Tiers(S3_PARTNER_TIERS), payoutDay: 15, by: S3_SEED_BY, at: S3_SEED_AT }],
+  /** Override target per partner per bulan (FR-CF-004). */
+  partnerTargets: [{ partnerId: 'REG2026-0139', ym: '2026-10', amount: 300e6, reason: 'Partner baru, target disesuaikan', by: S3_SEED_BY, at: new Date('2026-09-28T10:00:00+07:00') }],
+  /** Log perubahan konfigurasi (aktor, waktu, lama → baru). */
+  log: [],
+};
+/**
+ * Catatan pembayaran (FR-PY): kunci `${kind}:${id}:${ym}` (kind SALES | PARTNER) → { correction, note, paidAt, paidBy, log }.
+ * Data contoh: bulan Final sebelum Final terakhir dianggap sudah dibayar pada tanggal jadwal (paidThrough); satu koreksi contoh
+ * di Agustus untuk SR Siti (FR-PY-005).
+ */
+export const s3Payments = {
+  paidThrough: '2026-08',
+  records: { 'SALES:11:2026-08': { correction: 150000, note: 'Koreksi Juli 2026', paidAt: null, paidBy: null, log: [] } },
+};
