@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # perlu tag prd-v1.1
+          fetch-depth: 0 # perlu tag prd-v*
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -32,22 +32,25 @@ jobs:
           # Pages adalah demo prototipe: tampilkan DevToolbar + catatan demo.
           VITE_DEMO: 'true'
           VITE_BASE: /admin-sales-portal/
-          VITE_PRD_VERSION: '2.0'
-      # PRD 1.1 beku di tag prd-v1.1, tayang di /v1.1/ (keputusan 2026-10-17). Dilewati bila tag belum ada.
-      - name: Build PRD 1.1 (tag prd-v1.1)
+          VITE_PRD_VERSION: '3.0'
+      # Versi PRD lama beku di tag prd-v<versi>, tayang di /v<versi>/ (keputusan 2026-10-17, 2026-10-22). Pemilih versi
+      # (src/lib/version.js, src/components/VersionTag.jsx) disalin dari main agar tautan antar versi selalu lengkap.
+      # Versi yang tag-nya belum ada dilewati.
+      - name: Build PRD versi lama (tag prd-v1.1, prd-v2.0)
         run: |
-          if git rev-parse -q --verify refs/tags/prd-v1.1 >/dev/null; then
-            git worktree add "$RUNNER_TEMP/prd-v1.1" prd-v1.1
-            cd "$RUNNER_TEMP/prd-v1.1"
-            npm ci
-            npx vite build --outDir "$GITHUB_WORKSPACE/dist/v1.1" --emptyOutDir
-          else
-            echo "Tag prd-v1.1 belum ada; hanya versi utama yang dibangun."
-          fi
+          for v in 1.1 2.0; do
+            if git rev-parse -q --verify "refs/tags/prd-v$v" >/dev/null; then
+              git worktree add "$RUNNER_TEMP/prd-v$v" "prd-v$v"
+              cp src/lib/version.js "$RUNNER_TEMP/prd-v$v/src/lib/version.js"
+              cp src/components/VersionTag.jsx "$RUNNER_TEMP/prd-v$v/src/components/VersionTag.jsx"
+              (cd "$RUNNER_TEMP/prd-v$v" && npm ci && VITE_BASE="/${REPO}/v$v/" VITE_PRD_VERSION="$v" npx vite build --outDir "$GITHUB_WORKSPACE/dist/v$v" --emptyOutDir)
+            else
+              echo "Tag prd-v$v belum ada; dilewati."
+            fi
+          done
         env:
           VITE_DEMO: 'true'
-          VITE_BASE: /admin-sales-portal/v1.1/
-          VITE_PRD_VERSION: '1.1'
+          REPO: admin-sales-portal
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
