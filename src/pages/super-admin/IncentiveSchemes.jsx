@@ -4,6 +4,7 @@ import { ActionModal } from '../../components/ActionModal.jsx';
 import { AdminShell } from '../../components/AdminShell.jsx';
 import { DataTable } from '../../components/DataTable.jsx';
 import { KeyValueGrid, SectionCard } from '../../components/KeyValueGrid.jsx';
+import { StickyBar } from '../../components/StickyBar.jsx';
 import { useToast } from '../../components/Toaster.jsx';
 import { MonthStatusBadge } from '../../components/scope3/S3Common.jsx';
 import { ApiError, perfMonths } from '../../api/mockApi.js';
@@ -51,7 +52,9 @@ export function IncentiveSchemes({ user, onLogout, query }) {
 
   return (
     <AdminShell active="/skema-insentif" icon="CoinsLine" title="Skema Insentif" description="Target, tier insentif, gaji pokok, dan insentif partner per bulan. Dipakai untuk semua perhitungan." user={user} onLogout={onLogout}>
-      <TabMenuHorizontal value={tab} onChange={(v) => set({ tab: v === 'sales' ? '' : v })} items={TABS} />
+      <StickyBar flush>
+        <TabMenuHorizontal value={tab} onChange={(v) => set({ tab: v === 'sales' ? '' : v })} items={TABS} />
+      </StickyBar>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
         <div style={{ width: 280 }}>
           <Select size="sm" value={ym} onChange={(v) => set({ m: v })}
@@ -62,17 +65,21 @@ export function IncentiveSchemes({ user, onLogout, query }) {
         <Button size="sm" onClick={() => setEditing(true)}>Ubah konfigurasi</Button>
       </div>
       {final && <Alert status="information" size="sm" title={`${monthLabel(ym, true)} sudah Final dan hanya bisa dilihat. Perubahan dibuat untuk bulan yang belum Final.`} />}
-      <div key={`${tab}-${ym}-${rev}`} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 'var(--space-16)', alignItems: 'start' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-16)' }}>
-          {tab === 'sales' && <SalesView cfg={cfg} />}
-          {tab === 'fee' && <FeeView cfg={cfg} />}
-          {tab === 'partner' && <PartnerView cfg={cfg} ym={ym} user={user} onChanged={() => setRev((x) => x + 1)} />}
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-16)' }}>
+      {/* Ringkasan dan simulator berdampingan; setiap tabel di section sendiri selebar konten (keputusan 2026-10-26). */}
+      <div key={`${tab}-${ym}-${rev}`} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-16)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: 'var(--space-16)', alignItems: 'start' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-16)' }}>
+            {tab === 'sales' && <SalesSummary cfg={cfg} />}
+            {tab === 'fee' && <FeeSummary cfg={cfg} />}
+            {tab === 'partner' && <PartnerSummary cfg={cfg} />}
+          </div>
           {tab === 'partner' ? <PartnerSimulator ym={ym} /> : <SalesSimulator ym={ym} />}
-          <VersionList kind={tab} />
-          <ChangeLog kind={tab} />
         </div>
+        {tab === 'sales' && <SalesTables cfg={cfg} />}
+        {tab === 'fee' && <FeeTables cfg={cfg} />}
+        {tab === 'partner' && <PartnerTables cfg={cfg} ym={ym} user={user} onChanged={() => setRev((x) => x + 1)} />}
+        <VersionList kind={tab} />
+        <ChangeLog kind={tab} />
       </div>
       {editing && <ConfigEditor kind={tab} startMonth={editableMonths(tab).includes(ym) ? ym : CURRENT_MONTH} user={user}
         onClose={() => setEditing(false)} onSaved={(m) => { setEditing(false); setRev((x) => x + 1); set({ m }); }} />}
@@ -81,14 +88,12 @@ export function IncentiveSchemes({ user, onLogout, query }) {
 }
 
 // ------------------------------------------------------------------ tampilan per tab
-function SalesView({ cfg }) {
+function SalesSummary({ cfg }) {
   return (
     <>
       <SectionCard title="Target per peran (per bulan)">
         <KeyValueGrid columns={3} items={ROLES3.map((r) => ({ label: r === 'TL' ? 'TL (Senior dan Junior)' : r, value: formatRp(cfg.targets[r]) }))} />
       </SectionCard>
-      <SectionCard title="Tier insentif SA/SR"><TierTableView tiers={cfg.tiers.SALES} /></SectionCard>
-      <SectionCard title="Tier insentif TL"><TierTableView tiers={cfg.tiers.TL} /></SectionCard>
       <SectionCard title="Jadwal">
         <KeyValueGrid items={[{ label: 'Tanggal tutup buku (cut-off) sales', value: `Tanggal ${cfg.lockDay} bulan berikutnya` }, { label: 'Tanggal bayar sales', value: `Tanggal ${cfg.payoutDay} bulan berikutnya` }]} />
         <span style={muted}>{CUTOFF_HINT}</span>
@@ -97,17 +102,20 @@ function SalesView({ cfg }) {
   );
 }
 
-function FeeView({ cfg }) {
+function SalesTables({ cfg }) {
+  return (
+    <>
+      <SectionCard title="Tier insentif SA/SR"><TierTableView tiers={cfg.tiers.SALES} /></SectionCard>
+      <SectionCard title="Tier insentif TL"><TierTableView tiers={cfg.tiers.TL} /></SectionCard>
+    </>
+  );
+}
+
+function FeeSummary({ cfg }) {
   const missing = AREAS.filter((a) => !cfg.fees[a.id]);
   return (
     <>
       {missing.map((a) => <Alert key={a.id} status="warning" size="sm" title={`Daily fee belum diatur untuk ${a.name}`} />)}
-      <SectionCard title="Daily fee per area dan peran (Rp per hari valid)">
-        <DataTable rows={AREAS.filter((a) => cfg.fees[a.id])} rowKey={(a) => a.id} minWidth={420} columns={[
-          { key: 'a', header: 'Area', render: (a) => ({ priority: 'leading', title: a.name }) },
-          ...ROLES3.map((r) => ({ key: r, header: r, align: 'right', render: (a) => nowrap(formatRp(cfg.fees[a.id][r])) })),
-        ]} />
-      </SectionCard>
       <SectionCard title="Aturan gaji pokok">
         <KeyValueGrid items={[
           { label: 'Maksimal hari dibayar', value: `${cfg.maxDays} hari per bulan` }, { label: 'Multiplier', value: `×${String(cfg.multiplier).replace('.', ',')}` },
@@ -119,17 +127,33 @@ function FeeView({ cfg }) {
   );
 }
 
-function PartnerView({ cfg, ym, user, onChanged }) {
+function FeeTables({ cfg }) {
+  return (
+    <SectionCard title="Daily fee per area dan peran (Rp per hari valid)">
+      <DataTable rows={AREAS.filter((a) => cfg.fees[a.id])} rowKey={(a) => a.id} minWidth={420} columns={[
+        { key: 'a', header: 'Area', render: (a) => ({ priority: 'leading', title: a.name }) },
+        ...ROLES3.map((r) => ({ key: r, header: r, align: 'right', render: (a) => nowrap(formatRp(cfg.fees[a.id][r])) })),
+      ]} />
+    </SectionCard>
+  );
+}
+
+function PartnerSummary({ cfg }) {
+  return (
+    <SectionCard title="Target dan jadwal">
+      <KeyValueGrid items={[{ label: 'Target partner default', value: `${formatRp(cfg.defaultTarget)} per bulan`, full: true },
+        { label: 'Tanggal tutup buku (cut-off) partner', value: `Tanggal ${cfg.lockDay} bulan berikutnya` }, { label: 'Tanggal bayar partner', value: `Tanggal ${cfg.payoutDay} bulan berikutnya` }]} />
+      <span style={muted}>{PARTNER_CUTOFF_HINT}</span>
+    </SectionCard>
+  );
+}
+
+function PartnerTables({ cfg, ym, user, onChanged }) {
   const toast = useToast();
   const [modal, setModal] = useState(null); // { partnerId?, ym? }
   const list = partnerTargetList();
   return (
     <>
-      <SectionCard title="Target dan jadwal">
-        <KeyValueGrid items={[{ label: 'Target partner default', value: `${formatRp(cfg.defaultTarget)} per bulan`, full: true },
-          { label: 'Tanggal tutup buku (cut-off) partner', value: `Tanggal ${cfg.lockDay} bulan berikutnya` }, { label: 'Tanggal bayar partner', value: `Tanggal ${cfg.payoutDay} bulan berikutnya` }]} />
-        <span style={muted}>{PARTNER_CUTOFF_HINT}</span>
-      </SectionCard>
       <SectionCard title="Tier insentif volume"><TierTableView tiers={cfg.tiers} /></SectionCard>
       <SectionCard title="Target per partner" actions={<Button size="xs" variant="stroke" tone="neutral" onClick={() => setModal({ ym: editableMonths('partner').includes(ym) ? ym : editableMonths('partner')[0] })}>Atur target partner</Button>}>
         {list.length === 0 ? <span style={muted}>Semua partner memakai target default.</span> : (
