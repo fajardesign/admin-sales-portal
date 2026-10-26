@@ -93,8 +93,8 @@ function AplStoresView({ user, onLogout, query }) {
       )}
       <PeriodFilter path="/apl/toko-aktif" query={query} user={user} period={period}>
         <div style={{ width: 160 }}><Select size="sm" value={q.channel ?? ''} placeholder="Semua channel" onChange={(x) => set({ channel: x })} options={[{ value: '', label: 'Semua channel' }, ...Object.entries(CHANNEL).map(([value, label]) => ({ value, label }))]} /></div>
+        <SearchField placeholder="Cari toko, partner, TL, SA/SR, atau kode" value={q.q ?? ''} onChange={(x) => set({ q: x })} />
       </PeriodFilter>
-      <SearchField placeholder="Cari toko, partner, TL, SA/SR, atau kode" value={q.q ?? ''} onChange={(x) => set({ q: x })} />
       {picked.size > 0 && (
         <div role="region" aria-label="Toko dipilih" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-12)', padding: 'var(--space-10) var(--space-16)', borderRadius: 'var(--rounded-12)', background: 'var(--bg-weak-50)', boxShadow: 'var(--shadow-stroke)' }}>
           <span style={{ flex: 1, font: 'var(--label-sm)', color: 'var(--text-strong-950)' }}>{picked.size} toko dipilih</span>

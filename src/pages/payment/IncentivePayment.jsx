@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Button, Checkbox, CheckboxLabel, Drawer, DrawerHeader, LinkButton, Select, TabMenuHorizontal, TextArea, TextInput } from '@ds/index.js';
+import { Alert, Button, Checkbox, CheckboxLabel, Drawer, DrawerHeader, Icon, LinkButton, Select, TabMenuHorizontal, TextArea, TextInput, Tooltip } from '@ds/index.js';
 import { ActionModal } from '../../components/ActionModal.jsx';
 import { AdminShell } from '../../components/AdminShell.jsx';
 import { DataTable } from '../../components/DataTable.jsx';
@@ -7,6 +7,7 @@ import { KeyValueGrid, SectionCard } from '../../components/KeyValueGrid.jsx';
 import { ListCard, ListPager } from '../../components/ListCard.jsx';
 import { SearchField } from '../../components/FilterBar.jsx';
 import { StatCard, StatGrid } from '../../components/StatCard.jsx';
+import { StickyBar } from '../../components/StickyBar.jsx';
 import { useToast } from '../../components/Toaster.jsx';
 import { MonthSelect, PaymentBadge, correctionText, paymentText } from '../../components/scope3/S3Common.jsx';
 import { ApiError } from '../../api/mockApi.js';
@@ -130,7 +131,9 @@ function IncentivePaymentView({ user, onLogout, query }) {
 
   return (
     <AdminShell active="/pembayaran-insentif" icon="Wallet3Line" title="Pembayaran Insentif" description="Rekonsiliasi, file final, dan pencatatan pembayaran take home pay sales dan insentif partner." user={user} onLogout={onLogout}>
-      <TabMenuHorizontal value={tab} onChange={(v) => set({ tab: v === 'sales' ? '' : v, status: '', m: '' })} items={[{ value: 'sales', label: 'Sales' }, { value: 'partner', label: 'Partner' }]} />
+      <StickyBar>
+        <TabMenuHorizontal value={tab} onChange={(v) => set({ tab: v === 'sales' ? '' : v, status: '', m: '' })} items={[{ value: 'sales', label: 'Sales' }, { value: 'partner', label: 'Partner' }]} />
+      </StickyBar>
       {!canEdit && <Alert status="information" size="sm" title="Hanya Admin yang dapat mencatat koreksi dan pembayaran. Super Admin melihat dan mengunduh saja." />}
       {view === 'none' ? (
         <ListCard view="empty" emptyMessage="Belum ada bulan yang menunggu rekonsiliasi atau final." />
@@ -140,11 +143,14 @@ function IncentivePaymentView({ user, onLogout, query }) {
             <MonthSelect value={ym} onChange={(v) => set({ m: v, status: '' })} kind={kind} closedOnly />
             <div style={{ width: 200 }}><Select size="sm" value={q.area ?? ''} placeholder="Semua area" onChange={(v) => set({ area: v })} options={AREA_OPTS} /></div>
             {!recon && <div style={{ width: 220 }}><Select size="sm" value={q.status ?? ''} placeholder="Semua status" onChange={(v) => set({ status: v })} options={STATUS_OPTS} /></div>}
+            <SearchField placeholder={tab === 'sales' ? 'Cari nama' : 'Cari partner'} value={q.q ?? ''} onChange={(v) => set({ q: v })} width={260} />
             <span style={{ flex: 1 }} />
-            <Button size="sm" variant="stroke" tone="neutral" disabled={view !== 'data' || downloading} onClick={download}>{downloading ? 'Menyiapkan file…' : downloadLabel}</Button>
+            <Tooltip content={downloading ? 'Menyiapkan file…' : downloadLabel} placement="left">
+              <Button size="sm" variant="stroke" tone="neutral" iconOnly leftIcon={<Icon name="DownloadLine" />} aria-label={downloading ? 'Menyiapkan file…' : downloadLabel}
+                disabled={view !== 'data' || downloading} onClick={download} />
+            </Tooltip>
           </div>
           <StepLine step={step} />
-          <SearchField placeholder={tab === 'sales' ? 'Cari nama' : 'Cari partner'} value={q.q ?? ''} onChange={(v) => set({ q: v })} />
           {view === 'data' && (
             <StatGrid min={200}>
               <StatCard icon="FileList2Line" color="blue" label="Jumlah dihitung" value={formatRp(sum((r) => r.payment.calculated))} hint={`${formatNumber(rows.length)} baris · ${monthLabel(ym, true)}`} />

@@ -8,8 +8,9 @@ const COLLAPSE_KEY = 'sp-sidebar-collapsed';
 const readCollapsed = () => { try { return localStorage.getItem(COLLAPSE_KEY) === '1'; } catch { return false; } };
 
 /**
- * Shell portal: Sidebar gelap 272px (bisa diciutkan ke 80px, hanya ikon; pilihan diingat per perangkat) + PageHeader
- * (ikon, judul, deskripsi, chip pengguna, Keluar) + konten pad 24/32.
+ * Shell portal: Sidebar gelap 272px (bisa diperkecil ke 80px, hanya ikon; pilihan diingat per perangkat) + PageHeader
+ * (ikon, judul, deskripsi, chip pengguna, Keluar) tetap di atas + konten pad 24/32 yang di-scroll utuh (kartu, filter, tabel);
+ * bagian yang perlu tetap terlihat memakai StickyBar.
  */
 export function AdminShell({ active, icon, title, description, user, onLogout, headerExtra, children }) {
   const [collapsed, setCollapsed] = useState(readCollapsed);
@@ -19,7 +20,7 @@ export function AdminShell({ active, icon, title, description, user, onLogout, h
       <Sidebar theme="dark" company="" collapsed={collapsed}
         logo={collapsed ? <AmarBankLogo lockup="mark" color="white" height={26} /> : <AmarBankLogo lockup="horizontal" color="white" height={26} />}
         sections={navFor(user)} value={active} onChange={(v) => navigate(v)}
-        footer={<SidebarItem theme="dark" collapsed={collapsed} icon={collapsed ? 'ArrowRightSLine' : 'ArrowLeftSLine'} label={collapsed ? 'Bentangkan menu' : 'Ciutkan menu'} onClick={toggle} />} />
+        footer={<SidebarItem theme="dark" collapsed={collapsed} icon={collapsed ? 'ArrowRightSLine' : 'ArrowLeftSLine'} label={collapsed ? 'Perbesar navigasi' : 'Perkecil navigasi'} onClick={toggle} />} />
       <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <PageHeader
           media={(
@@ -37,7 +38,7 @@ export function AdminShell({ active, icon, title, description, user, onLogout, h
           )}
         />
         {headerExtra}
-        <div style={{ flex: 1, overflow: 'auto', padding: 'var(--space-24) var(--space-32) var(--space-32)', display: 'flex', flexDirection: 'column', gap: 'var(--space-16)' }}>
+        <div className="sp-content" style={{ flex: 1, overflow: 'auto', padding: 'var(--space-24) var(--space-32) var(--space-32)', display: 'flex', flexDirection: 'column', gap: 'var(--space-16)' }}>
           {children}
         </div>
       </main>

@@ -105,8 +105,8 @@ function AplIncentiveView({ user, onLogout, query }) {
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
         <MonthSelect value={ym} onChange={(v) => set({ m: v })} />
         <AreaSelect path="/apl/insentif" query={query} user={user} />
+        <SearchField placeholder="Cari nama atau TL" value={q.q ?? ''} onChange={(v) => set({ q: v })} />
       </div>
-      <SearchField placeholder="Cari nama atau TL" value={q.q ?? ''} onChange={(v) => set({ q: v })} />
       {status && (
         <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
           <MonthStatusBadge status={status} />

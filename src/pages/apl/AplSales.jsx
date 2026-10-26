@@ -6,6 +6,7 @@ import { ListCard } from '../../components/ListCard.jsx';
 import { SearchField } from '../../components/FilterBar.jsx';
 import { aplSalesRows, monthRange, subordinateOptions } from '../../api/mockApi.js';
 import { StatCard, StatGrid } from '../../components/StatCard.jsx';
+import { StickyBar } from '../../components/StickyBar.jsx';
 import { AsOf } from '../../components/scope3/S3Common.jsx';
 import { dataAsOf } from '../../api/scope3.js';
 import { useScenario } from '../../dev/scenario.js';
@@ -84,20 +85,20 @@ function AplSalesView({ user, onLogout, query }) {
 
   return (
     <AdminShell active="/apl/kinerja" icon="BarChartLine" title="Kinerja Penjualan" description="Telusuri kinerja pinjaman dari area hingga toko." user={user} onLogout={onLogout}>
-      <PeriodFilter path="/apl/kinerja" query={query} user={user} period={period} monthOnly>
-        <div style={{ width: 160 }}>
-          <Select size="sm" value={q.channel ?? ''} placeholder="Semua channel" onChange={(v) => set({ channel: v })}
-            options={[{ value: '', label: 'Semua channel' }, ...Object.entries(CHANNEL).map(([value, label]) => ({ value, label }))]} />
-        </div>
-        <div style={{ width: 240 }}>
-          <Select size="sm" value={q.sub ?? ''} placeholder="Semua bawahan" onChange={pickSub}
-            options={[{ value: '', label: 'Semua bawahan' }, ...subordinateOptions(areaIds)]} />
-        </div>
-      </PeriodFilter>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
-        <Breadcrumbs items={crumbs} />
-        <SearchField placeholder={`Cari ${LEVEL_LABEL[level].toLowerCase()}`} value={q.q ?? ''} onChange={(v) => set({ q: v })} width={280} />
-      </div>
+      <StickyBar>
+        <PeriodFilter path="/apl/kinerja" query={query} user={user} period={period} monthOnly>
+          <div style={{ width: 160 }}>
+            <Select size="sm" value={q.channel ?? ''} placeholder="Semua channel" onChange={(v) => set({ channel: v })}
+              options={[{ value: '', label: 'Semua channel' }, ...Object.entries(CHANNEL).map(([value, label]) => ({ value, label }))]} />
+          </div>
+          <div style={{ width: 240 }}>
+            <Select size="sm" value={q.sub ?? ''} placeholder="Semua bawahan" onChange={pickSub}
+              options={[{ value: '', label: 'Semua bawahan' }, ...subordinateOptions(areaIds)]} />
+          </div>
+          <SearchField placeholder={`Cari ${LEVEL_LABEL[level].toLowerCase()}`} value={q.q ?? ''} onChange={(v) => set({ q: v })} width={220} />
+        </PeriodFilter>
+      </StickyBar>
+      <Breadcrumbs items={crumbs} />
       <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-12)', flexWrap: 'wrap', font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>
         Pengajuan dibuat di {period.label}<AsOf asOf={asOf} ym={ym} onRefresh={() => load(true)} />
       </span>
