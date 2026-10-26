@@ -131,7 +131,7 @@ function IncentivePaymentView({ user, onLogout, query }) {
 
   return (
     <AdminShell active="/pembayaran-insentif" icon="Wallet3Line" title="Pembayaran Insentif" description="Rekonsiliasi, file final, dan pencatatan pembayaran take home pay sales dan insentif partner." user={user} onLogout={onLogout}>
-      <StickyBar>
+      <StickyBar flush>
         <TabMenuHorizontal value={tab} onChange={(v) => set({ tab: v === 'sales' ? '' : v, status: '', m: '' })} items={[{ value: 'sales', label: 'Sales' }, { value: 'partner', label: 'Partner' }]} />
       </StickyBar>
       {!canEdit && <Alert status="information" size="sm" title="Hanya Admin yang dapat mencatat koreksi dan pembayaran. Super Admin melihat dan mengunduh saja." />}

@@ -53,7 +53,7 @@ function AplTeamView({ user, onLogout, query }) {
   ];
   return (
     <AdminShell active="/apl/tim" icon="TeamLine" title="Tim" description="Anggota tim, absensi, dan kunjungan TL, SR, dan SA di area Anda." user={user} onLogout={onLogout}>
-      <StickyBar>
+      <StickyBar flush>
         <TabMenuHorizontal value={tab} onChange={(v) => set({ tab: v === 'anggota' ? '' : v })} items={[
           { value: 'anggota', label: 'Anggota Tim' }, { value: 'absensi', label: 'Absensi' }, { value: 'kunjungan', label: 'Kunjungan' },
         ]} />
