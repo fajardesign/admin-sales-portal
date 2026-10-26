@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Button, CheckboxLabel, Drawer, DrawerFooter, DrawerHeader, LinkButton, Select, TabMenuHorizontal, TextArea } from '@ds/index.js';
+import { Alert, Button, CheckboxLabel, Drawer, DrawerHeader, LinkButton, Select, TabMenuHorizontal, TextArea } from '@ds/index.js';
 import { ActionModal } from '../../components/ActionModal.jsx';
 import { AdminShell } from '../../components/AdminShell.jsx';
 import { DataTable } from '../../components/DataTable.jsx';
@@ -7,6 +7,7 @@ import { KeyValueGrid, SectionCard } from '../../components/KeyValueGrid.jsx';
 import { StickyBar } from '../../components/StickyBar.jsx';
 import { useToast } from '../../components/Toaster.jsx';
 import { MonthStatusBadge } from '../../components/scope3/S3Common.jsx';
+import { DrawerActions } from '../../components/DrawerActions.jsx';
 import { ApiError, perfMonths } from '../../api/mockApi.js';
 import { CURRENT_MONTH, partners } from '../../api/db.js';
 import {
@@ -269,10 +270,10 @@ function ConfigEditor({ kind, startMonth, user, onClose, onSaved }) {
     }
   }
   const footer = (
-    <DrawerFooter>
+    <DrawerActions>
       <Button variant="stroke" tone="neutral" size="sm" onClick={onClose}>Batal</Button>
       <Button size="sm" onClick={() => setConfirm(true)}>Simpan</Button>
-    </DrawerFooter>
+    </DrawerActions>
   );
   return (
     <Drawer open width={720} onClose={onClose} footer={footer}

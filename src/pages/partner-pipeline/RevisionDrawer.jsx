@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Button, CheckboxLabel, Drawer, DrawerFooter, DrawerHeader, TextArea } from '@ds/index.js';
+import { Button, CheckboxLabel, Drawer, DrawerHeader, TextArea } from '@ds/index.js';
 import { ActionModal } from '../../components/ActionModal.jsx';
 import { useToast } from '../../components/Toaster.jsx';
+import { DrawerActions } from '../../components/DrawerActions.jsx';
 import { requestRevision } from '../../api/mockApi.js';
 import { REVISION_SECTIONS } from '../../lib/constants.js';
 
@@ -65,10 +66,10 @@ export function RevisionDrawer({ partner, user, onClose, onDone }) {
       <Drawer open width={520} onClose={confirm ? undefined : onClose}
         header={<DrawerHeader size="lg" title="Minta Revisi" description={`${partner.partnerName} · ${partner.registrationNumber}`} icon="EditLine" onClose={onClose} />}
         footer={(
-          <DrawerFooter left={<span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>{keys.length} item dipilih</span>}>
+          <DrawerActions note={<span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>{keys.length} item dipilih</span>}>
             <Button variant="stroke" tone="neutral" size="sm" onClick={onClose}>Batal</Button>
             <Button size="sm" disabled={keys.length === 0} onClick={submit}>Kirim Permintaan Revisi</Button>
-          </DrawerFooter>
+          </DrawerActions>
         )}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-24)', padding: 'var(--space-16) var(--space-24) var(--space-24)' }}>
           <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>

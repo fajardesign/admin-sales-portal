@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Button, CheckboxLabel, Drawer, DrawerFooter, DrawerHeader, Field, Modal, Select, StatusModal, TextInput } from '@ds/index.js';
+import { Button, CheckboxLabel, Drawer, DrawerHeader, Field, Modal, Select, StatusModal, TextInput } from '@ds/index.js';
 import { ApiError, aplAreaHolders, createUser, identityTaken, leaderOptions } from '../../api/mockApi.js';
 import { useToast } from '../../components/Toaster.jsx';
+import { DrawerActions } from '../../components/DrawerActions.jsx';
 import { AREAS, CREATABLE_ROLES, PLATFORM_LABEL, ROLES, TL_LEVEL } from '../../lib/constants.js';
 import { validateUserForm } from '../../lib/validation.js';
 import { preset } from '../../dev/presets.js';
@@ -111,10 +112,10 @@ export function AddUserDrawer({ user, onClose, onCreated }) {
       <Drawer open width={480} onClose={confirmOpen ? undefined : requestCancel}
         header={<DrawerHeader size="lg" title="Tambah Pengguna" description="Akun dibuat dan tautan aktivasi (berlaku 3x24 jam, sekali pakai) dikirim ke email pengguna." icon="UserAddLine" onClose={requestCancel} />}
         footer={(
-          <DrawerFooter>
+          <DrawerActions>
             <Button variant="stroke" tone="neutral" size="sm" disabled={saving} onClick={requestCancel}>Batal</Button>
             <Button size="sm" disabled={saveDisabled} onClick={submit}>{saving ? 'Menyimpan...' : 'Simpan'}</Button>
-          </DrawerFooter>
+          </DrawerActions>
         )}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-16)', padding: 'var(--space-16) var(--space-24) var(--space-24)' }}>
           {text('email', { label: 'Email', leftIcon: 'MailLine', placeholder: 'nama@amarbank.co.id', hint: 'Dipakai untuk login dan email aktivasi.', onChange: (e) => setField('email', e.target.value) })}
