@@ -29,6 +29,7 @@ export const PRESETS = {
   'add-user-no-leader': { name: 'W2b | Add User | Error | No Leader', route: '/account-management', session: 'rina.saraswati', users: { adding: true }, addUser: { form: { role: 'TL', areaIds: [6] } } },
   'disable-tl': { name: 'W2c | Disable User | TL Replacement Leader', route: '/account-management', session: 'rina.saraswati', users: { disableId: 6 } },
   'disable-sa': { name: 'W2c | Disable User | SA Store Release', route: '/account-management', session: 'rina.saraswati', users: { disableId: 15 } },
+  'user-detail-tl': { name: 'W2d | User Detail | TL', route: '/account-management', session: 'rina.saraswati', users: { detailId: 6 } },
   'move-subordinates': { name: 'W2c | Move Subordinates | TL', route: '/account-management', session: 'rina.saraswati', users: { moveId: 6 } },
   'active-stores': { name: 'W3f | Active Stores', route: '/toko-aktif', session: 'rina.saraswati' },
   'active-stores-requests': { name: 'W3f | Active Stores | Permintaan tambah toko', route: '/toko-aktif?tab=permintaan', session: 'rina.saraswati' },

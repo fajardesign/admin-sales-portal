@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Button, Drawer, DrawerFooter, DrawerHeader, Icon, LinkButton } from '@ds/index.js';
+import { Button, Drawer, DrawerHeader, Icon, LinkButton } from '@ds/index.js';
 import { AccountStatusBadge } from '../../components/Badges.jsx';
 import { KeyValueGrid } from '../../components/KeyValueGrid.jsx';
 import { Timeline } from '../../components/Timeline.jsx';
+import { DrawerActions } from '../../components/DrawerActions.jsx';
 import { getUser } from '../../api/mockApi.js';
 import { now } from '../../api/db.js';
 import { ACTIVATION_TTL_MS, FEATURE_LABEL, PLATFORM_LABEL, ROLES, TL_LEVEL, areaName } from '../../lib/constants.js';
@@ -30,7 +31,7 @@ export function UserDetailDrawer({ userId, user, version, onClose, onResend, onD
     <Drawer open width={480} onClose={onClose}
       header={<DrawerHeader size="lg" title={u.fullName} description={`${ROLES[u.role].label} · ${areas}`} badge={<AccountStatusBadge status={st} />} onClose={onClose} />}
       footer={(
-        <DrawerFooter left={<>
+        <DrawerActions note={<>
           {st !== 'DISABLED' && u.id !== user.userId && <Button variant="ghost" tone="error" size="sm" onClick={() => onDisable(u)}>Nonaktifkan</Button>}
           {/* FR-AM-012: hanya TL Active yang masih punya bawahan tidak Disabled */}
           {u.role === 'TL' && st === 'ACTIVE' && u.subordinates.length > 0 && <Button variant="ghost" tone="neutral" size="sm" onClick={() => onMove(u)}>Pindahkan Bawahan</Button>}
@@ -40,7 +41,7 @@ export function UserDetailDrawer({ userId, user, version, onClose, onResend, onD
           {st === 'ACTIVE' && <Button size="sm" onClick={() => onReset(u)}>Reset Password</Button>}
           {pending && <Button size="sm" onClick={() => onResend(u)}>Kirim Ulang Aktivasi</Button>}
           {st === 'DISABLED' && <Button variant="stroke" tone="neutral" size="sm" onClick={onClose}>Tutup</Button>}
-        </DrawerFooter>
+        </DrawerActions>
       )}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-24)', padding: 'var(--space-16) var(--space-24) var(--space-24)' }}>
         <Section title="Informasi Pengguna">

@@ -33,7 +33,7 @@ function AccountManagementView({ user, onLogout, query }) {
   const [data, setData] = useState(null);
   const [view, setView] = useState('loading');
   const [adding, setAdding] = useState(preset?.users?.adding ?? false);
-  const [detailId, setDetailId] = useState(null);
+  const [detailId, setDetailId] = useState(preset?.users?.detailId ?? null);
   const [version, setVersion] = useState(0);
   const [resend, setResend] = useState(null);
   const [disable, setDisable] = useState(null);
