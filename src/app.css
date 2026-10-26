@@ -1,2 +1,5 @@
 html, body { margin: 0; }
 @keyframes sk-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+
+/* Konten shell di-scroll utuh: anak flex tidak boleh menyusut (kartu daftar dengan overflow-x tidak menjadi area scroll sendiri). */
+.sp-content > * { flex-shrink: 0; }

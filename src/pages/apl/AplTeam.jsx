@@ -5,6 +5,7 @@ import { DataTable } from '../../components/DataTable.jsx';
 import { ListCard } from '../../components/ListCard.jsx';
 import { KeyValueGrid, SectionCard } from '../../components/KeyValueGrid.jsx';
 import { SearchField } from '../../components/FilterBar.jsx';
+import { StickyBar } from '../../components/StickyBar.jsx';
 import { ATTENDANCE_TODAY, aplTeam, personSummary, weekStatusLabel } from '../../api/mockApi.js';
 import { useScenario } from '../../dev/scenario.js';
 import { nowrap } from '../../lib/cells.jsx';
@@ -52,13 +53,15 @@ function AplTeamView({ user, onLogout, query }) {
   ];
   return (
     <AdminShell active="/apl/tim" icon="TeamLine" title="Tim" description="Anggota tim, absensi, dan kunjungan TL, SR, dan SA di area Anda." user={user} onLogout={onLogout}>
-      <TabMenuHorizontal value={tab} onChange={(v) => set({ tab: v === 'anggota' ? '' : v })} items={[
-        { value: 'anggota', label: 'Anggota Tim' }, { value: 'absensi', label: 'Absensi' }, { value: 'kunjungan', label: 'Kunjungan' },
-      ]} />
+      <StickyBar flush>
+        <TabMenuHorizontal value={tab} onChange={(v) => set({ tab: v === 'anggota' ? '' : v })} items={[
+          { value: 'anggota', label: 'Anggota Tim' }, { value: 'absensi', label: 'Absensi' }, { value: 'kunjungan', label: 'Kunjungan' },
+        ]} />
+      </StickyBar>
       <PeriodFilter path="/apl/tim" query={query} user={user} period={period}>
         <div style={{ width: 150 }}><Select size="sm" value={q.role ?? ''} placeholder="Semua role" onChange={(v) => set({ role: v })} options={[{ value: '', label: 'Semua role' }, { value: 'TL', label: 'TL' }, { value: 'SR', label: 'SR' }, { value: 'SA', label: 'SA' }]} /></div>
+        <SearchField placeholder={tab === 'anggota' ? 'Cari nama, email, atau TL' : 'Cari nama atau TL'} value={q.q ?? ''} onChange={(v) => set({ q: v })} />
       </PeriodFilter>
-      <SearchField placeholder={tab === 'anggota' ? 'Cari nama, email, atau TL' : 'Cari nama atau TL'} value={q.q ?? ''} onChange={(v) => set({ q: v })} />
       {tab !== 'anggota' && <ProductivityList areaIds={areaIds} period={period} tab={tab} role={q.role} search={q.q} />}
       {tab === 'anggota' && <ListCard view={view} onRetry={() => load(true)} emptyMessage={q.q || q.role ? 'Tidak ada anggota tim yang sesuai dengan pencarian atau filter.' : 'Belum ada anggota tim aktif.'}
         footer={view === 'data' && <span style={{ display: 'block', padding: 'var(--space-12) var(--space-4) var(--space-4)', font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>{rows.length} anggota aktif · periode ringkasan: {period.label}</span>}>

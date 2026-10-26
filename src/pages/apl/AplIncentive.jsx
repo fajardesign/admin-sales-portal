@@ -13,7 +13,7 @@ import { nowrap } from '../../lib/cells.jsx';
 import { areaName } from '../../lib/constants.js';
 import { formatNumber, formatPct, formatRp, formatYmd, monthLabel } from '../../lib/format.js';
 import { navigate, withQuery } from '../../lib/router.js';
-import { defaultMonth, monthNote } from '../../lib/s3.js';
+import { defaultMonth, monthNote, signedRp } from '../../lib/s3.js';
 import { AreaSelect } from './aplCommon.jsx';
 import { useAplScope } from './aplPeriod.js';
 
@@ -89,10 +89,12 @@ function AplIncentiveView({ user, onLogout, query }) {
       </span>
     ) }) },
     { key: 'inc', header: 'Insentif', align: 'right', render: (r) => nowrap(formatRp(r.incentive)) },
+    { key: 'corr', header: 'Koreksi', align: 'right', render: (r) => (r.payment?.correction
+      ? { priority: 'regular', title: nowrap(signedRp(r.payment.correction)), description: r.payment.note || undefined } : '-') },
     { key: 'thp', header: 'Take home pay', render: (r) => ({ misc: true, children: (
       <span style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         <span style={{ font: 'var(--label-sm)', color: 'var(--text-strong-950)', whiteSpace: 'nowrap' }}>{formatRp(r.takeHomePay)}</span>
-        <PaymentLine payment={r.payment} />
+        <PaymentLine payment={r.payment} showCorrection={false} />
         {r.role === 'TL' && r.team > 0 && <span style={{ font: 'var(--label-xs)', color: 'var(--text-sub-600)', whiteSpace: 'nowrap' }}>Total take home pay tim {formatRp(r.teamTotal)}</span>}
       </span>
     ) }) },
@@ -103,8 +105,8 @@ function AplIncentiveView({ user, onLogout, query }) {
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
         <MonthSelect value={ym} onChange={(v) => set({ m: v })} />
         <AreaSelect path="/apl/insentif" query={query} user={user} />
+        <SearchField placeholder="Cari nama atau TL" value={q.q ?? ''} onChange={(v) => set({ q: v })} />
       </div>
-      <SearchField placeholder="Cari nama atau TL" value={q.q ?? ''} onChange={(v) => set({ q: v })} />
       {status && (
         <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
           <MonthStatusBadge status={status} />
@@ -123,7 +125,7 @@ function AplIncentiveView({ user, onLogout, query }) {
       )}
       <ListCard view={view} onRetry={() => load(true)} emptyMessage="Belum ada data TL atau SA/SR di area Anda untuk filter ini.">
         {view === 'data' && rows.length === 0 && <span style={{ display: 'block', padding: 'var(--space-16)', font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>Belum ada data TL atau SA/SR di area Anda untuk filter ini.</span>}
-        {(view === 'loading' || (view === 'data' && rows.length > 0)) && <DataTable loading={view === 'loading'} rows={rows} rowKey={(r) => r.rowKey} columns={columns} minWidth={1080} onRowClick={setDetail} />}
+        {(view === 'loading' || (view === 'data' && rows.length > 0)) && <DataTable loading={view === 'loading'} rows={rows} rowKey={(r) => r.rowKey} columns={columns} minWidth={1180} onRowClick={setDetail} />}
       </ListCard>
       <span style={{ font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' }}>
         Gaji pokok = hari valid (check in dan check out, maks. {fee.maxDays} hari) × daily fee area dan peran; dikali {String(fee.multiplier).replace('.', ',')} jika capaian di atas {fee.threshold}%. Insentif = koefisien tier × Cair dihitung (pinjaman yang diajukan dan cair di bulan yang sama). Take home pay = gaji pokok + insentif. Total tim = TL + SA/SR yang dipimpin.

@@ -23,7 +23,7 @@ export function StatCard({ icon, color = 'gray', label, value, hint, onClick }) 
   );
 }
 
-/** Grid responsif kartu KPI. */
+/** Grid responsif kartu KPI; kartu melebar mengisi kontainer (auto-fit). */
 export const StatGrid = ({ min = 220, children }) => (
-  <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${min}px, 1fr))`, gap: 'var(--space-12)' }}>{children}</div>
+  <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(${min}px, 1fr))`, gap: 'var(--space-12)' }}>{children}</div>
 );

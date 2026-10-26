@@ -12,7 +12,8 @@ import { monthNote, signedRp } from '../../lib/s3.js';
 
 /** Komponen bersama layar PRD Scope 3 (web). */
 const MONTH_BADGE = { BERJALAN: 'information', REKONSILIASI: 'pending', FINAL: 'completed' };
-const PAY_BADGE = { MENUNGGU: 'pending', DIBAYAR: 'completed', TIDAK_ADA: 'disabled' };
+const PAY_BADGE = { REKONSILIASI: 'information', MENUNGGU: 'pending', DIBAYAR: 'completed', TIDAK_DIBAYAR: 'failed', TIDAK_ADA: 'disabled' };
+const PAY_COLOR = { MENUNGGU: 'var(--state-warning-base)', DIBAYAR: 'var(--state-success-base)', TIDAK_DIBAYAR: 'var(--state-error-base)' };
 const BAND_BADGE = { TERCAPAI: 'completed', ON_TRACK: 'information', BERISIKO: 'failed' };
 const muted = { font: 'var(--paragraph-xs)', color: 'var(--text-sub-600)' };
 
@@ -21,36 +22,52 @@ export const PaymentBadge = ({ payment }) => (payment ? <StatusBadge status={PAY
 export const BandBadge = ({ band }) => <StatusBadge status={BAND_BADGE[band]}>{BAND_LABEL[band]}</StatusBadge>;
 
 
-/** Baris pembayaran di bawah take home pay / insentif (FR-PY-006). */
-export function PaymentLine({ payment }) {
+/** Teks status pembayaran untuk orang/partner (§ Month and payment status, FR-PY-006). */
+export function paymentText(p) {
+  if (p.status === 'REKONSILIASI') return `Menunggu rekonsiliasi — final ${formatYmd(p.lockAt)}`;
+  if (p.status === 'DIBAYAR') return `Dibayar ${formatYmd(p.paidAt)} · ${formatRp(p.paidAmount)}`;
+  if (p.status === 'MENUNGGU') return `Menunggu pembayaran (jadwal ${formatYmd(p.scheduledAt)})`;
+  if (p.status === 'TIDAK_DIBAYAR') return `Tidak dibayar: ${p.unpaidNote}`;
+  return PAYMENT_STATUS.TIDAK_ADA;
+}
+/** Koreksi bertanda dengan catatan: "Koreksi −Rp 150.000: Potongan seragam hilang" (AC-024). */
+export const correctionText = (p) => `Koreksi ${signedRp(p.correction)}${p.note ? `: ${p.note}` : ''}`;
+
+/**
+ * Baris pembayaran di bawah take home pay / insentif (FR-PY-006): status, koreksi saat rekonsiliasi dan sesudahnya, jumlah final.
+ * showCorrection = false bila koreksi sudah tampil di kolom sendiri (APL).
+ */
+export function PaymentLine({ payment, showCorrection = true }) {
   if (!payment) return null;
-  const text = payment.status === 'DIBAYAR' ? `Dibayar ${formatYmd(payment.paidAt)} · ${formatRp(payment.paidAmount)}`
-    : payment.status === 'MENUNGGU' ? `Menunggu pembayaran (jadwal ${formatYmd(payment.scheduledAt)})` : PAYMENT_STATUS.TIDAK_ADA;
   return (
     <span style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-      <span style={{ ...muted, color: payment.status === 'DIBAYAR' ? 'var(--state-success-base)' : payment.status === 'MENUNGGU' ? 'var(--state-warning-base)' : 'var(--text-sub-600)' }}>{text}</span>
-      {payment.correction !== 0 && <span style={muted}>Koreksi {signedRp(payment.correction)}{payment.note ? ` · ${payment.note}` : ''}</span>}
+      <span style={{ ...muted, color: PAY_COLOR[payment.status] ?? 'var(--text-sub-600)' }}>{paymentText(payment)}</span>
+      {showCorrection && payment.correction !== 0 && <span style={muted}>{correctionText(payment)}</span>}
+      {payment.correction !== 0 && <span style={muted}>Jumlah final {formatRp(payment.finalAmount)}</span>}
     </span>
   );
 }
 
-/** "Data per {tanggal jam}" + "Perbarui" (FR-LP-001); Perbarui tidak tampil untuk bulan Final. */
-export function AsOf({ asOf, onRefresh, ym }) {
+/** "Data per {tanggal jam}" + "Perbarui" (FR-LP-001); Perbarui tidak tampil untuk bulan Final skema kind. */
+export function AsOf({ asOf, onRefresh, ym, kind = 'SALES' }) {
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-8)', ...muted }}>
       <Icon name="TimeLine" size={16} />Data per {formatDateTime(asOf)}
-      {onRefresh && monthStatus(ym) !== 'FINAL' && <LinkButton size="sm" onClick={onRefresh}>Perbarui</LinkButton>}
+      {onRefresh && monthStatus(ym, kind) !== 'FINAL' && <LinkButton size="sm" onClick={onRefresh}>Perbarui</LinkButton>}
     </span>
   );
 }
 
-/** Pemilih bulan dengan status bulan, terbaru dulu (12 bulan terakhir). */
-export function MonthSelect({ value, onChange, finalOnly = false, width = 260 }) {
-  const months = [...perfMonths()].reverse().slice(0, 12).filter((m) => !finalOnly || monthStatus(m) === 'FINAL');
+/**
+ * Pemilih bulan dengan status bulan skema kind, terbaru dulu (12 bulan terakhir). closedOnly = hanya bulan Menunggu rekonsiliasi
+ * dan Final (Pembayaran Insentif).
+ */
+export function MonthSelect({ value, onChange, kind = 'SALES', closedOnly = false, width = 260 }) {
+  const months = [...perfMonths()].reverse().slice(0, 12).filter((m) => !closedOnly || monthStatus(m, kind) !== 'BERJALAN');
   return (
     <div style={{ width }}>
       <Select size="sm" value={value} placeholder="Pilih bulan" onChange={onChange}
-        options={months.map((m) => ({ value: m, label: `${monthLabel(m, true)} · ${MONTH_STATUS[monthStatus(m)]}` }))} />
+        options={months.map((m) => ({ value: m, label: `${monthLabel(m, true)} · ${MONTH_STATUS[monthStatus(m, kind)]}` }))} />
     </div>
   );
 }
@@ -162,7 +179,7 @@ export function PartnerIncomeDrawer({ row: r, onClose }) {
       header={<DrawerHeader size="lg" title={r.name} description={`${areaName(r.areaId)} · ${r.storeCount} toko · ${monthLabel(r.ym, true)}`} icon="Building2Line" onClose={onClose} />}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-16)', padding: 'var(--space-16) var(--space-24) var(--space-24)' }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-8)', flexWrap: 'wrap' }}>
-          <MonthStatusBadge status={r.monthStatus} /><span style={muted}>{monthNote(r.ym)}</span>
+          <MonthStatusBadge status={r.monthStatus} /><span style={muted}>{monthNote(r.ym, 'PARTNER')}</span>
         </span>
         <SectionCard title={`Insentif partner ${formatRp(r.incentive)}`}>
           <IncentiveBlock r={r} tiers={configFor('partner', r.ym).tiers} />

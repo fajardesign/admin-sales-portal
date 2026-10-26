@@ -544,8 +544,8 @@ const S3_SEED_AT = new Date('2026-04-25T09:00:00+07:00');
 /**
  * Konfigurasi Scope 3 berversi per bulan efektif (FR-CF-001, FR-CF-003, FR-CF-004). Versi berlaku dari effectiveFrom sampai versi
  * berikutnya. Nilai awal = PRD Scope 3 (keputusan 2026-10-22): target SA 100 jt, SR 150 jt, TL 1,5 M; daily fee SA/SR Rp 120.000,
- * TL Rp 200.000 di semua area; maks. 26 hari dibayar; multiplier ×2 bila capaian > 100% untuk SA, SR, TL; lock tanggal 5,
- * bayar sales tanggal 10, partner tanggal 15; target partner default Rp 500 jt.
+ * TL Rp 200.000 di semua area; maks. 26 hari dibayar; multiplier ×2 bila capaian > 100% untuk SA, SR, TL; cut-off sales tanggal 5,
+ * bayar sales tanggal 10; cut-off partner tanggal 10, bayar partner tanggal 15 (round 10); target partner default Rp 500 jt.
  */
 export const s3Config = {
   sales: [{
@@ -556,18 +556,21 @@ export const s3Config = {
     version: 1, effectiveFrom: '2026-05', fees: Object.fromEntries(AREAS.map((a) => [a.id, { SA: 120000, SR: 120000, TL: 200000 }])),
     maxDays: 26, multiplier: 2, threshold: 100, roles: ['SA', 'SR', 'TL'], by: S3_SEED_BY, at: S3_SEED_AT,
   }],
-  partner: [{ version: 1, effectiveFrom: '2026-05', defaultTarget: 500e6, tiers: s3Tiers(S3_PARTNER_TIERS), payoutDay: 15, by: S3_SEED_BY, at: S3_SEED_AT }],
+  partner: [{ version: 1, effectiveFrom: '2026-05', defaultTarget: 500e6, tiers: s3Tiers(S3_PARTNER_TIERS), lockDay: 10, payoutDay: 15, by: S3_SEED_BY, at: S3_SEED_AT }],
   /** Override target per partner per bulan (FR-CF-004). */
   partnerTargets: [{ partnerId: 'REG2026-0139', ym: '2026-10', amount: 300e6, reason: 'Partner baru, target disesuaikan', by: S3_SEED_BY, at: new Date('2026-09-28T10:00:00+07:00') }],
   /** Log perubahan konfigurasi (aktor, waktu, lama → baru). */
   log: [],
 };
 /**
- * Catatan pembayaran (FR-PY): kunci `${kind}:${id}:${ym}` (kind SALES | PARTNER) → { correction, note, paidAt, paidBy, log }.
+ * Catatan pembayaran (FR-PY): kunci `${kind}:${id}:${ym}` (kind SALES | PARTNER) → { correction, note, paidAt, paidBy, unpaidNote, log }.
+ * batches = log batch tandai (incentive_payment_log per batch), exports = log unduhan (payment_export_log).
  * Data contoh: bulan Final sebelum Final terakhir dianggap sudah dibayar pada tanggal jadwal (paidThrough); satu koreksi contoh
  * di Agustus untuk SR Siti (FR-PY-005).
  */
 export const s3Payments = {
   paidThrough: '2026-08',
-  records: { 'SALES:11:2026-08': { correction: 150000, note: 'Koreksi Juli 2026', paidAt: null, paidBy: null, log: [] } },
+  records: { 'SALES:11:2026-08': { correction: 150000, note: 'Koreksi Juli 2026', paidAt: null, paidBy: null, unpaidNote: '', log: [] } },
+  batches: [],
+  exports: [],
 };

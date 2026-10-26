@@ -1,21 +1,22 @@
 /**
- * PRD Scope 3 — Sales Pipeline & Incentive Monitoring (PRD 3.0, draft 9 2026-10-22).
+ * PRD Scope 3 — Sales Pipeline & Incentive Monitoring (PRD 3.0, draft 11 2026-10-26; proses bayar bulanan round 10).
  *
  * Fondasi data dan aturan (tahap 1), terpisah dari skema insentif lama di mockApi.js:
  * - status portal 4 (Diajukan, Disetujui, Ditolak, Cair) dari status LMS (FR-LP-003);
  * - bulan kinerja WIB: pinjaman dihitung bila diajukan DAN cair di bulan yang sama (Performance month);
- * - status bulan Berjalan → Menunggu rekonsiliasi → Final, dikunci pada lock day bulan berikutnya (FR-IN-002);
+ * - status bulan Berjalan → Menunggu rekonsiliasi → Final, dikunci pada cut-off bulan berikutnya, terpisah untuk sales
+ *   (default tanggal 5) dan partner (default tanggal 10) (FR-IN-002, FR-PI-004);
  * - hari valid = check in dan check out (atau dikoreksi TL sebelum lock), gaji pokok = min(hari valid, maks) × daily fee
  *   area × role, ×multiplier bila capaian di atas threshold (FR-DF-001/002);
  * - insentif = koefisien tier × Cair dihitung, tier "> dari, ≤ sampai" (keputusan user 2026-10-22: ikut PRD);
  * - insentif partner volume saja untuk partner offline retail (FR-PI-001/002);
- * - pembayaran per baris Final: koreksi, tandai dibayar (FR-PY).
+ * - pembayaran (FR-PY, round 10): koreksi saat rekonsiliasi, unduh draf/final, tandai Dibayar atau Tidak dibayar setelah cut-off.
  * Semua angka dibulatkan ke bawah ke rupiah.
  */
 import { attendance, CURRENT_MONTH, loans, now, partners, s3Config, s3Payments, users, wibDate } from './db.js';
 import { ApiError, actorOf, listGate, monthRange, userById, wait } from './mockApi.js';
 import { getScenario } from '../dev/scenario.js';
-import { areaName } from '../lib/constants.js';
+import { BANKS, areaName } from '../lib/constants.js';
 
 /** Hari ini untuk status bulan Scope 3; DevToolbar "Tanggal Scope 3" bisa memundurkannya ke sebelum lock. */
 export const s3Today = () => getScenario().s3Today ?? '2026-10-07';
@@ -36,14 +37,15 @@ export function configFor(kind, ym) {
   const vs = [...s3Config[kind]].sort((a, b) => (a.effectiveFrom < b.effectiveFrom ? 1 : -1));
   return vs.find((v) => v.effectiveFrom <= ym) ?? vs[vs.length - 1];
 }
-/** Tanggal lock bulan ym (YYYY-MM-DD, 00:00 WIB) = lock day di bulan berikutnya. */
-export const lockDate = (ym) => dayIn(nextYm(ym), configFor('sales', ym).lockDay);
+const cfgKind = (kind) => (kind === 'PARTNER' ? 'partner' : 'sales');
+/** Tanggal cut-off (tutup buku) bulan ym (YYYY-MM-DD, 00:00 WIB) = lockDay skema itu di bulan berikutnya. kind: 'SALES' | 'PARTNER'. */
+export const lockDate = (ym, kind = 'SALES') => dayIn(nextYm(ym), configFor(cfgKind(kind), ym).lockDay);
 /** Jadwal bayar bulan ym: sales tanggal payoutDay bulan berikutnya (default 10), partner default 15. */
-export const payoutDate = (ym, kind = 'SALES') => dayIn(nextYm(ym), kind === 'PARTNER' ? configFor('partner', ym).payoutDay : configFor('sales', ym).payoutDay);
-/** BERJALAN | REKONSILIASI | FINAL (relatif terhadap hari ini WIB). */
-export function monthStatus(ym) {
+export const payoutDate = (ym, kind = 'SALES') => dayIn(nextYm(ym), configFor(cfgKind(kind), ym).payoutDay);
+/** BERJALAN | REKONSILIASI | FINAL (relatif terhadap hari ini WIB) menurut cut-off skema kind. */
+export function monthStatus(ym, kind = 'SALES') {
   if (ym >= CURRENT_MONTH) return 'BERJALAN';
-  return s3Today() >= lockDate(ym) ? 'FINAL' : 'REKONSILIASI';
+  return s3Today() >= lockDate(ym, kind) ? 'FINAL' : 'REKONSILIASI';
 }
 export const MONTH_STATUS = { BERJALAN: 'Berjalan', REKONSILIASI: 'Menunggu rekonsiliasi', FINAL: 'Final' };
 /** Batas koreksi absensi TL untuk tanggal ymd: akhir minggu berikutnya (Scope 2 FR-014) atau sebelum lock bulannya, mana yang lebih dulu. */
@@ -110,7 +112,7 @@ export const isValidDay = (a) => !!a.clockInAt && !!a.clockOutAt && a.status !==
 const validDaysOf = (uid, ym) => attendance.filter((a) => a.userId === uid && a.date.startsWith(ym) && isValidDay(a)).length;
 const roleOf = (u) => (u.role === 'TL' ? 'TL' : u.role);
 
-const finals = new Map(); // `${ym}` → { sales: Map, partner: Map } — baris Final dibekukan saat pertama dibaca setelah lock.
+const finals = new Map(); // `${kind}:${ym}` → Map — baris Final dibekukan saat pertama dibaca setelah cut-off skemanya.
 
 function salesFigures(u, ym) {
   const ls = loans.filter((l) => (u.role === 'TL' ? l.tlId === u.id : l.salesId === u.id) && inMonth(l.submittedAt, ym));
@@ -140,35 +142,46 @@ function partnerFigures(p, ym) {
   const actual = loans.filter((l) => l.partnerId === p.id && countsFor(l, ym)).reduce((a, l) => a + l.amount, 0);
   return { partnerId: p.id, name: p.partnerName, areaId: p.areaId, storeCount: p.stores.filter((s) => s.status === 'ACTIVE' || s.status === 'INACTIVE').length, ...calcPartner(configFor('partner', ym), { actual, target: partnerTarget(p.id, ym) }) };
 }
-function monthRows(ym) {
-  const status = monthStatus(ym);
-  if (status === 'FINAL' && finals.has(ym)) return finals.get(ym);
-  const rows = {
-    sales: new Map(salesPeople(ym).map((u) => [u.id, salesFigures(u, ym)])),
-    partner: new Map(eligiblePartners(ym).map((p) => [p.id, partnerFigures(p, ym)])),
-  };
-  if (status === 'FINAL') finals.set(ym, rows);
+/** Baris bulan ym per skema (kind 'SALES' | 'PARTNER'): Map id → angka; dibekukan saat Final. */
+function monthRows(kind, ym) {
+  const key = `${kind}:${ym}`;
+  const status = monthStatus(ym, kind);
+  if (status === 'FINAL' && finals.has(key)) return finals.get(key);
+  const rows = kind === 'SALES' ? new Map(salesPeople(ym).map((u) => [u.id, salesFigures(u, ym)]))
+    : new Map(eligiblePartners(ym).map((p) => [p.id, partnerFigures(p, ym)]));
+  if (status === 'FINAL') finals.set(key, rows);
   return rows;
 }
 
 // ------------------------------------------------------------------ pembayaran (FR-PY)
 const payKey = (kind, id, ym) => `${kind}:${id}:${ym}`;
-/** Status pembayaran baris bulan Final: MENUNGGU | DIBAYAR | TIDAK_ADA; null bila bulan belum Final. */
-export function paymentOf(kind, id, ym, finalAmount) {
-  if (monthStatus(ym) !== 'FINAL') return null;
+const calculatedOf = (kind, r) => (kind === 'SALES' ? r.takeHomePay : r.incentive);
+/**
+ * Status pembayaran baris (§ Month and payment status): REKONSILIASI (1 M+1 sampai cut-off, koreksi boleh) | MENUNGGU |
+ * DIBAYAR | TIDAK_DIBAYAR | TIDAK_ADA (jumlah final Rp 0); null selama bulan Berjalan. Jumlah final = dihitung + koreksi.
+ */
+export function paymentOf(kind, id, ym, calculated) {
+  const st = monthStatus(ym, kind);
+  if (st === 'BERJALAN') return null;
   const r = s3Payments.records[payKey(kind, id, ym)] ?? {};
   const correction = r.correction ?? 0;
-  const amountToPay = Math.max(0, finalAmount + correction);
+  const finalAmount = Math.max(0, calculated + correction);
   const scheduledAt = payoutDate(ym, kind);
-  const paidAt = r.paidAt ?? (ym <= s3Payments.paidThrough && amountToPay > 0 ? scheduledAt : null);
-  const status = paidAt ? 'DIBAYAR' : amountToPay > 0 ? 'MENUNGGU' : 'TIDAK_ADA';
-  return { status, correction, note: r.note ?? '', amountToPay, paidAt, paidAmount: paidAt ? amountToPay : null, scheduledAt, overdue: status === 'MENUNGGU' && s3Today() > scheduledAt };
+  const base = { calculated, correction, note: r.note ?? '', finalAmount, scheduledAt, lockAt: lockDate(ym, kind), log: r.log ?? [] };
+  if (st === 'REKONSILIASI') return { ...base, status: 'REKONSILIASI', paidAt: null, paidAmount: null, unpaidNote: '', overdue: false };
+  const paidAt = r.paidAt ?? (ym <= s3Payments.paidThrough && finalAmount > 0 ? scheduledAt : null);
+  const status = paidAt ? 'DIBAYAR' : finalAmount === 0 ? 'TIDAK_ADA' : r.unpaidNote ? 'TIDAK_DIBAYAR' : 'MENUNGGU';
+  return { ...base, status, paidAt, paidAmount: paidAt ? finalAmount : null, unpaidNote: status === 'TIDAK_DIBAYAR' ? r.unpaidNote : '', overdue: status === 'MENUNGGU' && s3Today() > scheduledAt };
 }
-export const PAYMENT_STATUS = { MENUNGGU: 'Menunggu pembayaran', DIBAYAR: 'Dibayar', TIDAK_ADA: 'Tidak ada pembayaran' };
+export const PAYMENT_STATUS = { REKONSILIASI: 'Rekonsiliasi', MENUNGGU: 'Menunggu pembayaran', DIBAYAR: 'Dibayar', TIDAK_DIBAYAR: 'Tidak dibayar', TIDAK_ADA: 'Tidak ada pembayaran' };
+/** Baris yang bisa ditandai setelah cut-off (FR-PY-004). */
+export const markable = (p) => p?.status === 'MENUNGGU' || p?.status === 'TIDAK_DIBAYAR';
+/** Pesan saat koreksi ditolak setelah cut-off (FR-PY-002, AC-049). */
+export const CLOSED_MSG = 'Bulan ini sudah tutup buku. Koreksi dimasukkan di rekonsiliasi bulan berikutnya.';
 
 const withMeta = (kind, ym, r, id) => ({
-  ...r, ym, monthStatus: monthStatus(ym),
-  payment: paymentOf(kind, id, ym, kind === 'SALES' ? r.takeHomePay : r.incentive),
+  ...r, ym, monthStatus: monthStatus(ym, kind),
+  payment: paymentOf(kind, id, ym, calculatedOf(kind, r)),
 });
 
 // ------------------------------------------------------------------ API baca
@@ -182,7 +195,7 @@ export const dataAsOf = () => now();
 export async function salesRows(ym, scope = {}, { retry = false } = {}) {
   const empty = await listGate(retry);
   if (empty) return { rows: [], asOf: dataAsOf(), monthStatus: monthStatus(ym) };
-  const rows = [...monthRows(ym).sales.values()].filter((r) => (scope.userId == null || r.userId === scope.userId)
+  const rows = [...monthRows('SALES', ym).values()].filter((r) => (scope.userId == null || r.userId === scope.userId)
     && (scope.leaderId == null || r.userId === scope.leaderId || r.leaderId === scope.leaderId)
     && (!scope.areaIds?.length || scope.areaIds.includes(r.areaId)))
     .map((r) => withMeta('SALES', ym, r, r.userId))
@@ -191,7 +204,7 @@ export async function salesRows(ym, scope = {}, { retry = false } = {}) {
 }
 /** Satu baris sales (Penghasilan bulan ym) dengan riwayat 12 bulan bila diminta. */
 export function salesRow(uid, ym) {
-  const r = monthRows(ym).sales.get(uid);
+  const r = monthRows('SALES', ym).get(uid);
   return r ? withMeta('SALES', ym, r, uid) : null;
 }
 export function salesHistory(uid, months) {
@@ -204,10 +217,10 @@ export function totalsOf(rows) {
 }
 export async function partnerRows(ym, scope = {}, { retry = false } = {}) {
   const empty = await listGate(retry);
-  if (empty) return { rows: [], asOf: dataAsOf(), monthStatus: monthStatus(ym) };
-  const rows = [...monthRows(ym).partner.values()].filter((r) => (!scope.partnerId || r.partnerId === scope.partnerId) && (!scope.areaIds?.length || scope.areaIds.includes(r.areaId)))
+  if (empty) return { rows: [], asOf: dataAsOf(), monthStatus: monthStatus(ym, 'PARTNER') };
+  const rows = [...monthRows('PARTNER', ym).values()].filter((r) => (!scope.partnerId || r.partnerId === scope.partnerId) && (!scope.areaIds?.length || scope.areaIds.includes(r.areaId)))
     .map((r) => withMeta('PARTNER', ym, r, r.partnerId)).sort((a, b) => b.incentive - a.incentive || a.name.localeCompare(b.name));
-  return { rows, asOf: dataAsOf(), monthStatus: monthStatus(ym) };
+  return { rows, asOf: dataAsOf(), monthStatus: monthStatus(ym, 'PARTNER') };
 }
 
 /**
@@ -230,51 +243,116 @@ export async function pipeline(ym, scope = {}, f = {}, { retry = false } = {}) {
     .map((l) => ({ ...l, portalStatus: portalStatus(l), counted: countsFor(l, ym), paidLater: portalStatus(l) === 'CAIR' && !countsFor(l, ym) }));
   return {
     funnel, total: all.length, countedAmount: counted.reduce((a, l) => a + l.amount, 0), countedCount: counted.length,
-    paidLaterCount: all.filter((l) => portalStatus(l) === 'CAIR' && !countsFor(l, ym)).length, rows: list, asOf: dataAsOf(), monthStatus: monthStatus(ym),
+    paidLaterCount: all.filter((l) => portalStatus(l) === 'CAIR' && !countsFor(l, ym)).length, rows: list, asOf: dataAsOf(), monthStatus: monthStatus(ym, scope.partnerId ? 'PARTNER' : 'SALES'),
   };
 }
 
 // ------------------------------------------------------------------ API tulis: pembayaran (Admin)
-/** "Isi koreksi" (FR-PY-002): baris bulan Final yang belum Dibayar; jumlah dibayar tidak boleh negatif. */
+const rowOf = (kind, ym, id) => monthRows(kind, ym).get(id);
+const recordOf = (kind, id, ym) => s3Payments.records[payKey(kind, id, ym)] ?? { correction: 0, note: '', paidAt: null, paidBy: null, unpaidNote: '', log: [] };
+/** Bulan yang tampil di Pembayaran Insentif (FR-PY-001): Menunggu rekonsiliasi atau Final menurut cut-off skema kind. */
+export const paymentMonths = (months, kind) => [...months].reverse().filter((m) => monthStatus(m, kind) !== 'BERJALAN');
+
+/**
+ * "Isi koreksi" (FR-PY-002): hanya selama rekonsiliasi (1 M+1 sampai cut-off skema); jumlah final tidak boleh negatif.
+ * Setelah cut-off ditolak CLOSED (pesan CLOSED_MSG). Bisa diubah atau dikosongkan (0) sampai cut-off; setiap simpan dicatat.
+ */
 export async function setCorrection(kind, id, ym, correction, note, session) {
   await wait(300);
   if (session.role !== 'REVIEWER') throw new ApiError('FORBIDDEN');
-  if (monthStatus(ym) !== 'FINAL') throw new ApiError('CONFLICT');
-  const row = kind === 'SALES' ? monthRows(ym).sales.get(id) : monthRows(ym).partner.get(id);
+  const st = monthStatus(ym, kind);
+  if (st === 'FINAL') throw new ApiError('CLOSED');
+  if (st !== 'REKONSILIASI') throw new ApiError('CONFLICT');
+  const row = rowOf(kind, ym, id);
   if (!row) throw new ApiError('CONFLICT');
-  const final = kind === 'SALES' ? row.takeHomePay : row.incentive;
-  const cur = paymentOf(kind, id, ym, final);
-  if (cur.status === 'DIBAYAR') throw new ApiError('STALE');
   const c = Math.trunc(Number(correction) || 0);
-  if (final + c < 0) throw new ApiError('NEGATIVE');
+  if (calculatedOf(kind, row) + c < 0) throw new ApiError('NEGATIVE');
   if ((note ?? '').length > 255) throw new ApiError('NOTE_TOO_LONG');
-  const k = payKey(kind, id, ym);
-  const rec = s3Payments.records[k] ?? { correction: 0, note: '', paidAt: null, paidBy: null, log: [] };
-  rec.log = [...(rec.log ?? []), { at: now(), by: actorOf(session), from: rec.correction ?? 0, to: c, note: (note ?? '').trim() }];
-  Object.assign(rec, { correction: c, note: (note ?? '').trim() });
-  s3Payments.records[k] = rec;
-  return paymentOf(kind, id, ym, final);
+  const rec = recordOf(kind, id, ym);
+  const n = (note ?? '').trim();
+  rec.log = [...(rec.log ?? []), { action: 'CORRECTION', at: now(), by: actorOf(session), from: rec.correction ?? 0, to: c, note: n }];
+  Object.assign(rec, { correction: c, note: n });
+  s3Payments.records[payKey(kind, id, ym)] = rec;
+  return paymentOf(kind, id, ym, calculatedOf(kind, row));
+}
+
+/** Baris yang dipilih untuk dicatat; STALE bila ada yang sudah tidak bisa ditandai (berubah sejak daftar dimuat). */
+function markRows(ym, keys, session) {
+  if (session.role !== 'REVIEWER') throw new ApiError('FORBIDDEN');
+  if (!keys.length || keys.some(({ kind }) => monthStatus(ym, kind) !== 'FINAL')) throw new ApiError('CONFLICT');
+  const rows = keys.map(({ kind, id }) => {
+    const row = rowOf(kind, ym, id);
+    return { kind, id, p: row && paymentOf(kind, id, ym, calculatedOf(kind, row)) };
+  });
+  if (rows.some((r) => !markable(r.p))) throw new ApiError('STALE');
+  return rows;
+}
+function saveBatch(ym, rows, action, session, apply) {
+  const batchId = `B${s3Payments.batches.length + 1}`;
+  rows.forEach(({ kind, id, p }) => {
+    const rec = recordOf(kind, id, ym);
+    const entry = apply(rec, p);
+    rec.log = [...(rec.log ?? []), { action, at: now(), by: actorOf(session), batchId, ...entry }];
+    s3Payments.records[payKey(kind, id, ym)] = rec;
+  });
+  const total = rows.reduce((a, r) => a + r.p.finalAmount, 0);
+  s3Payments.batches.push({ id: batchId, action, ym, count: rows.length, total, by: actorOf(session), at: now() });
+  return { count: rows.length, total, batchId };
 }
 /**
- * "Tandai dibayar" (FR-PY-003): semua baris yang dipilih disimpan bersama atau tidak sama sekali. keys: [{ kind, id }].
- * Status Dibayar final (FR-PY-004). STALE bila ada baris yang sudah tidak Menunggu pembayaran.
+ * "Tandai Dibayar" (FR-PY-004): baris Menunggu pembayaran atau Tidak dibayar; satu batch disimpan utuh atau tidak sama sekali
+ * (STALE). Dibayar final; keterangan Tidak dibayar sebelumnya tetap di riwayat (OQ-3-37).
  */
 export async function markPaid(ym, keys, paidAt, session) {
   await wait(500);
-  if (session.role !== 'REVIEWER') throw new ApiError('FORBIDDEN');
-  if (monthStatus(ym) !== 'FINAL' || !keys.length) throw new ApiError('CONFLICT');
+  const rows = markRows(ym, keys, session);
   if (!paidAt) throw new ApiError('DATE_REQUIRED');
-  const rows = keys.map(({ kind, id }) => {
-    const row = kind === 'SALES' ? monthRows(ym).sales.get(id) : monthRows(ym).partner.get(id);
-    return { kind, id, p: row && paymentOf(kind, id, ym, kind === 'SALES' ? row.takeHomePay : row.incentive) };
+  return saveBatch(ym, rows, 'MARK_PAID', session, (rec, p) => {
+    Object.assign(rec, { paidAt, paidBy: actorOf(session), unpaidNote: '' });
+    return { paidAt, amount: p.finalAmount, previousNote: p.unpaidNote || undefined };
   });
-  if (rows.some((r) => !r.p || r.p.status !== 'MENUNGGU')) throw new ApiError('STALE');
-  rows.forEach(({ kind, id }) => {
-    const k = payKey(kind, id, ym);
-    const rec = s3Payments.records[k] ?? { correction: 0, note: '', log: [] };
-    s3Payments.records[k] = { ...rec, paidAt, paidBy: actorOf(session) };
+}
+/** "Tandai Tidak dibayar" (FR-PY-004): keterangan wajib (maks. 255); baris tetap bisa ditandai Dibayar nanti. */
+export async function markUnpaid(ym, keys, note, session) {
+  await wait(500);
+  const rows = markRows(ym, keys, session);
+  const n = (note ?? '').trim();
+  if (!n) throw new ApiError('NOTE_REQUIRED');
+  if (n.length > 255) throw new ApiError('NOTE_TOO_LONG');
+  return saveBatch(ym, rows, 'MARK_UNPAID', session, (rec) => { rec.unpaidNote = n; return { note: n }; });
+}
+
+/**
+ * Unduhan Pembayaran Insentif (FR-PY-003): selama rekonsiliasi "Unduh draf" (setiap baris ditandai DRAF), mulai cut-off file final
+ * (isi beku). Ikut filter area (areaId null = semua). Setiap unduhan dicatat (payment_export_log). Admin dan Super Admin.
+ * Hasil { kind: DRAFT | FINAL, filename, headers, rows, count, total }.
+ */
+export async function exportPayments(kind, ym, { areaId = null } = {}, session) {
+  await wait(400);
+  if (session.role !== 'REVIEWER' && session.role !== 'SUPER_ADMIN') throw new ApiError('FORBIDDEN');
+  const st = monthStatus(ym, kind);
+  if (st === 'BERJALAN') throw new ApiError('CONFLICT');
+  const draft = st === 'REKONSILIASI';
+  const list = (kind === 'SALES' ? (await salesRows(ym, {}, { retry: true })).rows : (await partnerRows(ym, {}, { retry: true })).rows)
+    .filter((r) => areaId == null || r.areaId === areaId);
+  const mark = draft ? ['DRAF'] : [];
+  const headers = kind === 'SALES'
+    ? [...(draft ? ['Status'] : []), 'Bulan', 'ID karyawan', 'Nama', 'Peran', 'Area', 'TL', 'Hari valid', 'Hari dibayar', 'Daily fee', 'Multiplier', 'Gaji pokok', 'Insentif', 'Koreksi', 'Catatan', 'Take home pay final']
+    : [...(draft ? ['Status'] : []), 'Bulan', 'Partner', 'Area', 'Bank', 'Nama rekening', 'Nomor rekening', 'Insentif', 'Koreksi', 'Catatan', 'Jumlah final'];
+  const rows = list.map((r) => {
+    const p = r.payment;
+    if (kind === 'SALES') {
+      return [...mark, ym, r.userId, r.name, r.role, areaName(r.areaId), r.leaderId ? userById(r.leaderId)?.fullName ?? '' : '', r.validDays, r.paidDays,
+        r.dailyFee, r.multiplierApplies ? r.multiplier : 1, r.basicSalary, r.incentive, p.correction, p.note, p.finalAmount];
+    }
+    const bank = partners.find((x) => x.id === r.partnerId)?.bank ?? {};
+    return [...mark, ym, r.name, areaName(r.areaId), BANKS[bank.code] ?? bank.code ?? '', bank.accountName ?? '', bank.accountNumber ?? '', r.incentive, p.correction, p.note, p.finalAmount];
   });
-  return { count: rows.length, total: rows.reduce((a, r) => a + r.p.amountToPay, 0) };
+  const total = list.reduce((a, r) => a + r.payment.finalAmount, 0);
+  const area = areaId == null ? 'semua-area' : areaName(areaId).toLowerCase().replace(/\s+/g, '-');
+  const filename = `${draft ? 'draf' : 'final'}-${kind === 'SALES' ? 'take-home-pay' : 'insentif-partner'}-${ym}-${area}.csv`;
+  s3Payments.exports.push({ ym, subjectType: kind, kind: draft ? 'DRAFT' : 'FINAL', areaId, count: rows.length, total, by: actorOf(session), at: now(), filename });
+  return { kind: draft ? 'DRAFT' : 'FINAL', filename, headers, rows, count: rows.length, total };
 }
 
 /** Bulan yang tersedia untuk riwayat (12 terakhir, terbaru dulu) dari rentang data contoh. */
@@ -286,12 +364,12 @@ export const rangeOf = monthRange;
 export const CONFIG_LABEL = { sales: 'Insentif Sales', fee: 'Gaji Pokok', partner: 'Insentif Partner' };
 const ROLES3 = ['SA', 'SR', 'TL'];
 const rp = (n) => `Rp ${Math.round(n).toLocaleString('id-ID')}`;
-/** Bulan yang boleh diubah: bulan Menunggu rekonsiliasi, bulan berjalan, dan 3 bulan ke depan (bulan Final hanya baca). */
-export function editableMonths() {
+/** Bulan yang boleh diubah: bulan Menunggu rekonsiliasi, bulan berjalan, dan 3 bulan ke depan (bulan Final skema itu hanya baca). */
+export function editableMonths(kind = 'sales') {
   const out = [];
   for (let m = '2026-05', i = 0; i < 12; m = nextYm(m), i += 1) out.push(m);
   const upto = nextYm(nextYm(nextYm(CURRENT_MONTH)));
-  return out.filter((m) => m <= upto && monthStatus(m) !== 'FINAL');
+  return out.filter((m) => m <= upto && monthStatus(m, kind === 'partner' ? 'PARTNER' : 'SALES') !== 'FINAL');
 }
 /** Status versi relatif bulan berjalan: ACTIVE | SCHEDULED | ARCHIVED. */
 export function versionState(kind, v) {
@@ -314,6 +392,14 @@ export function tierErrors(tiers) {
   }
   return null;
 }
+/** Cut-off 2–28 dan sebelum tanggal bayar; tanggal bayar ≤ 28 (FR-CF-001, FR-CF-004). */
+function dayErrors(v) {
+  const e = {};
+  if (!(Number.isInteger(v.lockDay) && v.lockDay >= 2 && v.lockDay <= 28)) e.lockDay = 'Tanggal cut-off 2–28';
+  if (!(Number.isInteger(v.payoutDay) && v.payoutDay >= 1 && v.payoutDay <= 28)) e.payoutDay = 'Tanggal bayar 1–28';
+  else if (!e.lockDay && !(v.lockDay < v.payoutDay)) e.payoutDay = 'Tanggal bayar harus setelah tanggal cut-off';
+  return e;
+}
 /** Validasi nilai versi; hasil { field: pesan } (kosong = valid). */
 export function validateConfig(kind, v, ym) {
   const e = {};
@@ -321,9 +407,7 @@ export function validateConfig(kind, v, ym) {
   if (kind === 'sales') {
     ROLES3.forEach((r) => { if (!pos(v.targets?.[r])) e[`target.${r}`] = 'Target harus lebih dari 0'; });
     ['SALES', 'TL'].forEach((k) => { const m = tierErrors(v.tiers?.[k]); if (m) e[`tiers.${k}`] = m; });
-    if (!(v.lockDay >= 1 && v.lockDay <= 28)) e.lockDay = 'Tanggal lock 1–28';
-    if (!(v.payoutDay >= 1 && v.payoutDay <= 28)) e.payoutDay = 'Tanggal bayar 1–28';
-    else if (!(v.lockDay < v.payoutDay)) e.payoutDay = 'Tanggal bayar harus setelah tanggal lock';
+    Object.assign(e, dayErrors(v));
   } else if (kind === 'fee') {
     Object.keys(v.fees ?? {}).forEach((a) => ROLES3.forEach((r) => { if (!pos(v.fees[a]?.[r])) e[`fee.${a}.${r}`] = 'Wajib diisi'; }));
     if (!(Number.isInteger(v.maxDays) && v.maxDays >= 1 && v.maxDays <= 31)) e.maxDays = 'Maksimal hari dibayar 1–31';
@@ -332,9 +416,7 @@ export function validateConfig(kind, v, ym) {
   } else {
     if (!pos(v.defaultTarget)) e.defaultTarget = 'Target harus lebih dari 0';
     const m = tierErrors(v.tiers); if (m) e.tiers = m;
-    const lock = configFor('sales', ym).lockDay;
-    if (!(v.payoutDay >= 1 && v.payoutDay <= 28)) e.payoutDay = 'Tanggal bayar 1–28';
-    else if (!(v.payoutDay > lock)) e.payoutDay = `Tanggal bayar harus setelah tanggal lock (${lock})`;
+    Object.assign(e, dayErrors(v));
   }
   return e;
 }
@@ -346,7 +428,7 @@ function diffLines(kind, a, b) {
     ROLES3.forEach((r) => { if (a.targets[r] !== b.targets[r]) out.push(`Target ${r}: ${rp(a.targets[r])} → ${rp(b.targets[r])}`); });
     if (!same(a.tiers.SALES, b.tiers.SALES)) out.push('Tabel tier SA/SR diubah');
     if (!same(a.tiers.TL, b.tiers.TL)) out.push('Tabel tier TL diubah');
-    if (a.lockDay !== b.lockDay) out.push(`Tanggal lock: ${a.lockDay} → ${b.lockDay}`);
+    if (a.lockDay !== b.lockDay) out.push(`Tanggal cut-off sales: ${a.lockDay} → ${b.lockDay}`);
     if (a.payoutDay !== b.payoutDay) out.push(`Tanggal bayar sales: ${a.payoutDay} → ${b.payoutDay}`);
   } else if (kind === 'fee') {
     Object.keys(b.fees).forEach((ar) => ROLES3.forEach((r) => {
@@ -359,11 +441,12 @@ function diffLines(kind, a, b) {
   } else {
     if (a.defaultTarget !== b.defaultTarget) out.push(`Target partner default: ${rp(a.defaultTarget)} → ${rp(b.defaultTarget)}`);
     if (!same(a.tiers, b.tiers)) out.push('Tabel tier volume diubah');
+    if (a.lockDay !== b.lockDay) out.push(`Tanggal cut-off partner: ${a.lockDay} → ${b.lockDay}`);
     if (a.payoutDay !== b.payoutDay) out.push(`Tanggal bayar partner: ${a.payoutDay} → ${b.payoutDay}`);
   }
   return out.length ? out : ['Tanpa perubahan nilai'];
 }
-const FIELDS = { sales: ['targets', 'tiers', 'lockDay', 'payoutDay'], fee: ['fees', 'maxDays', 'multiplier', 'threshold', 'roles'], partner: ['defaultTarget', 'tiers', 'payoutDay'] };
+const FIELDS = { sales: ['targets', 'tiers', 'lockDay', 'payoutDay'], fee: ['fees', 'maxDays', 'multiplier', 'threshold', 'roles'], partner: ['defaultTarget', 'tiers', 'lockDay', 'payoutDay'] };
 
 /**
  * Simpan versi konfigurasi berlaku mulai bulan ym (bukan bulan Final). Versi dengan bulan yang sama diganti; selain itu versi
@@ -372,7 +455,7 @@ const FIELDS = { sales: ['targets', 'tiers', 'lockDay', 'payoutDay'], fee: ['fee
 export async function saveConfig(kind, ym, values, session) {
   await wait(400);
   if (session.role !== 'SUPER_ADMIN') throw new ApiError('FORBIDDEN');
-  if (monthStatus(ym) === 'FINAL' || !editableMonths().includes(ym)) throw new ApiError('CONFLICT');
+  if (!editableMonths(kind).includes(ym)) throw new ApiError('CONFLICT');
   const errors = validateConfig(kind, values, ym);
   if (Object.keys(errors).length) throw new ApiError('INVALID', errors);
   const before = configFor(kind, ym);
@@ -389,7 +472,7 @@ export async function saveConfig(kind, ym, values, session) {
 export async function setPartnerTarget(pid, ym, amount, reason, session) {
   await wait(300);
   if (session.role !== 'SUPER_ADMIN') throw new ApiError('FORBIDDEN');
-  if (monthStatus(ym) === 'FINAL') throw new ApiError('CONFLICT');
+  if (monthStatus(ym, 'PARTNER') === 'FINAL') throw new ApiError('CONFLICT');
   if (amount != null && !(amount > 0)) throw new ApiError('INVALID', { amount: 'Target harus lebih dari 0' });
   const p = partners.find((x) => x.id === pid);
   const before = partnerTarget(pid, ym);
