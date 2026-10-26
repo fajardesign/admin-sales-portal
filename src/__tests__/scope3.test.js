@@ -1,10 +1,10 @@
 // PRD Scope 3 (3.0): aturan hitung diuji dengan contoh di PRD ("Worked examples"). File terpisah karena mengubah data contoh.
 import { beforeEach, describe, expect, it } from 'vitest';
 import { DEFAULT_SCENARIO, setScenario } from '../dev/scenario.js';
-import { loans, s3Config } from '../api/db.js';
+import { loans, s3Config, s3Payments } from '../api/db.js';
 import {
-  achievementBand, calcPartner, calcSales, configFor, correctionDeadline, countsFor, lockDate, markPaid, monthStatus, payoutDate,
-  pipeline, portalStatus, salesRow, salesRows, setCorrection, tierOf,
+  achievementBand, calcPartner, calcSales, configFor, correctionDeadline, countsFor, exportPayments, lockDate, markPaid, markUnpaid,
+  monthStatus, partnerRows, payoutDate, pipeline, portalStatus, salesRow, salesRows, setCorrection, tierOf,
 } from '../api/scope3.js';
 
 const admin = { userId: 1, name: 'Rina Saraswati', role: 'REVIEWER' };
@@ -115,16 +115,56 @@ describe('Baris sales, visibilitas, dan pembayaran', () => {
     expect(salesRow(11, '2026-09').payment.status).toBe('MENUNGGU');
     expect(salesRow(11, '2026-10').payment).toBeNull();
   });
-  it('koreksi lalu tandai dibayar; Dibayar final; tandai ulang = STALE', async () => {
+  it('round 10: cut-off sales 5 dan partner 10; pada 7 Okt sales September Final, partner September masih rekonsiliasi', () => {
+    expect(lockDate('2026-09', 'SALES')).toBe('2026-10-05');
+    expect(lockDate('2026-09', 'PARTNER')).toBe('2026-10-10');
+    expect(payoutDate('2026-09', 'PARTNER')).toBe('2026-10-15');
+    expect(monthStatus('2026-09', 'SALES')).toBe('FINAL');
+    expect(monthStatus('2026-09', 'PARTNER')).toBe('REKONSILIASI');
+  });
+  it('koreksi hanya selama rekonsiliasi (AC-024, AC-049); jumlah final = dihitung + koreksi, tidak boleh negatif', async () => {
+    setScenario({ s3Today: '2026-10-03' });
     const before = salesRow(11, '2026-09');
-    const p = await setCorrection('SALES', 11, '2026-09', 50000, 'Koreksi Agustus 2026', admin);
-    expect(p.amountToPay).toBe(before.takeHomePay + 50000);
+    expect(before.payment).toMatchObject({ status: 'REKONSILIASI', lockAt: '2026-10-05', finalAmount: before.takeHomePay });
+    const p = await setCorrection('SALES', 11, '2026-09', -150000, 'Potongan seragam hilang', admin);
+    expect(p).toMatchObject({ status: 'REKONSILIASI', correction: -150000, finalAmount: before.takeHomePay - 150000 });
     await expect(setCorrection('SALES', 11, '2026-09', -(before.takeHomePay + 1), '', admin)).rejects.toMatchObject({ code: 'NEGATIVE' });
-    await markPaid('2026-09', [{ kind: 'SALES', id: 11 }], '2026-10-10', admin);
-    expect(salesRow(11, '2026-09').payment).toMatchObject({ status: 'DIBAYAR', paidAmount: before.takeHomePay + 50000 });
-    await expect(markPaid('2026-09', [{ kind: 'SALES', id: 11 }], '2026-10-10', admin)).rejects.toMatchObject({ code: 'STALE' });
-    await expect(setCorrection('SALES', 11, '2026-09', 0, '', admin)).rejects.toMatchObject({ code: 'STALE' });
-    await expect(markPaid('2026-10', [{ kind: 'SALES', id: 6 }], '2026-10-10', admin)).rejects.toMatchObject({ code: 'CONFLICT' });
+    setScenario({ s3Today: '2026-10-06' });
+    await expect(setCorrection('SALES', 11, '2026-09', 0, '', admin)).rejects.toMatchObject({ code: 'CLOSED' });
+    expect(salesRow(11, '2026-09').payment).toMatchObject({ status: 'MENUNGGU', finalAmount: before.takeHomePay - 150000, scheduledAt: '2026-10-10' });
+    const { rows } = await partnerRows('2026-09', {}, { retry: true });
+    await expect(setCorrection('PARTNER', rows[0].partnerId, '2026-09', 10000, 'Koreksi', admin)).resolves.toMatchObject({ status: 'REKONSILIASI', correction: 10000 });
+    await expect(markPaid('2026-09', [{ kind: 'PARTNER', id: rows[0].partnerId }], '2026-10-15', admin)).rejects.toMatchObject({ code: 'CONFLICT' });
+  });
+  it('Tidak dibayar wajib keterangan, lalu bisa Dibayar dengan riwayat (AC-052, AC-053); Dibayar final (AC-026)', async () => {
+    const { rows } = await salesRows('2026-09', {}, { retry: true });
+    const ids = rows.filter((r) => r.payment.status === 'MENUNGGU').slice(0, 2).map((r) => ({ kind: 'SALES', id: r.userId }));
+    await expect(markUnpaid('2026-09', ids, '  ', admin)).rejects.toMatchObject({ code: 'NOTE_REQUIRED' });
+    await expect(markUnpaid('2026-09', ids, 'Rekening tidak valid', { ...admin, role: 'SUPER_ADMIN' })).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    await markUnpaid('2026-09', ids, 'Rekening tidak valid', admin);
+    expect(salesRow(ids[0].id, '2026-09').payment).toMatchObject({ status: 'TIDAK_DIBAYAR', unpaidNote: 'Rekening tidak valid' });
+    await markPaid('2026-09', [ids[0]], '2026-10-19', admin);
+    const p = salesRow(ids[0].id, '2026-09').payment;
+    expect(p).toMatchObject({ status: 'DIBAYAR', paidAt: '2026-10-19', paidAmount: p.finalAmount, unpaidNote: '' });
+    expect(p.log.map((e) => e.action)).toEqual(['MARK_UNPAID', 'MARK_PAID']);
+    expect(p.log[1].previousNote).toBe('Rekening tidak valid');
+    await expect(markPaid('2026-09', [ids[0]], '2026-10-19', admin)).rejects.toMatchObject({ code: 'STALE' });
+    await expect(markUnpaid('2026-09', [ids[0], ids[1]], 'x', admin)).rejects.toMatchObject({ code: 'STALE' });
+    expect(salesRow(ids[1].id, '2026-09').payment.status).toBe('TIDAK_DIBAYAR');
+  });
+  it('unduh draf saat rekonsiliasi dan final setelah cut-off, ikut filter area, dicatat (AC-051)', async () => {
+    setScenario({ s3Today: '2026-10-03' });
+    const d = await exportPayments('SALES', '2026-09', { areaId: 1 }, admin);
+    expect(d).toMatchObject({ kind: 'DRAFT' });
+    expect(d.headers[0]).toBe('Status');
+    expect(d.rows.every((r) => r[0] === 'DRAF' && r[5] === 'Makassar')).toBe(true);
+    setScenario({ s3Today: '2026-10-07' });
+    const f1 = await exportPayments('SALES', '2026-09', {}, { userId: 900, role: 'SUPER_ADMIN' });
+    const f2 = await exportPayments('SALES', '2026-09', {}, admin);
+    expect(f1.kind).toBe('FINAL');
+    expect(f2.rows).toEqual(f1.rows);
+    expect(s3Payments.exports.slice(-3).map((e) => e.kind)).toEqual(['DRAFT', 'FINAL', 'FINAL']);
+    await expect(exportPayments('SALES', '2026-10', {}, admin)).rejects.toMatchObject({ code: 'CONFLICT' });
   });
   it('baris Final dibekukan: perubahan konfigurasi tidak mengubah September', () => {
     const before = salesRow(6, '2026-09').takeHomePay;
@@ -143,6 +183,10 @@ describe('Konfigurasi (FR-CF)', () => {
     v.tiers.SALES[2].from = 71; v.targets.SA = 0; v.lockDay = 12;
     const e = validateConfig('sales', v, '2026-10');
     expect(Object.keys(e).sort()).toEqual(['payoutDay', 'target.SA', 'tiers.SALES']);
+    const pv = structuredClone(configFor('partner', '2026-10'));
+    expect(validateConfig('partner', pv, '2026-10')).toEqual({});
+    pv.lockDay = 1;
+    expect(validateConfig('partner', pv, '2026-10')).toEqual({ lockDay: 'Tanggal cut-off 2–28' });
   });
   it('simpan versi Oktober mengubah bulan berjalan; bulan Final ditolak; perubahan tercatat', async () => {
     const { saveConfig, configLog } = await import('../api/scope3.js');

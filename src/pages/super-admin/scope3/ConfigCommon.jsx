@@ -44,11 +44,11 @@ export function ChangeLog({ kind }) {
   );
 }
 
-/** Pilihan bulan berlaku: bulan yang belum Final (Menunggu rekonsiliasi, berjalan, mendatang). */
-export function EffectiveMonth({ value, onChange }) {
+/** Pilihan bulan berlaku: bulan yang belum Final untuk skema kind (Menunggu rekonsiliasi, berjalan, mendatang). */
+export function EffectiveMonth({ kind = 'sales', value, onChange }) {
   return (
     <Select label="Berlaku mulai" required value={value} onChange={onChange}
-      options={editableMonths().map((m) => ({ value: m, label: `${monthLabel(m, true)} · ${m > CURRENT_MONTH ? 'Mendatang' : MONTH_STATUS[monthStatus(m)]}` }))}
+      options={editableMonths(kind).map((m) => ({ value: m, label: `${monthLabel(m, true)} · ${m > CURRENT_MONTH ? 'Mendatang' : MONTH_STATUS[monthStatus(m, kind === 'partner' ? 'PARTNER' : 'SALES')]}` }))}
       hint="Perubahan berlaku pada pengambilan data berikutnya untuk bulan ini dan sesudahnya." />
   );
 }

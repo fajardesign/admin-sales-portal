@@ -10,8 +10,9 @@ export const SCENARIO_OPTIONS = {
   saveOutcome: ['success', 'emailFail', 'kcFail'],
   picAccount: ['ok', 'fail'],
   activationState: ['valid', 'expired', 'already'],
-  // PRD Scope 3: tanggal hari ini untuk status bulan. 2026-10-03 = sebelum lock 5 Okt, September masih "Menunggu rekonsiliasi".
-  s3Today: ['2026-10-07', '2026-10-03'],
+  // PRD Scope 3: tanggal hari ini untuk status bulan. Cut-off September: sales 5 Okt, partner 10 Okt; bayar sales 10, partner 15.
+  // 2026-10-03 = keduanya rekonsiliasi; 2026-10-07 = sales Final, partner rekonsiliasi; 2026-10-12 = sales pencatatan, partner Final.
+  s3Today: ['2026-10-07', '2026-10-03', '2026-10-12'],
 };
 export const SCENARIO_LABELS = { tableState: 'Tabel', service: 'Layanan login', saveOutcome: 'Simpan pengguna', picAccount: 'Akun PIC', activationState: 'Tautan contoh', s3Today: 'Tanggal Scope 3' };
 export const DEFAULT_SCENARIO = { tableState: 'data', service: 'ok', saveOutcome: 'success', picAccount: 'ok', activationState: 'valid', s3Today: '2026-10-07' };

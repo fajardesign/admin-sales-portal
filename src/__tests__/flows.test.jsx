@@ -538,7 +538,7 @@ describe('Super Admin', () => {
     expect(await screen.findByText(/Target SA: Rp.100\.000\.000 → Rp.110\.000\.000/, {}, T)).toBeTruthy();
   });
 
-  it('Skema Insentif: tanggal bayar harus setelah tanggal lock; Gaji Pokok menampilkan daily fee per area', async () => {
+  it('Skema Insentif: tanggal bayar harus setelah tanggal cut-off; Gaji Pokok menampilkan daily fee per area', async () => {
     const user = await start('hendra.wijaya');
     await user.click(await screen.findByRole('button', { name: 'Ubah konfigurasi' }, T));
     const lock = await screen.findByDisplayValue('5', {}, T);
@@ -546,7 +546,7 @@ describe('Super Admin', () => {
     await user.type(lock, '12');
     await user.click(screen.getByRole('button', { name: 'Simpan' }));
     await user.click(await screen.findByRole('button', { name: 'Ya, simpan' }, T));
-    expect(await screen.findByText('Tanggal bayar harus setelah tanggal lock', {}, T)).toBeTruthy();
+    expect(await screen.findByText('Tanggal bayar harus setelah tanggal cut-off', {}, T)).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'Batal' }));
     await user.click(screen.getByRole('tab', { name: 'Gaji Pokok' }));
     expect(await screen.findByText('Daily fee per area dan peran (Rp per hari valid)', {}, T)).toBeTruthy();
@@ -562,7 +562,7 @@ describe('Super Admin', () => {
     await user.click(screen.getByRole('tab', { name: 'Partner' }));
     expect(await screen.findByText('Total insentif partner', {}, T)).toBeTruthy();
     expect((await screen.findAllByText(/^Dibayar 15 Sep 2026/, {}, T)).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: 'Ekspor Excel' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Unduh Excel' })).toBeTruthy();
   });
 });
 

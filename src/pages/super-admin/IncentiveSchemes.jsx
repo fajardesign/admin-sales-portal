@@ -22,28 +22,32 @@ import { ChangeLog, EffectiveMonth, NumberField, TierEditor, TierTableView, Vers
 const TABS = [{ value: 'sales', label: 'Insentif Sales' }, { value: 'fee', label: 'Gaji Pokok' }, { value: 'partner', label: 'Insentif Partner' }];
 const ROLES3 = ['SA', 'SR', 'TL'];
 const muted = { font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' };
-const allMonths = () => {
+const CUTOFF_HINT = 'Pada tanggal ini di bulan M+1, bulan M dikunci: koreksi dan absensi ditutup, file take home pay final diunduh untuk vendor. Vendor butuh 5 hari kalender sebelum tanggal bayar.';
+const PARTNER_CUTOFF_HINT = 'Pada tanggal ini di bulan M+1, insentif partner bulan M dikunci: koreksi ditutup, file insentif partner final diunduh untuk Finance.';
+const statusKind = (tab) => (tab === 'partner' ? 'PARTNER' : 'SALES');
+const allMonths = (tab) => {
   const out = [...perfMonths()];
-  editableMonths().forEach((m) => { if (!out.includes(m)) out.push(m); });
+  editableMonths(tab).forEach((m) => { if (!out.includes(m)) out.push(m); });
   return out.reverse();
 };
 
 /**
  * E1 · Skema Insentif (PRD Scope 3 FR-CF-001/003/004, SCR-3-07): konfigurasi berversi per bulan efektif dalam 3 tab — Insentif
- * Sales (target per peran, tier SA/SR dan TL, tanggal lock dan bayar), Gaji Pokok (daily fee per area × peran, maks. hari dibayar,
- * multiplier, threshold, peran), Insentif Partner (target default, tier volume, tanggal bayar, target per partner). Bulan berjalan,
+ * Sales (target per peran, tier SA/SR dan TL, tanggal cut-off dan bayar sales), Gaji Pokok (daily fee per area × peran, maks. hari
+ * dibayar, multiplier, threshold, peran), Insentif Partner (target default, tier volume, tanggal cut-off dan bayar partner, target per
+ * partner; versi terpisah dari sales, round 10). Bulan berjalan,
  * bulan menunggu rekonsiliasi, dan bulan mendatang bisa diubah; bulan Final hanya baca. Konfirmasi dan log setiap perubahan.
  */
 export function IncentiveSchemes({ user, onLogout, query }) {
   const q = Object.fromEntries(query.entries());
   const tab = TABS.some((t) => t.value === q.tab) ? q.tab : 'sales';
-  const months = allMonths();
+  const months = allMonths(tab);
   const ym = months.includes(q.m) ? q.m : CURRENT_MONTH;
   const [rev, setRev] = useState(0);
   const [editing, setEditing] = useState(!!preset?.scheme?.editing);
   const set = (patch) => navigate(withQuery('/skema-insentif', { ...q, ...patch }));
   const cfg = configFor(tab, ym);
-  const final = monthStatus(ym) === 'FINAL';
+  const final = monthStatus(ym, statusKind(tab)) === 'FINAL';
 
   return (
     <AdminShell active="/skema-insentif" icon="CoinsLine" title="Skema Insentif" description="Target, tier insentif, gaji pokok, dan insentif partner per bulan. Dipakai untuk semua perhitungan." user={user} onLogout={onLogout}>
@@ -51,7 +55,7 @@ export function IncentiveSchemes({ user, onLogout, query }) {
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
         <div style={{ width: 280 }}>
           <Select size="sm" value={ym} onChange={(v) => set({ m: v })}
-            options={months.map((m) => ({ value: m, label: `${monthLabel(m, true)} · ${m > CURRENT_MONTH ? 'Mendatang' : MONTH_STATUS[monthStatus(m)]}` }))} />
+            options={months.map((m) => ({ value: m, label: `${monthLabel(m, true)} · ${m > CURRENT_MONTH ? 'Mendatang' : MONTH_STATUS[monthStatus(m, statusKind(tab))]}` }))} />
         </div>
         <span style={{ ...muted, paddingBottom: 'var(--space-8)' }}>Versi {cfg.version} · berlaku mulai {monthLabel(cfg.effectiveFrom, true)}</span>
         <span style={{ flex: 1 }} />
@@ -70,7 +74,7 @@ export function IncentiveSchemes({ user, onLogout, query }) {
           <ChangeLog kind={tab} />
         </div>
       </div>
-      {editing && <ConfigEditor kind={tab} startMonth={editableMonths().includes(ym) ? ym : CURRENT_MONTH} user={user}
+      {editing && <ConfigEditor kind={tab} startMonth={editableMonths(tab).includes(ym) ? ym : CURRENT_MONTH} user={user}
         onClose={() => setEditing(false)} onSaved={(m) => { setEditing(false); setRev((x) => x + 1); set({ m }); }} />}
     </AdminShell>
   );
@@ -86,8 +90,8 @@ function SalesView({ cfg }) {
       <SectionCard title="Tier insentif SA/SR"><TierTableView tiers={cfg.tiers.SALES} /></SectionCard>
       <SectionCard title="Tier insentif TL"><TierTableView tiers={cfg.tiers.TL} /></SectionCard>
       <SectionCard title="Jadwal">
-        <KeyValueGrid items={[{ label: 'Tanggal lock', value: `Tanggal ${cfg.lockDay} bulan berikutnya` }, { label: 'Tanggal bayar sales', value: `Tanggal ${cfg.payoutDay} bulan berikutnya` }]} />
-        <span style={muted}>Pada tanggal lock di bulan M+1, hasil bulan M dikunci menjadi final. Hanya pinjaman yang diajukan dan cair di bulan M yang dihitung. Setelah tanggal ini, TL tidak bisa lagi mengoreksi absensi bulan M.</span>
+        <KeyValueGrid items={[{ label: 'Tanggal tutup buku (cut-off) sales', value: `Tanggal ${cfg.lockDay} bulan berikutnya` }, { label: 'Tanggal bayar sales', value: `Tanggal ${cfg.payoutDay} bulan berikutnya` }]} />
+        <span style={muted}>{CUTOFF_HINT}</span>
       </SectionCard>
     </>
   );
@@ -122,17 +126,19 @@ function PartnerView({ cfg, ym, user, onChanged }) {
   return (
     <>
       <SectionCard title="Target dan jadwal">
-        <KeyValueGrid items={[{ label: 'Target partner default', value: `${formatRp(cfg.defaultTarget)} per bulan` }, { label: 'Tanggal bayar partner', value: `Tanggal ${cfg.payoutDay} bulan berikutnya` }]} />
+        <KeyValueGrid items={[{ label: 'Target partner default', value: `${formatRp(cfg.defaultTarget)} per bulan`, full: true },
+          { label: 'Tanggal tutup buku (cut-off) partner', value: `Tanggal ${cfg.lockDay} bulan berikutnya` }, { label: 'Tanggal bayar partner', value: `Tanggal ${cfg.payoutDay} bulan berikutnya` }]} />
+        <span style={muted}>{PARTNER_CUTOFF_HINT}</span>
       </SectionCard>
       <SectionCard title="Tier insentif volume"><TierTableView tiers={cfg.tiers} /></SectionCard>
-      <SectionCard title="Target per partner" actions={<Button size="xs" variant="stroke" tone="neutral" onClick={() => setModal({ ym: editableMonths().includes(ym) ? ym : editableMonths()[0] })}>Atur target partner</Button>}>
+      <SectionCard title="Target per partner" actions={<Button size="xs" variant="stroke" tone="neutral" onClick={() => setModal({ ym: editableMonths('partner').includes(ym) ? ym : editableMonths('partner')[0] })}>Atur target partner</Button>}>
         {list.length === 0 ? <span style={muted}>Semua partner memakai target default.</span> : (
           <DataTable rows={list} rowKey={(t) => `${t.partnerId}-${t.ym}`} minWidth={520} columns={[
             { key: 'p', header: 'Partner', render: (t) => ({ priority: 'leading', title: partners.find((p) => p.id === t.partnerId)?.partnerName ?? t.partnerId, description: areaName(partners.find((p) => p.id === t.partnerId)?.areaId) }) },
-            { key: 'm', header: 'Bulan', render: (t) => ({ misc: true, children: <span style={{ display: 'inline-flex', gap: 'var(--space-6)', alignItems: 'center' }}>{nowrap(monthLabel(t.ym, true))}<MonthStatusBadge status={monthStatus(t.ym)} /></span> }) },
+            { key: 'm', header: 'Bulan', render: (t) => ({ misc: true, children: <span style={{ display: 'inline-flex', gap: 'var(--space-6)', alignItems: 'center' }}>{nowrap(monthLabel(t.ym, true))}<MonthStatusBadge status={monthStatus(t.ym, 'PARTNER')} /></span> }) },
             { key: 'a', header: 'Target', align: 'right', render: (t) => ({ priority: 'regular', title: nowrap(formatRp(t.amount)), description: t.reason || undefined }) },
             { key: 'b', header: 'Diubah oleh', render: (t) => ({ priority: 'regular', title: t.by, description: formatDateTime(t.at) }) },
-            { key: 'x', header: '', render: (t) => (monthStatus(t.ym) === 'FINAL' ? '' : { misc: true, children: (
+            { key: 'x', header: '', render: (t) => (monthStatus(t.ym, 'PARTNER') === 'FINAL' ? '' : { misc: true, children: (
               <LinkButton size="sm" onClick={async () => { await setPartnerTarget(t.partnerId, t.ym, null, '', user); toast('success', 'Target partner dihapus, kembali ke default.'); onChanged(); }}>Hapus</LinkButton>
             ) }) },
           ]} />
@@ -163,7 +169,7 @@ function PartnerTargetModal({ init, user, onClose, onSaved }) {
     <ActionModal open onClose={onClose} title="Atur target partner" icon="Building2Line" busy={busy} onConfirm={save} confirmLabel="Simpan target">
       <Select label="Partner" required value={pid || undefined} placeholder="Pilih partner" onChange={setPid} error={err.pid}
         options={eligible.map((p) => ({ value: p.id, label: `${p.partnerName} (${areaName(p.areaId)})` }))} />
-      <Select label="Bulan" required value={ym} onChange={setYm} options={editableMonths().map((m) => ({ value: m, label: monthLabel(m, true) }))} />
+      <Select label="Bulan" required value={ym} onChange={setYm} options={editableMonths('partner').map((m) => ({ value: m, label: monthLabel(m, true) }))} />
       {pid && <span style={muted}>Target saat ini {formatRp(partnerTarget(pid, ym))}</span>}
       <NumberField label="Target (Rp)" value={amount} onChange={setAmount} error={err.amount} />
       <TextArea label="Alasan" sublabel="(Opsional)" maxLength={255} rows={2} value={reason} onChange={setReason} placeholder="Contoh: Partner baru, target disesuaikan" />
@@ -248,7 +254,7 @@ function ConfigEditor({ kind, startMonth, user, onClose, onSaved }) {
     <Drawer open width={720} onClose={onClose} footer={footer}
       header={<DrawerHeader size="lg" title={`Ubah ${CONFIG_LABEL[kind]}`} description="Bulan Final tidak bisa diubah." icon="EditLine" onClose={onClose} />}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-16)', padding: 'var(--space-16) var(--space-24) var(--space-24)' }}>
-        <EffectiveMonth value={ym} onChange={pickMonth} />
+        <EffectiveMonth kind={kind} value={ym} onChange={pickMonth} />
         {Object.keys(errors).length > 0 && <Alert status="error" size="sm" title="Periksa kembali isian yang ditandai." />}
         {kind === 'sales' && (
           <>
@@ -258,10 +264,10 @@ function ConfigEditor({ kind, startMonth, user, onClose, onSaved }) {
             <TierEditor title="Tier insentif SA/SR" tiers={draft.tiers.SALES} error={errors['tiers.SALES']} onChange={(t) => change({ tiers: { ...draft.tiers, SALES: t } })} />
             <TierEditor title="Tier insentif TL" tiers={draft.tiers.TL} error={errors['tiers.TL']} onChange={(t) => change({ tiers: { ...draft.tiers, TL: t } })} />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 'var(--space-12)' }}>
-              <NumberField label="Tanggal lock" value={draft.lockDay} error={errors.lockDay} onChange={(v) => change({ lockDay: v })} hint="1–28" />
-              <NumberField label="Tanggal bayar sales" value={draft.payoutDay} error={errors.payoutDay} onChange={(v) => change({ payoutDay: v })} hint="Setelah tanggal lock" />
+              <NumberField label="Tanggal tutup buku (cut-off) sales" value={draft.lockDay} error={errors.lockDay} onChange={(v) => change({ lockDay: v })} hint="2–28, sebelum tanggal bayar" />
+              <NumberField label="Tanggal bayar sales" value={draft.payoutDay} error={errors.payoutDay} onChange={(v) => change({ payoutDay: v })} hint="Maksimal 28" />
             </div>
-            <span style={muted}>Pada tanggal ini di bulan M+1, hasil bulan M dikunci menjadi final. Hanya pinjaman yang diajukan dan cair di bulan M yang dihitung. Setelah tanggal ini, TL tidak bisa lagi mengoreksi absensi bulan M.</span>
+            <span style={muted}>{CUTOFF_HINT}</span>
           </>
         )}
         {kind === 'fee' && (
@@ -294,8 +300,12 @@ function ConfigEditor({ kind, startMonth, user, onClose, onSaved }) {
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 'var(--space-12)' }}>
               <NumberField label="Target partner default (Rp)" value={draft.defaultTarget} error={errors.defaultTarget} onChange={(v) => change({ defaultTarget: v })} />
-              <NumberField label="Tanggal bayar partner" value={draft.payoutDay} error={errors.payoutDay} onChange={(v) => change({ payoutDay: v })} hint="Setelah tanggal lock" />
             </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 'var(--space-12)' }}>
+              <NumberField label="Tanggal tutup buku (cut-off) partner" value={draft.lockDay} error={errors.lockDay} onChange={(v) => change({ lockDay: v })} hint="2–28, sebelum tanggal bayar" />
+              <NumberField label="Tanggal bayar partner" value={draft.payoutDay} error={errors.payoutDay} onChange={(v) => change({ payoutDay: v })} hint="Maksimal 28" />
+            </div>
+            <span style={muted}>{PARTNER_CUTOFF_HINT}</span>
             <TierEditor title="Tier insentif volume" tiers={draft.tiers} error={errors.tiers} onChange={(t) => change({ tiers: t })} />
           </>
         )}

@@ -24,7 +24,7 @@ const roleText = (r) => (r.role === 'TL' ? `TL ${r.tlLevel === 'SENIOR' ? 'Senio
 /**
  * E3 · Hasil Perhitungan (PRD Scope 3 FR-CF-002, SCR-3-08): laporan bulanan untuk Finance, tab Sales dan Partner. Sales per
  * orang: hari valid, hari dibayar, daily fee, multiplier, gaji pokok, target, cair dihitung, capaian, tier, insentif, take home
- * pay, status bulan, dan untuk bulan Final status pembayaran, koreksi, jumlah dibayar, tanggal bayar. Ekspor Excel. Hanya Super Admin.
+ * pay, status bulan, dan untuk bulan Final status pembayaran, koreksi, jumlah final, tanggal bayar, keterangan. Unduh Excel (FR-CF-002). Hanya Super Admin.
  */
 export function IncentiveResults(props) {
   const { tableState, s3Today } = useScenario();
@@ -61,19 +61,19 @@ function IncentiveResultsView({ user, onLogout, query }) {
     try {
       if (tab === 'sales') {
         downloadCsv(`hasil-perhitungan-sales-${ym}.csv`,
-          ['Nama', 'Role', 'TL', 'Area', 'Hari valid', 'Hari dibayar', 'Daily fee', 'Multiplier', 'Gaji pokok', 'Target', 'Cair dihitung', 'Capaian (%)', 'Koefisien (%)', 'Insentif', 'Take home pay', 'Status bulan', 'Status pembayaran', 'Koreksi', 'Catatan', 'Jumlah dibayar', 'Tanggal bayar'],
+          ['Nama', 'Role', 'TL', 'Area', 'Hari valid', 'Hari dibayar', 'Daily fee', 'Multiplier', 'Gaji pokok', 'Target', 'Cair dihitung', 'Capaian (%)', 'Koefisien (%)', 'Insentif', 'Take home pay', 'Status bulan', 'Status pembayaran', 'Koreksi', 'Catatan', 'Take home pay final', 'Tanggal bayar', 'Keterangan'],
           rows.map((r) => [r.name, roleText(r), userById(r.leaderId)?.fullName ?? '', areaName(r.areaId), r.validDays, r.paidDays, r.dailyFee, r.multiplierApplies ? 'Ya' : 'Tidak', r.basicSalary,
             r.target, r.actual, r.achievement.toFixed(1), r.coefficient, r.incentive, r.takeHomePay, MONTH_STATUS[r.monthStatus],
-            r.payment ? PAYMENT_STATUS[r.payment.status] : '', r.payment?.correction ?? '', r.payment?.note ?? '', r.payment?.paidAmount ?? '', r.payment?.paidAt ?? '']));
+            r.payment ? PAYMENT_STATUS[r.payment.status] : '', r.payment?.correction ?? '', r.payment?.note ?? '', r.payment?.finalAmount ?? '', r.payment?.paidAt ?? '', r.payment?.unpaidNote ?? '']));
       } else {
         downloadCsv(`hasil-perhitungan-partner-${ym}.csv`,
-          ['Partner', 'Area', 'Jumlah toko', 'Target', 'Cair dihitung', 'Capaian (%)', 'Koefisien (%)', 'Insentif partner', 'Status bulan', 'Status pembayaran', 'Koreksi', 'Jumlah dibayar', 'Tanggal bayar'],
+          ['Partner', 'Area', 'Jumlah toko', 'Target', 'Cair dihitung', 'Capaian (%)', 'Koefisien (%)', 'Insentif partner', 'Status bulan', 'Status pembayaran', 'Koreksi', 'Catatan', 'Jumlah final', 'Tanggal bayar', 'Keterangan'],
           rows.map((r) => [r.name, areaName(r.areaId), r.storeCount, r.target, r.actual, r.achievement.toFixed(1), r.coefficient, r.incentive, MONTH_STATUS[r.monthStatus],
-            r.payment ? PAYMENT_STATUS[r.payment.status] : '', r.payment?.correction ?? '', r.payment?.paidAmount ?? '', r.payment?.paidAt ?? '']));
+            r.payment ? PAYMENT_STATUS[r.payment.status] : '', r.payment?.correction ?? '', r.payment?.note ?? '', r.payment?.finalAmount ?? '', r.payment?.paidAt ?? '', r.payment?.unpaidNote ?? '']));
       }
-      toast('success', 'Laporan diekspor.');
+      toast('success', 'Laporan diunduh.');
     } catch {
-      toast('error', 'Gagal mengekspor laporan. Coba lagi.');
+      toast('error', 'Gagal mengunduh file. Coba lagi.');
     } finally {
       setExporting(false);
     }
@@ -119,18 +119,18 @@ function IncentiveResultsView({ user, onLogout, query }) {
     <AdminShell active="/hasil-perhitungan" icon="FileList2Line" title="Hasil Perhitungan" description="Gaji pokok, insentif, dan take home pay sales serta insentif partner per bulan, untuk Finance." user={user} onLogout={onLogout}>
       <TabMenuHorizontal value={tab} onChange={(v) => set({ tab: v === 'sales' ? '' : v, role: '' })} items={[{ value: 'sales', label: 'Sales' }, { value: 'partner', label: 'Partner' }]} />
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
-        <MonthSelect value={ym} onChange={(v) => set({ m: v })} />
+        <MonthSelect value={ym} onChange={(v) => set({ m: v })} kind={tab === 'sales' ? 'SALES' : 'PARTNER'} />
         <div style={{ width: 180 }}><Select size="sm" value={q.area ?? ''} placeholder="Semua area" onChange={(v) => set({ area: v })} options={AREA_OPTS} /></div>
         {tab === 'sales' && <div style={{ width: 160 }}><Select size="sm" value={q.role ?? ''} placeholder="Semua role" onChange={(v) => set({ role: v })} options={ROLE_OPTS} /></div>}
         <div style={{ flex: 1 }} />
-        <Button size="sm" variant="stroke" tone="neutral" leftIcon={<Icon name="DownloadLine" size={16} />} disabled={exporting || view !== 'data'} onClick={exportFile}>{exporting ? 'Mengekspor...' : 'Ekspor Excel'}</Button>
+        <Button size="sm" variant="stroke" tone="neutral" leftIcon={<Icon name="DownloadLine" size={16} />} disabled={exporting || view !== 'data'} onClick={exportFile}>{exporting ? 'Menyiapkan file…' : 'Unduh Excel'}</Button>
       </div>
       <SearchField placeholder={tab === 'sales' ? 'Cari nama atau TL' : 'Cari partner'} value={q.q ?? ''} onChange={(v) => set({ q: v })} />
       {data && (
         <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
           <MonthStatusBadge status={data.monthStatus} />
-          <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>{monthNote(ym)} · jadwal bayar {formatYmd(payoutDate(ym, tab === 'sales' ? 'SALES' : 'PARTNER'))}</span>
-          <AsOf asOf={data.asOf} ym={ym} onRefresh={() => load(true)} />
+          <span style={{ font: 'var(--paragraph-sm)', color: 'var(--text-sub-600)' }}>{monthNote(ym, tab === 'sales' ? 'SALES' : 'PARTNER')} · jadwal bayar {formatYmd(payoutDate(ym, tab === 'sales' ? 'SALES' : 'PARTNER'))}</span>
+          <AsOf asOf={data.asOf} ym={ym} kind={tab === 'sales' ? 'SALES' : 'PARTNER'} onRefresh={() => load(true)} />
         </span>
       )}
       {view === 'data' && (
