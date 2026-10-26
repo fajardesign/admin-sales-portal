@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Badge, Button, Icon, Select, TabMenuHorizontal } from '@ds/index.js';
+import { Badge, Button, Icon, Select, TabMenuHorizontal, Tooltip } from '@ds/index.js';
 import { AdminShell } from '../../components/AdminShell.jsx';
 import { DataTable } from '../../components/DataTable.jsx';
 import { ListCard } from '../../components/ListCard.jsx';
 import { SearchField } from '../../components/FilterBar.jsx';
 import { StatCard, StatGrid } from '../../components/StatCard.jsx';
+import { StickyBar } from '../../components/StickyBar.jsx';
 import { useToast } from '../../components/Toaster.jsx';
 import { AsOf, BandBadge, IncomeDrawer, MonthSelect, MonthStatusBadge, PartnerIncomeDrawer, PaymentLine } from '../../components/scope3/S3Common.jsx';
 import { MONTH_STATUS, PAYMENT_STATUS, partnerRows, payoutDate, rateLabel, salesRows, totalsOf } from '../../api/scope3.js';
@@ -117,15 +118,20 @@ function IncentiveResultsView({ user, onLogout, query }) {
 
   return (
     <AdminShell active="/hasil-perhitungan" icon="FileList2Line" title="Hasil Perhitungan" description="Gaji pokok, insentif, dan take home pay sales serta insentif partner per bulan, untuk Finance." user={user} onLogout={onLogout}>
-      <TabMenuHorizontal value={tab} onChange={(v) => set({ tab: v === 'sales' ? '' : v, role: '' })} items={[{ value: 'sales', label: 'Sales' }, { value: 'partner', label: 'Partner' }]} />
+      <StickyBar flush>
+        <TabMenuHorizontal value={tab} onChange={(v) => set({ tab: v === 'sales' ? '' : v, role: '' })} items={[{ value: 'sales', label: 'Sales' }, { value: 'partner', label: 'Partner' }]} />
+      </StickyBar>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
         <MonthSelect value={ym} onChange={(v) => set({ m: v })} kind={tab === 'sales' ? 'SALES' : 'PARTNER'} />
         <div style={{ width: 180 }}><Select size="sm" value={q.area ?? ''} placeholder="Semua area" onChange={(v) => set({ area: v })} options={AREA_OPTS} /></div>
         {tab === 'sales' && <div style={{ width: 160 }}><Select size="sm" value={q.role ?? ''} placeholder="Semua role" onChange={(v) => set({ role: v })} options={ROLE_OPTS} /></div>}
+        <SearchField placeholder={tab === 'sales' ? 'Cari nama atau TL' : 'Cari partner'} value={q.q ?? ''} onChange={(v) => set({ q: v })} width={260} />
         <div style={{ flex: 1 }} />
-        <Button size="sm" variant="stroke" tone="neutral" leftIcon={<Icon name="DownloadLine" size={16} />} disabled={exporting || view !== 'data'} onClick={exportFile}>{exporting ? 'Menyiapkan file…' : 'Unduh Excel'}</Button>
+        <Tooltip content={exporting ? 'Menyiapkan file…' : 'Unduh Excel'} placement="left">
+          <Button size="sm" variant="stroke" tone="neutral" iconOnly leftIcon={<Icon name="DownloadLine" />} aria-label={exporting ? 'Menyiapkan file…' : 'Unduh Excel'}
+            disabled={exporting || view !== 'data'} onClick={exportFile} />
+        </Tooltip>
       </div>
-      <SearchField placeholder={tab === 'sales' ? 'Cari nama atau TL' : 'Cari partner'} value={q.q ?? ''} onChange={(v) => set({ q: v })} />
       {data && (
         <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-12)', flexWrap: 'wrap' }}>
           <MonthStatusBadge status={data.monthStatus} />
